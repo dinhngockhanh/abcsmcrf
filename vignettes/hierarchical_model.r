@@ -32,7 +32,7 @@ model <- function(parameters) {
     theta1 <- parameters$theta1
     theta2 <- parameters$theta2
     n_samples_per_parameter_set <- 20 # Number of samples per parameter set
-    nNoise <- 500 # Number of noise variables
+    nNoise <- 50 # Number of noise variables
     #   Make simulations
     y <- matrix(NA, length(theta1), n_samples_per_parameter_set)
     for (i in 1:length(theta1)) {
@@ -75,8 +75,10 @@ model <- function(parameters) {
 #   Input:  data frame of parameters, each row is one set of parameters
 #   Output: data frame of parameters, after perturbation
 perturb <- function(parameters) {
-    parameters$theta1 <- parameters$theta1 + runif(nrow(parameters), min = -1, max = 1)
-    parameters$theta2 <- pmax(parameters$theta2 + runif(nrow(parameters), min = -1, max = 1), 0)
+    parameters$theta1 <- parameters$theta1 + rnorm(nrow(parameters), mean = 0, sd = 1)
+    parameters$theta2 <- pmax(parameters$theta2 + rnorm(nrow(parameters), mean = 0, sd = 1), 0)
+    # parameters$theta1 <- parameters$theta1 + runif(nrow(parameters), min = -1, max = 1)
+    # parameters$theta2 <- pmax(parameters$theta2 + runif(nrow(parameters), min = -1, max = 1), 0)
     return(parameters)
 }
 #---Target statistics
@@ -85,8 +87,8 @@ theta1 <- rnorm(1, 0, sqrt(theta2))
 target <- model(data.frame(theta1 = theta1, theta2 = theta2))[-c(1:2)]
 #---Initial guesses for parameters (sampled from prior distributions)
 parameters_initial <- data.frame(
-    theta1 = runif(1000, 0, 10),
-    theta2 = runif(1000, 0, 10)
+    theta1 = runif(1000, -5, -0),
+    theta2 = runif(1000, 3, 6)
 )
 #---Run SMC-ABCRF
 smcabcrf_test(
@@ -95,7 +97,7 @@ smcabcrf_test(
     perturb = perturb,
     parameters_initial = parameters_initial,
     nIter = 7, # Number of iterations
-    nKeep = rep(1000, 7), # Number of particles for each iteration
+    nParticles = rep(1000, 7), # Number of particles for each iteration
     # ntree = 2000,
     parallel = T
 )
@@ -105,7 +107,7 @@ smcabcrf_test(
 #     perturb = perturb,
 #     parameters_initial = parameters_initial,
 #     nIter = 7, # Number of iterations
-#     nKeep = rep(1000, 7), # Number of particles for each iteration
+#     nParticles = rep(1000, 7), # Number of particles for each iteration
 #     # ntree = 2000,
 #     parallel = T
 # )
