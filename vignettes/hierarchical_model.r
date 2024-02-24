@@ -1,7 +1,11 @@
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - Macbook
-R_workplace <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/vignettes"
+# # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - Macbook
+# R_workplace <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/vignettes"
+# R_libPaths <- ""
+# R_libPaths_extra <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/R"
+# # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
+R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/0224_test"
 R_libPaths <- ""
-R_libPaths_extra <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/R"
+R_libPaths_extra <- "/Users/xiangzijin/SMC-RF/R"
 # =======================================SET UP FOLDER PATHS & LIBRARIES
 .libPaths(R_libPaths)
 
@@ -75,20 +79,29 @@ model <- function(parameters) {
 #   Input:  data frame of parameters, each row is one set of parameters
 #   Output: data frame of parameters, after perturbation
 perturb <- function(parameters) {
-    parameters$theta1 <- parameters$theta1 + rnorm(nrow(parameters), mean = 0, sd = 1)
-    parameters$theta2 <- pmax(parameters$theta2 + rnorm(nrow(parameters), mean = 0, sd = 1), 0)
-    # parameters$theta1 <- parameters$theta1 + runif(nrow(parameters), min = -1, max = 1)
-    # parameters$theta2 <- pmax(parameters$theta2 + runif(nrow(parameters), min = -1, max = 1), 0)
+    # parameters$theta1 <- parameters$theta1 + rnorm(nrow(parameters), mean = 0, sd = 1)
+    # parameters$theta2 <- pmax(parameters$theta2 + rnorm(nrow(parameters), mean = 0, sd = 1), 0)
+    parameters$theta1 <- parameters$theta1 + runif(nrow(parameters), min = -0.5, max = 0.5)
+    parameters$theta2 <- pmax(parameters$theta2 + runif(nrow(parameters), min = -0.5, max = 0.5), 0)
     return(parameters)
 }
 #---Target statistics
 theta2 <- 1 / rgamma(1, shape = 4, rate = 3)
 theta1 <- rnorm(1, 0, sqrt(theta2))
 target <- model(data.frame(theta1 = theta1, theta2 = theta2))[-c(1:2)]
-#---Initial guesses for parameters (sampled from prior distributions)
+# #---Initial guesses for parameters (sampled from prior distributions)-uniform
+# parameters_initial <- data.frame(
+#     theta1 = runif(1000, -5, -0),
+#     theta2 = runif(1000, 3, 6)
+# )
+#---Initial guesses for parameters (sampled from prior distributions)-hierarchical normal
+alpha <- 4
+beta <- 3
+theta2 <- 1 / rgamma(1000, shape = alpha, rate = beta)
+theta1 <- rnorm(1000, 0, sqrt(theta2))
 parameters_initial <- data.frame(
-    theta1 = runif(1000, -5, -0),
-    theta2 = runif(1000, 3, 6)
+    theta1 = theta1,
+    theta2 = theta2
 )
 #---Run SMC-ABCRF
 smcabcrf_test(
