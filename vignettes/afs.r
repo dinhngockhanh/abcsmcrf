@@ -24,10 +24,10 @@ setwd(R_workplace)
 # ======================================================================
 set.seed(1)
 AFS_model <- function(theta, beta, model, n) {
-    # This simulates haplotype and site information
-    # Model = 1 for regular coalescent (beta = 0)
-    #       = 2 for exponential growth coalescent model
-    #       = 3 for pure death process with rate 1
+    #   This simulates haplotype and site information
+    #   Model = 1 for regular coalescent (beta = 0)
+    #         = 2 for exponential growth coalescent model
+    #         = 3 for pure death process with rate 1
     #---Set up arrays and initialisation
     hist <- list() # list of sets of common ancestor labels
     muts <- list() # list of mutation lists
@@ -149,7 +149,7 @@ model <- function(parameters) {
     model <- 1
     n <- 100
 
-    nNoise <- 100 # Number of noise variables
+    nNoise <- 10 # Number of noise variables
 
     cl <- makePSOCKcluster(detectCores() - 1)
     AFS_model <<- AFS_model
@@ -174,8 +174,8 @@ model <- function(parameters) {
 #   Input:  data frame of parameters, each row is one set of parameters
 #   Output: data frame of parameters, after perturbation
 perturb <- function(parameters) {
-    parameters$theta <- pmin(pmax(parameters$theta + runif(nrow(parameters), min = -1, max = 1), 0), 20)
-    parameters$beta <- pmin(pmax(parameters$beta + runif(nrow(parameters), min = -1, max = 1), 0), 20)
+    parameters$theta <- pmin(pmax(parameters$theta + runif(nrow(parameters), min = -1, max = 1), 1), 20)
+    parameters$beta <- pmin(pmax(parameters$beta + runif(nrow(parameters), min = -1, max = 1), 1), 20)
     return(parameters)
 }
 #---Target statistics

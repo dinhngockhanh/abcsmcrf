@@ -83,8 +83,6 @@ model <- function(parameters,
 #   Input:  data frame of parameters, each row is one set of parameters
 #   Output: data frame of parameters, after perturbation
 perturb <- function(parameters) {
-    # parameters$theta1 <- parameters$theta1 + rnorm(nrow(parameters), mean = 0, sd = 1)
-    # parameters$theta2 <- pmax(parameters$theta2 + rnorm(nrow(parameters), mean = 0, sd = 1), 0)
     parameters$theta1 <- parameters$theta1 + runif(nrow(parameters), min = -0.5, max = 0.5)
     parameters$theta2 <- pmax(parameters$theta2 + runif(nrow(parameters), min = -0.5, max = 0.5), 0)
     return(parameters)
@@ -92,32 +90,8 @@ perturb <- function(parameters) {
 # =====================================================Target statistics
 theta2 <- 1 / rgamma(1, shape = alpha, rate = beta)
 theta1 <- rnorm(1, 0, sqrt(theta2))
-parameters_target <- data.frame(
-    theta1 = theta1,
-    theta2 = theta2
-)
-target <- model(
-    parameters = parameters_target,
-    n_samples_per_parameter_set = n_samples_per_parameter_set,
-    nNoise = nNoise
-)[-c(1:ncol(parameters_target))]
-
-
-model(
-    parameters = parameters_target,
-    n_samples_per_parameter_set = n_samples_per_parameter_set,
-    nNoise = nNoise
-)
-# ========================================Initial guesses for parameters
-# ============================(sampled from prior distributions)-uniform
-# parameters_initial <- data.frame(
-#     theta1 = runif(N, -5, -0),
-#     theta2 = runif(N, 3, 6)
-# )
-# ========================================Initial guesses for parameters
-# ================(sampled from prior distributions)-hierarchical normal
-theta2 <- 1 / rgamma(N, shape = alpha, rate = beta)
-theta1 <- rnorm(N, 0, sqrt(theta2))
+target <- model(data.frame(theta1 = theta1, theta2 = theta2))[-c(1:2)]
+#---Initial guesses for parameters (sampled from prior distributions)
 parameters_initial <- data.frame(
     theta1 = theta1,
     theta2 = theta2
@@ -160,7 +134,7 @@ smcabcrf_fitting(
     parameters_initial = parameters_initial,
     parameters_truth = parameters_truth,
     nIter = 7, # Number of iterations
-    nParticles = rep(N, 7), # Number of particles for each iteration
+    nParticles = rep(1000, 7), # Number of particles for each iteration
     # ntree = 2000,
     parallel = T
 )
