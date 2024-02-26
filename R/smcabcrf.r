@@ -129,65 +129,34 @@ smcabcrf_test <- function(target,
         w <- ABCRF_weights
         colnames(w) <- paste0("weights_", colnames(w))
         w$iteration <- iteration
+        color_scheme <- c(
+            "True Posterior" = "black",
+            "Prior Distribution" = "gray",
+            "Iter-1" = "purple",
+            "Iter-2" = "blue",
+            "Iter-3" = "cyan",
+            "Iter-4" = "green",
+            "Iter-5" = "yellow",
+            "Iter-6" = "orange",
+            "Iter-7" = "red"
+        )
         p_theta1 <- p_theta1 +
             geom_density(
                 data = cbind(parameters, w),
                 aes(x = theta1, weight = weights_theta1, fill = paste0("Iter-", iteration), color = paste0("Iter-", iteration)), alpha = 0.2, size = 2
-            )
+            ) +
+            scale_fill_manual(values = color_scheme, name = "Iteration") +
+            scale_color_manual(values = color_scheme, name = "Iteration")
         p_theta2 <- p_theta2 +
             geom_density(
                 data = cbind(parameters, w),
                 aes(x = theta2, weight = weights_theta2, fill = paste0("Iter-", iteration), color = paste0("Iter-", iteration)), alpha = 0.2, size = 2
-            )
+            ) +
+            scale_fill_manual(values = color_scheme, name = "Iteration") +
+            scale_color_manual(values = color_scheme, name = "Iteration")
         ########################################################  TEST - END
     }
     ######################################################  TEST - BEGIN
-    p_theta1 <- p_theta1 +
-        scale_fill_manual(values = c(
-            "True Posterior" = "black",
-            "Prior Distribution" = "gray",
-            "Iter-1" = "purple",
-            "Iter-2" = "blue",
-            "Iter-3" = "cyan",
-            "Iter-4" = "green",
-            "Iter-5" = "yellow",
-            "Iter-6" = "orange",
-            "Iter-7" = "red"
-        ), name = "Legend") +
-        scale_colour_manual(values = c(
-            "True Posterior" = "black",
-            "Prior Distribution" = "gray",
-            "Iter-1" = "purple",
-            "Iter-2" = "blue",
-            "Iter-3" = "cyan",
-            "Iter-4" = "green",
-            "Iter-5" = "yellow",
-            "Iter-6" = "orange",
-            "Iter-7" = "red"
-        ), name = "Iteration")
-    p_theta2 <- p_theta2 +
-        scale_fill_manual(values = c(
-            "True Posterior" = "black",
-            "Prior Distribution" = "gray",
-            "Iter-1" = "purple",
-            "Iter-2" = "blue",
-            "Iter-3" = "cyan",
-            "Iter-4" = "green",
-            "Iter-5" = "yellow",
-            "Iter-6" = "orange",
-            "Iter-7" = "red"
-        ), name = "Distribution")
-    scale_colour_manual(values = c(
-        "True Posterior" = "black",
-        "Prior Distribution" = "gray",
-        "Iter-1" = "purple",
-        "Iter-2" = "blue",
-        "Iter-3" = "cyan",
-        "Iter-4" = "green",
-        "Iter-5" = "yellow",
-        "Iter-6" = "orange",
-        "Iter-7" = "red"
-    ), name = "Distribution")
     png("TEST.png", res = 150, width = 17, height = 17, units = "in", pointsize = 12)
     grid.arrange(p_theta1, p_theta2, ncol = 1)
     dev.off()

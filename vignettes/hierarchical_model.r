@@ -1,14 +1,13 @@
-# # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - Macbook
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - Macbook
 # R_workplace <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/vignettes"
 # R_libPaths <- ""
 # R_libPaths_extra <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/R"
-# # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
 R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/0224_test"
 R_libPaths <- ""
 R_libPaths_extra <- "/Users/xiangzijin/SMC-RF/R"
 # =======================================SET UP FOLDER PATHS & LIBRARIES
 .libPaths(R_libPaths)
-
 library(ggplot2)
 library(gridExtra)
 library(grid)
@@ -19,9 +18,12 @@ files_sources <- list.files(pattern = "\\.[rR]$")
 sapply(files_sources, source)
 setwd(R_workplace)
 
-
-
-
+# =============================================SET UP INITIAL PARAMETERS
+N <- 1000
+n_samples_per_parameter_set <- 20
+nNoise <- 50
+alpha <- 4
+beta <- 3
 
 
 
@@ -32,11 +34,13 @@ set.seed(1)
 #   Output: data frame of parameters & statistics, each row contains statistics for one set of parameters:
 #           first columns = input parameters
 #           next columns = summary statistics
-model <- function(parameters) {
+model <- function(parameters,
+                  n_samples_per_parameter_set,
+                  nNoise) {
     theta1 <- parameters$theta1
     theta2 <- parameters$theta2
-    n_samples_per_parameter_set <- 20 # Number of samples per parameter set
-    nNoise <- 50 # Number of noise variables
+    n_samples_per_parameter_set <- n_samples_per_parameter_set # Number of samples per parameter set
+    nNoise <- nNoise # Number of noise variables
     #   Make simulations
     y <- matrix(NA, length(theta1), n_samples_per_parameter_set)
     for (i in 1:length(theta1)) {
@@ -75,7 +79,7 @@ model <- function(parameters) {
     )
     return(data)
 }
-#---Model for parameter perturbation
+# ======================================Model for parameter perturbation
 #   Input:  data frame of parameters, each row is one set of parameters
 #   Output: data frame of parameters, after perturbation
 perturb <- function(parameters) {
@@ -85,42 +89,89 @@ perturb <- function(parameters) {
     parameters$theta2 <- pmax(parameters$theta2 + runif(nrow(parameters), min = -0.5, max = 0.5), 0)
     return(parameters)
 }
-#---Target statistics
-theta2 <- 1 / rgamma(1, shape = 4, rate = 3)
+# =====================================================Target statistics
+theta2 <- 1 / rgamma(1, shape = alpha, rate = beta)
 theta1 <- rnorm(1, 0, sqrt(theta2))
-target <- model(data.frame(theta1 = theta1, theta2 = theta2))[-c(1:2)]
-# #---Initial guesses for parameters (sampled from prior distributions)-uniform
+parameters_target <- data.frame(
+    theta1 = theta1,
+    theta2 = theta2
+)
+target <- model(
+    parameters = parameters_target,
+    n_samples_per_parameter_set = n_samples_per_parameter_set,
+    nNoise = nNoise
+)[-c(1:ncol(parameters_target))]
+
+
+model(
+    parameters = parameters_target,
+    n_samples_per_parameter_set = n_samples_per_parameter_set,
+    nNoise = nNoise
+)
+# ========================================Initial guesses for parameters
+# ============================(sampled from prior distributions)-uniform
 # parameters_initial <- data.frame(
-#     theta1 = runif(1000, -5, -0),
-#     theta2 = runif(1000, 3, 6)
+#     theta1 = runif(N, -5, -0),
+#     theta2 = runif(N, 3, 6)
 # )
-#---Initial guesses for parameters (sampled from prior distributions)-hierarchical normal
-alpha <- 4
-beta <- 3
-theta2 <- 1 / rgamma(1000, shape = alpha, rate = beta)
-theta1 <- rnorm(1000, 0, sqrt(theta2))
+# ========================================Initial guesses for parameters
+# ================(sampled from prior distributions)-hierarchical normal
+theta2 <- 1 / rgamma(N, shape = alpha, rate = beta)
+theta1 <- rnorm(N, 0, sqrt(theta2))
 parameters_initial <- data.frame(
     theta1 = theta1,
     theta2 = theta2
 )
+# ===============================True marginal posteriors for parameters
+# ================(sampled from prior distributions)-hierarchical normal
+s_2 <- target[, "variance"] * (n_samples_per_parameter_set - 1)
+ybar <- target[, "expectation"]
+mean_theta1 <- n_samples_per_parameter_set / (n_samples_per_parameter_set + 1) * ybar
+scale_theta1 <- sqrt((2 * (3 + s_2 / 2 + n_samples_per_parameter_set * ybar^2 / (2 * n_samples_per_parameter_set + 2))) / ((n_samples_per_parameter_set + 1) * (n_samples_per_parameter_set + 8)))
+t_deviate <- rt(N * 10, df = n_samples_per_parameter_set + 8)
+theta1_true <- mean_theta1 + t_deviate * scale_theta1
+shape_theta2 <- n_samples_per_parameter_set / 2 + 4
+scale_theta2 <- 0.5 * (s_2 + 6 + n_samples_per_parameter_set * ybar^2 / (n_samples_per_parameter_set + 1))
+theta2_true <- rinvgamma(N * 10, shape = shape_theta2, scale = 1 / scale_theta2)
+parameters_truth <- data.frame(
+    theta1 = theta1_true,
+    theta2 = theta2_true
+)
+
+
+as.list(model(
+    parameters = parameters_initial,
+    n_samples_per_parameter_set = n_samples_per_parameter_set,
+    nNoise = nNoise
+))
+
 #---Run SMC-ABCRF
-smcabcrf_test(
+setwd(R_libPaths_extra)
+files_sources <- list.files(pattern = "\\.[rR]$")
+sapply(files_sources, source)
+setwd(R_workplace)
+smcabcrf_fitting(
     target = target,
     model = model,
+    N = N,
+    n_samples_per_parameter_set = n_samples_per_parameter_set,
+    nNoise = nNoise,
     perturb = perturb,
     parameters_initial = parameters_initial,
+    parameters_truth = parameters_truth,
     nIter = 7, # Number of iterations
-    nParticles = rep(1000, 7), # Number of particles for each iteration
+    nParticles = rep(N, 7), # Number of particles for each iteration
     # ntree = 2000,
     parallel = T
 )
+
 # smcabcrf(
 #     target = target,
 #     model = model,
 #     perturb = perturb,
 #     parameters_initial = parameters_initial,
 #     nIter = 7, # Number of iterations
-#     nParticles = rep(1000, 7), # Number of particles for each iteration
+#     nParticles = rep(N, 7), # Number of particles for each iteration
 #     # ntree = 2000,
 #     parallel = T
 # )
