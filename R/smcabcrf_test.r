@@ -107,6 +107,7 @@ smcabcrf_fitting <- function(target,
                 data = mini_reference,
                 paral = parallel
             )
+
             posterior_gamma_RF <- predict(
                 object = RFmodel,
                 obs = target,
@@ -118,6 +119,7 @@ smcabcrf_fitting <- function(target,
             df_dist <- densityPlot_df(
                 object = RFmodel, obs = target, training = mini_reference
             )
+
             dist_output <- list()
             dist_output$x <- df_dist$x
             dist_output$y_prior <- df_dist$y_prior
