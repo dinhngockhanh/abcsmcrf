@@ -11,7 +11,7 @@ smcabcrf <- function(target,
     parameters_id <- colnames(parameters_initial)
 
     SMCRF <- list()
-    SMCRF[[method]] <- "abcrf"
+    SMCRF[[method]] <- "smcrf-single-param"
 
     for (iteration in 1:nIter) {
         #   Sample parameters for this round of iteration
