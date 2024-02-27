@@ -12,23 +12,7 @@ smcabcrf_fitting <- function(target,
                              ...) {
     library(abcrf)
     library(matrixStats)
-    # =====================================Plot True Marginal Posteriors
-    p_theta1 <- ggplot() +
-        geom_density(data = data.frame(parameters_truth$theta1), aes(x = parameters_truth$theta1, fill = "True Posterior", color = "True Posterior"), size = 2) +
-        theme(
-            text = element_text(size = 20),
-            panel.background = element_rect(fill = "white", colour = "white"),
-            panel.grid.major = element_line(colour = "white"),
-            panel.grid.minor = element_line(colour = "white")
-        )
-    p_theta2 <- ggplot() +
-        geom_density(data = data.frame(parameters_truth$theta2), aes(x = parameters_truth$theta2, fill = "True Posterior", color = "True Posterior"), size = 2) +
-        theme(
-            text = element_text(size = 20),
-            panel.background = element_rect(fill = "white", colour = "white"),
-            panel.grid.major = element_line(colour = "white"),
-            panel.grid.minor = element_line(colour = "white")
-        )
+    library(data.table)
     ########################################################  TEST - END
     if (length(nParticles) < nIter) nParticles[(length(nParticles) + 1):nIter] <- nParticles[length(nParticles)]
     parameters_id <- colnames(parameters_initial)
@@ -58,18 +42,17 @@ smcabcrf_fitting <- function(target,
     )
     #####################################################
     ################################################################
+    filename <- paste0("ABCSMC_RF_OUTPUT.rda")
+    ABCSMC_RF_output <- list()
+    ABCSMC_RF_output$RFmodel <- list()
+    ABCSMC_RF_output$posterior_gamma_RF <- list()
+    ABCSMC_RF_output$priors <- parameters_initial[1:nParticles[1], ]
+    ABCSMC_RF_output$truth <- parameters_truth
+    for (parameter_id in parameters_id) {
+        ABCSMC_RF_output$posterior_gamma_RF[[parameter_id]] <- list()
+        ABCSMC_RF_output$RFmodel[[parameter_id]] <- list()
+    }
     for (iteration in 1:nIter) {
-        color_scheme <- c(
-            "True Posterior" = "black",
-            "Prior Distribution" = "gray",
-            "Iter-1" = "purple",
-            "Iter-2" = "blue",
-            "Iter-3" = "cyan",
-            "Iter-4" = "green",
-            "Iter-5" = "yellow",
-            "Iter-6" = "orange",
-            "Iter-7" = "red"
-        )
         #   Sample parameters for this round of iteration
         if (iteration == 1) {
             parameters <- parameters_initial[1:nParticles[iteration], ]
@@ -81,23 +64,12 @@ smcabcrf_fitting <- function(target,
             }
             parameters <- perturb(parameters_new)
         }
-        ##################################################  TEST - BEGIN
-        if (iteration == 1) {
-            p_theta1 <- p_theta1 + geom_density(data = parameters, aes(x = theta1, fill = "Prior Distribution", color = "Prior Distribution"), alpha = 0.2, size = 2)
-            p_theta2 <- p_theta2 + geom_density(data = parameters, aes(x = theta2, fill = "Prior Distribution", color = "Prior Distribution"), alpha = 0.2, size = 2)
-        }
-        ####################################################  TEST - END
         #   Simulate statistics
         reference <- model(
             parameters = parameters,
             n_samples_per_parameter_set = n_samples_per_parameter_set,
             nNoise = nNoise
         )
-        filename <- paste0("ABCSMC_RF_Input_Iter_", iteration, ".rda")
-        ABCSMC_RF_input <- list()
-        ABCSMC_RF_input$params <- as.list(reference[c(1:ncol(parameters_initial))])
-        ABCSMC_RF_input$statistics <- as.list(reference[-c(1:ncol(parameters_initial))])
-        save(ABCSMC_RF_input, file = filename)
         #   Run ABCRF for each parameter
         ABCRF_weights <- data.frame(matrix(NA, nrow = nParticles[iteration], ncol = 0))
         for (parameter_id in parameters_id) {
@@ -107,7 +79,6 @@ smcabcrf_fitting <- function(target,
                 data = mini_reference,
                 paral = parallel
             )
-
             posterior_gamma_RF <- predict(
                 object = RFmodel,
                 obs = target,
@@ -115,68 +86,119 @@ smcabcrf_fitting <- function(target,
                 paral = parallel,
                 rf.weights = T
             )
-            ############################################
-            df_dist <- densityPlot_df(
-                object = RFmodel, obs = target, training = mini_reference
-            )
-
-            dist_output <- list()
-            dist_output$x <- df_dist$x
-            dist_output$y_prior <- df_dist$y_prior
-            dist_output$y_posterior <- df_dist$y_posterior
-            filename <- paste0("dist_output_iter_", iteration, "_", parameter_id, ".rda")
-            save(dist_output, file = filename)
-            post_mean <- weighted.mean(df_dist$x, df_dist$y_posterior)
-            post_sd <- weightedSd(df_dist$x, df_dist$y_posterior)
-            post_median <- weightedMedian(df_dist$x, df_dist$y_posterior)
-            post_mode <- df_dist$x[which(df_dist$y_posterior == max(df_dist$y_posterior))]
-            ############################################
-            test_mean <- weighted.mean(mini_reference[, parameter_id], posterior_gamma_RF$weights)
-            test_sd <- weightedSd(mini_reference[, parameter_id], posterior_gamma_RF$weights)
-            test_median <- weightedMedian(mini_reference[, parameter_id], posterior_gamma_RF$weights)
-            test_mode <- mini_reference[, parameter_id][which(posterior_gamma_RF$weights == max(posterior_gamma_RF$weights))]
+            post_mean <- weighted.mean(mini_reference[, parameter_id], posterior_gamma_RF$weights)
+            post_sd <- weightedSd(mini_reference[, parameter_id], posterior_gamma_RF$weights)
+            post_median <- weightedMedian(mini_reference[, parameter_id], posterior_gamma_RF$weights)
+            post_mode <- mini_reference[, parameter_id][which(posterior_gamma_RF$weights == max(posterior_gamma_RF$weights))]
             # ===========================================SAVE OUTPUT CSV
             list_parameters_output[nrow(list_parameters_output) + 1, ] <- c(
                 paste0("Iteration_", iteration), parameter_id, post_mean, post_median,
                 post_mode, post_sd
             )
             ####################################################################
-            cat("Posterior mean: ", test_mean, ";", post_mean, "\n")
-            cat("Posterior median: ", test_median, ";", post_median, "\n")
-            cat("Posterior mode: ", test_mode, ";", post_mode, "\n")
-            cat("Posterior sd: ", test_sd, ";", post_sd, "\n")
+            cat("Posterior mean: ", post_mean, "\n")
+            cat("Posterior median: ", post_median, "\n")
+            cat("Posterior mode: ", post_mode, "\n")
+            cat("Posterior sd: ", post_sd, "\n")
             ABCRF_weights[, parameter_id] <- posterior_gamma_RF$weights
+            if (iteration == 1) {
+                ABCSMC_RF_output$RFmodel[[parameter_id]] <- list(RFmodel)
+                ABCSMC_RF_output$posterior_gamma_RF[[parameter_id]] <- list(posterior_gamma_RF)
+            } else {
+                ABCSMC_RF_output$RFmodel[[parameter_id]] <- c(ABCSMC_RF_output$RFmodel[[parameter_id]], list(RFmodel))
+                ABCSMC_RF_output$posterior_gamma_RF[[parameter_id]] <- c(ABCSMC_RF_output$posterior_gamma_RF[[parameter_id]], list(posterior_gamma_RF))
+            }
+        }
+        if (iteration == 1) {
+            ABCSMC_RF_output$params <- reference[, c(1:ncol(parameters_initial))]
+            ABCSMC_RF_output$statistics <- reference[, -c(1:ncol(parameters_initial))]
+            ABCSMC_RF_output$ABCRF_weights <- ABCRF_weights
+        } else {
+            ABCSMC_RF_output$params <- rbind(ABCSMC_RF_output$params, reference[, c(1:ncol(parameters_initial))])
+            ABCSMC_RF_output$statistics <- rbind(ABCSMC_RF_output$statistics, reference[, -c(1:ncol(parameters_initial))])
+            ABCSMC_RF_output$ABCRF_weights <- rbind(ABCSMC_RF_output$ABCRF_weights, ABCRF_weights)
         }
         ##################################################  TEST - BEGIN
         print(paste0("Iter-", iteration))
         w <- ABCRF_weights
         colnames(w) <- paste0("weights_", colnames(w))
         w$iteration <- iteration
-        p_theta1 <- p_theta1 +
-            geom_density(
-                data = cbind(parameters, w),
-                aes(x = theta1, weight = weights_theta1, fill = paste0("Iter-", iteration), color = paste0("Iter-", iteration)), alpha = 0.2, size = 2
-            ) +
-            scale_fill_manual(values = color_scheme, name = "Iteration") +
-            scale_color_manual(values = color_scheme, name = "Iteration")
-        p_theta2 <- p_theta2 +
-            geom_density(
-                data = cbind(parameters, w),
-                aes(x = theta2, weight = weights_theta2, fill = paste0("Iter-", iteration), color = paste0("Iter-", iteration)), alpha = 0.2, size = 2
-            ) +
-            scale_fill_manual(values = color_scheme, name = "Iteration") +
-            scale_color_manual(values = color_scheme, name = "Iteration")
-        ####################################################  TEST - END
     }
+    filename <- "ABCSMC_RF_output.rda"
+    save(ABCSMC_RF_output, file = filename)
     write.csv(list_parameters_output, paste0("ABCSMC_RF_para_output.csv"))
-    ######################################################  TEST - BEGIN
-    png("TEST.png", res = 150, width = 17, height = 17, units = "in", pointsize = 12)
-    grid.arrange(p_theta1, p_theta2, ncol = 1)
-    dev.off()
-    ########################################################  TEST - END
+    return(ABCSMC_RF_output)
 }
 
+plotting_smcrf <- function(
+    parameters_truth = NULL,
+    parameters_initial = NULL,
+    parameters_id,
+    outputdata,
+    nParticles,
+    color_scheme) {
+    for (parameter_id in parameters_id) {
+        color_scheme <- c(
+            "True Posterior" = "black",
+            "Prior Distribution" = "gray",
+            "Iter-1" = "purple",
+            "Iter-2" = "blue",
+            "Iter-3" = "cyan",
+            "Iter-4" = "green",
+            "Iter-5" = "yellow",
+            "Iter-6" = "orange",
+            "Iter-7" = "red"
+        )
+        p_para <- ggplot() +
+            theme(
+                text = element_text(size = 20),
+                panel.background = element_rect(fill = "white", colour = "white"),
+                panel.grid.major = element_line(colour = "white"),
+                panel.grid.minor = element_line(colour = "white")
+            )
+        if (!is.null(parameters_truth)) {
+            p_para <- p_para +
+                geom_density(data = data.frame(parameters_truth[[parameter_id]]), aes(x = parameters_truth[[parameter_id]]), fill = color_scheme["True Posterior"], color = color_scheme["True Posterior"], size = 2)
+        }
 
+        if (!is.null(parameters_initial)) {
+            prior_tmp <- data.frame(parameters_initial[[parameter_id]])
+            names(prior_tmp) <- parameter_id
+            p_para <- p_para +
+                geom_density(data = prior_tmp, aes(x = prior_tmp[[parameter_id]]), fill = color_scheme["Prior Distribution"], color = color_scheme["Prior Distribution"], alpha = 0.2, size = 2)
+        }
+        for (iteration in 1:length(nParticles)) {
+            para_tmp <- outputdata$params[(sum(nParticles[0:(iteration - 1)]) + 1):sum(nParticles[0:(iteration)]), ][[parameter_id]]
+            weights_tmp <- outputdata$ABCRF_weights[(sum(nParticles[0:(iteration - 1)]) + 1):sum(nParticles[0:(iteration)]), ][[parameter_id]]
+            data_tmp <- data.frame(para_tmp, weight = weights_tmp, iter = paste0("Iter-", iteration))
+            p_para <- p_para +
+                geom_density(
+                    data = data_tmp,
+                    aes(x = para_tmp, weight = weights_tmp, fill = iter, color = iter), alpha = 0.2, size = 2
+                )
+        }
+        color_scheme <- c(
+            "True Posterior" = "black",
+            "Prior Distribution" = "gray",
+            "Iter-1" = "purple",
+            "Iter-2" = "blue",
+            "Iter-3" = "cyan",
+            "Iter-4" = "green",
+            "Iter-5" = "yellow",
+            "Iter-6" = "orange",
+            "Iter-7" = "red"
+        )
+        p_para <- p_para +
+            scale_fill_manual(values = color_scheme, name = "Legend") +
+            scale_color_manual(values = color_scheme, name = "Legend")
+
+
+        file_name <- paste0("Iteration_plots_", parameter_id, ".png")
+        png(file_name, res = 150, width = 17, height = 17, units = "in", pointsize = 12)
+        print(p_para)
+        dev.off()
+    }
+}
 
 densityPlot_df <- function(object,
                            obs,

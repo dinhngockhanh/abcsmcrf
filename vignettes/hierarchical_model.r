@@ -3,7 +3,7 @@
 # R_libPaths <- ""
 # R_libPaths_extra <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
-R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/0224_test"
+R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/0224_test/hierarchical"
 R_libPaths <- ""
 R_libPaths_extra <- "/Users/xiangzijin/SMC-RF/R"
 # =======================================SET UP FOLDER PATHS & LIBRARIES
@@ -119,7 +119,7 @@ parameters_truth <- data.frame(
     theta2 = theta2_true
 )
 # =========================================================Run SMC-ABCRF
-smcabcrf_fitting(
+output <- smcabcrf_fitting(
     target = target,
     model = model,
     N = N,
@@ -129,10 +129,43 @@ smcabcrf_fitting(
     parameters_initial = parameters_initial,
     parameters_truth = parameters_truth,
     nIter = 7, # Number of iterations
-    nParticles = rep(1000, 7), # Number of particles for each iteration
+    nParticles = rep(N, 7), # Number of particles for each iteration
     # ntree = 2000,
     parallel = T
 )
+
+.libPaths(R_libPaths)
+library(ggplot2)
+library(gridExtra)
+library(grid)
+library(invgamma)
+setwd(R_libPaths_extra)
+files_sources <- list.files(pattern = "\\.[rR]$")
+sapply(files_sources, source)
+setwd(R_workplace)
+
+color_scheme <- c(
+    "True Posterior" = "black",
+    "Prior Distribution" = "gray",
+    "Iter-1" = "purple",
+    "Iter-2" = "blue",
+    "Iter-3" = "cyan",
+    "Iter-4" = "green",
+    "Iter-5" = "yellow",
+    "Iter-6" = "orange",
+    "Iter-7" = "red"
+)
+
+plotting_smcrf(
+    parameters_truth = parameters_truth,
+    parameters_initial = parameters_initial,
+    parameters_id = colnames(parameters_initial),
+    outputdata = output,
+    nParticles = rep(N, 7),
+    color_scheme = color_scheme
+)
+
+parameters_initial[[theta1]]
 
 # smcabcrf(
 #     target = target,
