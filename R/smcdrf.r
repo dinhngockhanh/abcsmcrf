@@ -1,56 +1,52 @@
 smcdrf <- function(target,
-                     model,
-                     perturb,
-                     parameters_initial,
-                     nIter,
-                     nParticles,
-                     parallel,
-                     ...) {
-    library(abcrf)
+                    model,
+                    perturb,
+                    parameters_initial,
+                    nIter,
+                    nParticles,
+                    parallel,
+                    splitting.rule = "CART",
+                    ...) {
     library(drf)
     if (length(nParticles) < nIter) nParticles[(length(nParticles) + 1):nIter] <- nParticles[length(nParticles)]
     parameters_id <- colnames(parameters_initial)
+
+    SMCDRF<-list()
+    SMCDRF[[method]]<-'smcrf-multi-param'
+
     for (iteration in 1:nIter) {
         #   Sample parameters for this round of iteration
         if (iteration == 1) {
             parameters <- parameters_initial[1:nParticles[iteration], ]
         } else {
-            # parameters_new <- sample(parameters, size = nParticles[iteration], prob = DRF_weights, replace = T)
-            sample_new <- sample(c(1:1000), size = nParticles[iteration], prob = DRF_weights, replace = T)
+            sample_new <- sample(nrow(parameters), size = nParticles[iteration], prob = DRF_weights, replace = T)
             parameters_new <- parameters[sample_new,]
             parameters <- perturb(parameters_new)
+            rownames(parameters)<-NULL
         }
         #   Simulate statistics
         reference <- model(parameters)
-        #   Run DRF for each parameter
-        
-
         #   Run DRF for all parameters
         Xdrf <- reference[, colnames(reference)[!colnames(reference) %in% parameters_id]]
         Ydrf <- reference[, parameters_id]
-        drfmodel <- drf(Xdrf, Ydrf, mtry = 3, splitting.rule = "CART")
+        drfmodel <- drf(Xdrf, Ydrf, splitting.rule = splitting.rule)
         def_pred <- predict(drfmodel, target)
         DRF_weights <- as.vector(get_sample_weights(drfmodel, target))
+        DRF_weights<-matrix(rep(DRF_weights,length(parameters_id)),ncol=length(parameters_id))
 
-        # ABCRF_weights <- data.frame(matrix(NA, nrow = nParticles[iteration], ncol = 0))
-        # for (parameter_id in parameters_id) {
-        #     mini_reference <- reference[, c(parameter_id, colnames(reference)[!colnames(reference) %in% parameters_id])]
-        #     RFmodel <- regAbcrf(
-        #         formula = as.formula(paste0(parameter_id, " ~ .")),
-        #         data = mini_reference,
-        #         paral = parallel
-        #     )
-        #     posterior_gamma_RF <- predict(
-        #         object = RFmodel,
-        #         obs = target,
-        #         training = mini_reference,
-        #         paral = parallel,
-        #         rf.weights = T
-        #     )
-        #     ABCRF_weights[, parameter_id] <- posterior_gamma_RF$weights
-        # }
+        #   Save SMC-RF results from this iteration
+        SMCDRF_iteration<-list()
+        SMCDRF_iteration$parameters<-parameters
+        SMCDRF_iteration$statistics<-reference[,-parameters_id]
+        SMCDRF_iteration$weights<-DRF_weights
+        SMCDRF_iteration$rf_model<-drfmodel
+        SMCDRF_iteration$rf_predict<-def_pred
+        SMCDRF[[iteration]]<-SMCDRF_iteration
     }
+    return(SMCDRF)
 }
+
+
 
 smcdrf_test <- function(target,
                         model,
