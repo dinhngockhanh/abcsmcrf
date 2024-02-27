@@ -9,6 +9,10 @@ smcabcrf <- function(target,
     library(abcrf)
     if (length(nParticles) < nIter) nParticles[(length(nParticles) + 1):nIter] <- nParticles[length(nParticles)]
     parameters_id <- colnames(parameters_initial)
+
+    SMCRF <- list()
+    SMCRF[[method]] <- "abcrf"
+
     for (iteration in 1:nIter) {
         #   Sample parameters for this round of iteration
         if (iteration == 1) {
@@ -41,7 +45,15 @@ smcabcrf <- function(target,
             )
             ABCRF_weights[, parameter_id] <- posterior_gamma_RF$weights
         }
+        SMCRF_iteration <- list()
+        SMCRF_iteration$parameters <- parameters
+        SMCRF_iteration$statistics <- reference
+        SMCRF_iteration$weights <- ABCRF_weights
+        SMCRF_iteration$RF <- RFmodel
+        SMCRF_iteration$posterior <- posterior_gamma_RF
+        SMCRF[[iteration]] <- SMCRF_iteration
     }
+    return(SMCRF)
 }
 
 smcabcrf_test <- function(target,
