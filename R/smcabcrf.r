@@ -45,12 +45,13 @@ smcabcrf <- function(target,
             )
             ABCRF_weights[, parameter_id] <- posterior_gamma_RF$weights
         }
+        #   Save SMC-RF results from this iteration
         SMCRF_iteration <- list()
         SMCRF_iteration$parameters <- parameters
-        SMCRF_iteration$statistics <- reference
+        SMCRF_iteration$statistics <- reference[, -parameters_id]
         SMCRF_iteration$weights <- ABCRF_weights
-        SMCRF_iteration$RF <- RFmodel
-        SMCRF_iteration$posterior <- posterior_gamma_RF
+        SMCRF_iteration$rf_model <- RFmodel
+        SMCRF_iteration$rf_predict <- posterior_gamma_RF
         SMCRF[[iteration]] <- SMCRF_iteration
     }
     return(SMCRF)
