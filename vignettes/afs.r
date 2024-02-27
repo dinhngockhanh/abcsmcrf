@@ -6,6 +6,10 @@
 R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/0224_test/afs"
 R_libPaths <- ""
 R_libPaths_extra <- "/Users/xiangzijin/SMC-RF/R"
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zhihan - Macbook
+R_workplace <- "/Users/lexie/Documents/DNA/SMC-RF/vignettes"
+R_libPaths <- ""
+R_libPaths_extra <- "/Users/lexie/Documents/DNA/SMC-RF/R"
 # =======================================SET UP FOLDER PATHS & LIBRARIES
 .libPaths(R_libPaths)
 
@@ -217,3 +221,14 @@ smcabcrf_test_2(
 #     # ntree = 2000,
 #     parallel = T
 # )
+smcdrf_test_2(
+    target = target,
+    model = model,
+    perturb = perturb,
+    parameters_initial = parameters_initial,
+    nIter = 7, # Number of iterations
+    nParticles = rep(1000, 7), # Number of particles for each iteration
+    # ntree = 2000,
+    parallel = T,
+    parameters_truth = data.frame(theta = theta, beta = beta)
+)
