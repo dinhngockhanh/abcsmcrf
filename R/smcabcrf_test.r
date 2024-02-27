@@ -13,35 +13,8 @@ smcabcrf_fitting <- function(target,
     library(abcrf)
     library(matrixStats)
     library(data.table)
-    ########################################################  TEST - END
     if (length(nParticles) < nIter) nParticles[(length(nParticles) + 1):nIter] <- nParticles[length(nParticles)]
     parameters_id <- colnames(parameters_initial)
-    # ===================================================SAVE OUTPUT CSV
-    list_parameters_output <- data.frame(matrix(ncol = 6, nrow = 0))
-    colnames(list_parameters_output) <- c("Iteration", "Variable", "Mean", "Median", "Mode", "Sd")
-    #####################################################
-    # Estimate density for theta1 and theta2
-    density_theta1 <- density(parameters_truth$theta1)
-    density_theta2 <- density(parameters_truth$theta2)
-    # Calculate the weighted mean
-    weighted_mean_theta1 <- weighted.mean(density_theta1$x, w = density_theta1$y)
-    weighted_mean_theta2 <- weighted.mean(density_theta2$x, w = density_theta2$y)
-    weighted_median_theta1 <- weightedMedian(density_theta1$x, w = density_theta1$y)
-    weighted_median_theta2 <- weightedMedian(density_theta2$x, w = density_theta2$y)
-    mode_theta1 <- density_theta1$x[which.max(density_theta1$y)]
-    mode_theta2 <- density_theta2$x[which.max(density_theta2$y)]
-    weighted_sd_theta1 <- weightedSd(density_theta1$x, density_theta1$y)
-    weighted_sd_theta2 <- weightedSd(density_theta2$x, density_theta2$y)
-    list_parameters_output[nrow(list_parameters_output) + 1, ] <- c(
-        "True_posteriors", "theta1", weighted_mean_theta1, weighted_median_theta1,
-        mode_theta1, weighted_sd_theta1
-    )
-    list_parameters_output[nrow(list_parameters_output) + 1, ] <- c(
-        "True_posteriors", "theta2", weighted_mean_theta2, weighted_median_theta2,
-        mode_theta2, weighted_sd_theta2
-    )
-    #####################################################
-    ################################################################
     filename <- paste0("ABCSMC_RF_OUTPUT.rda")
     ABCSMC_RF_output <- list()
     ABCSMC_RF_output$RFmodel <- list()
@@ -86,20 +59,6 @@ smcabcrf_fitting <- function(target,
                 paral = parallel,
                 rf.weights = T
             )
-            post_mean <- weighted.mean(mini_reference[, parameter_id], posterior_gamma_RF$weights)
-            post_sd <- weightedSd(mini_reference[, parameter_id], posterior_gamma_RF$weights)
-            post_median <- weightedMedian(mini_reference[, parameter_id], posterior_gamma_RF$weights)
-            post_mode <- mini_reference[, parameter_id][which(posterior_gamma_RF$weights == max(posterior_gamma_RF$weights))]
-            # ===========================================SAVE OUTPUT CSV
-            list_parameters_output[nrow(list_parameters_output) + 1, ] <- c(
-                paste0("Iteration_", iteration), parameter_id, post_mean, post_median,
-                post_mode, post_sd
-            )
-            ####################################################################
-            cat("Posterior mean: ", post_mean, "\n")
-            cat("Posterior median: ", post_median, "\n")
-            cat("Posterior mode: ", post_mode, "\n")
-            cat("Posterior sd: ", post_sd, "\n")
             ABCRF_weights[, parameter_id] <- posterior_gamma_RF$weights
             if (iteration == 1) {
                 ABCSMC_RF_output$RFmodel[[parameter_id]] <- list(RFmodel)
