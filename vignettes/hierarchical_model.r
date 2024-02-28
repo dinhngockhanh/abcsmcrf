@@ -119,61 +119,46 @@ parameters_truth <- data.frame(
     theta2 = theta2_true
 )
 # =========================================================Run SMC-ABCRF
-output <- smcabcrf_fitting(
-    target = target,
-    model = model,
-    N = N,
-    n_samples_per_parameter_set = n_samples_per_parameter_set,
-    nNoise = nNoise,
-    perturb = perturb,
-    parameters_initial = parameters_initial,
-    parameters_truth = parameters_truth,
-    nIter = 7, # Number of iterations
-    nParticles = rep(N, 7), # Number of particles for each iteration
-    # ntree = 2000,
-    parallel = T
-)
-
-.libPaths(R_libPaths)
-library(ggplot2)
-library(gridExtra)
-library(grid)
-library(invgamma)
-setwd(R_libPaths_extra)
-files_sources <- list.files(pattern = "\\.[rR]$")
-sapply(files_sources, source)
-setwd(R_workplace)
-
-color_scheme <- c(
-    "True Posterior" = "black",
-    "Prior Distribution" = "gray",
-    "Iter-1" = "purple",
-    "Iter-2" = "blue",
-    "Iter-3" = "cyan",
-    "Iter-4" = "green",
-    "Iter-5" = "yellow",
-    "Iter-6" = "orange",
-    "Iter-7" = "red"
-)
-
-plotting_smcrf(
-    parameters_truth = parameters_truth,
-    parameters_initial = parameters_initial,
-    parameters_id = colnames(parameters_initial),
-    outputdata = output,
-    nParticles = rep(N, 7),
-    color_scheme = color_scheme
-)
-
-parameters_initial[[theta1]]
-
-# smcabcrf(
+# output <- smcabcrf_fitting(
 #     target = target,
 #     model = model,
+#     N = N,
+#     n_samples_per_parameter_set = n_samples_per_parameter_set,
+#     nNoise = nNoise,
 #     perturb = perturb,
 #     parameters_initial = parameters_initial,
+#     parameters_truth = parameters_truth,
 #     nIter = 7, # Number of iterations
 #     nParticles = rep(N, 7), # Number of particles for each iteration
 #     # ntree = 2000,
 #     parallel = T
 # )
+
+output <- smcabcrf(
+    target = target,
+    model = model,
+    n_samples_per_parameter_set = n_samples_per_parameter_set,
+    nNoise = nNoise,
+    perturb = perturb,
+    parameters_initial = parameters_initial,
+    nIter = 7, # Number of iterations
+    nParticles = rep(N, 7), # Number of particles for each iteration
+    # ntree = 2000,
+    parallel = T
+)
+filename <- "ABCSMC_RF_output.rda"
+save(output, file = filename)
+
+# plotting_smcrf(
+#     parameters_truth = parameters_truth,
+#     parameters_initial = parameters_initial,
+#     parameters_id = colnames(parameters_initial),
+#     outputdata = output
+# )
+
+
+plotting_smcrf(
+    parameters_id = names(target),
+    outputdata = output,
+    Plot_stats = TRUE
+)
