@@ -21,7 +21,7 @@ plot_joint <- function(outputdata,
             indx.sim.2 <- sample(1:nParticle, size = 1000, replace = T, prob = weights.2)
             para1 <- outputdata[[iter]]$parameters[indx.sim.1, para_id[1]]
             para2 <- outputdata[[iter]]$parameters[indx.sim.2, para_id[2]]
-            png(paste0("smcabcrf_joint_", para_id[1], "_", para_id[2], "_iter_", iter, ".png"))
+            png(paste0("smcabcrf_joint_", para_id[1], "_", para_id[2], ".png"))
         }
         z <- kde2d(para1, para2, n = 50)
         plot(para1, para2, pch = 19)
@@ -52,6 +52,5 @@ for (iter in 1:nIter) {
         p <- p + geom_density_2d_filled(data = data, aes_string(x = para_id[1], y = para_id[2]), alpha = 0.3)
     }
 }
-
 grid.arrange(p, ncol = 1)
 dev.off()
