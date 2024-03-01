@@ -77,18 +77,26 @@ model <- function(parameters,
 # ======================================Model for parameter perturbation
 #   Input:  data frame of parameters, each row is one set of parameters
 #   Output: data frame of parameters, after perturbation
-perturb <- function(parameters) {
-    parameters$theta1 <- parameters$theta1 + runif(nrow(parameters), min = -0.5, max = 0.5)
-    # parameters$theta2 <- parameters$theta2 + runif(nrow(parameters), min = -0.5, max = 0.5)
-    parameters$theta2 <- pmax(parameters$theta2 + runif(nrow(parameters), min = -0.5, max = 0.5), 0)
-    return(parameters)
+# perturb <- function(parameters) {
+#     parameters$theta1 <- parameters$theta1 + runif(nrow(parameters), min = -1, max = 1)
+#     parameters$theta2 <- parameters$theta2 + runif(nrow(parameters), min = -1, max = 1)
+#     # parameters$theta2 <- pmax(parameters$theta2 + runif(nrow(parameters), min = -0.5, max = 0.5), 0)
+#     return(parameters)
+# }
+perturb <- function(parameter) {
+    # parameter <- parameter + runif(1, min = -0.5, max = 0.5)
+    parameter <- parameter + runif(1, min = -1, max = 1)
+    # parameters$theta2 <- pmax(parameters$theta2 + runif(nrow(parameters), min = -0.5, max = 0.5), 0)
+    return(parameter)
 }
+range <- data.frame(
+    parameter = c("theta1", "theta2"),
+    min = c(-Inf, 0),
+    max = c(Inf, Inf)
+)
+theta1_min <- range$min[which(range$parameter == "theta1")]
+theta1_max <- range$max[which(range$parameter == "theta1")]
 
-# range <- data.frame(
-#     parameter = c("theta1", "theta2"),
-#     min = c(-Inf, 0),
-#     max = c(Inf, Inf)
-# )
 # =====================================================Target statistics
 theta2 <- 1 / rgamma(1, shape = alpha, rate = beta)
 theta1 <- rnorm(1, 0, sqrt(theta2))
@@ -132,6 +140,7 @@ drf_output <- smcdrf(
     n_samples_per_parameter_set = n_samples_per_parameter_set,
     nNoise = nNoise,
     perturb = perturb,
+    range = range,
     parameters_initial = parameters_initial,
     nIter = 7, # Number of iterations
     nParticles = rep(1000, 7), # Number of particles for each iteration
@@ -149,6 +158,7 @@ rf_output <- smcabcrf(
     perturb = perturb,
     parameters_initial = parameters_initial,
     nIter = 7, # Number of iterations
+    range = range,
     nParticles = rep(N, 7), # Number of particles for each iteration
     # ntree = 2000,
     parallel = T

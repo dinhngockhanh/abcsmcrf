@@ -3,7 +3,7 @@ smcabcrf <- function(target,
                      n_samples_per_parameter_set,
                      nNoise,
                      perturb,
-                     #  range,
+                     range,
                      parameters_initial,
                      nIter,
                      nParticles,
@@ -20,10 +20,23 @@ smcabcrf <- function(target,
         } else {
             parameters_new <- data.frame(matrix(NA, nrow = nParticles[iteration], ncol = 0))
             for (parameter_id in parameters_id) {
-                parameters_new[, parameter_id] <-
-                    sample(parameters[, parameter_id], size = nParticles[iteration], prob = ABCRF_weights[, parameter_id], replace = T)
+                para_min <- range$min[which(range$parameter == parameter_id)]
+                para_max <- range$max[which(range$parameter == parameter_id)]
+                # parameters_new[, parameter_id] <-
+                #     sample(parameters[, parameter_id], size = nParticles[iteration], prob = ABCRF_weights[, parameter_id], replace = T)
+                for (row in 1:nParticles[iteration]) {
+                    repeat{
+                        sampled_para <- sample(parameters[, parameter_id], size = 1, prob = ABCRF_weights[, parameter_id], replace = T)
+                        perturb_para <- perturb(sampled_para)
+                        if (perturb_para >= para_min & perturb_para <= para_max) {
+                            parameters_new[row, parameter_id] <- perturb_para
+                            break
+                        }
+                    }
+                }
             }
-            parameters <- perturb(parameters_new)
+            # parameters <- perturb(parameters_new)
+            parameters <- parameters_new
         }
         #   Simulate statistics
         reference <- model(parameters = parameters, n_samples_per_parameter_set = n_samples_per_parameter_set, nNoise = nNoise)

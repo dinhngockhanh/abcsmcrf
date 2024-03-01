@@ -3,6 +3,7 @@ smcdrf <- function(target,
                    n_samples_per_parameter_set,
                    nNoise,
                    perturb,
+                   range,
                    parameters_initial,
                    nIter,
                    nParticles,
@@ -18,10 +19,28 @@ smcdrf <- function(target,
         if (iteration == 1) {
             parameters <- parameters_initial[1:nParticles[iteration], ]
         } else {
-            sample_new <- sample(c(1:nrow(parameters)), size = nParticles[iteration], prob = weights, replace = T)
-            parameters_new <- parameters[sample_new, ]
-            parameters <- perturb(parameters_new)
-            rownames(parameters) <- NULL
+            # sample_new <- sample(c(1:nrow(parameters)), size = nParticles[iteration], prob = weights, replace = T)
+            # parameters_new <- parameters[sample_new, ]
+            # parameters <- perturb(parameters_new)
+            # rownames(parameters) <- NULL
+            parameters_new <- data.frame(matrix(NA, nrow = nParticles[iteration], ncol = 0))
+            for (parameter_id in parameters_id) {
+                para_min <- range$min[which(range$parameter == parameter_id)]
+                para_max <- range$max[which(range$parameter == parameter_id)]
+                # parameters_new[, parameter_id] <-
+                #     sample(parameters[, parameter_id], size = nParticles[iteration], prob = weights, replace = T)
+                for (row in 1:nParticles[iteration]) {
+                    repeat{
+                        sampled_para <- sample(parameters[, parameter_id], size = 1, prob = weights, replace = T)
+                        perturb_para <- perturb(sampled_para)
+                        if (perturb_para >= para_min & perturb_para <= para_max) {
+                            parameters_new[row, parameter_id] <- perturb_para
+                            break
+                        }
+                    }
+                }
+            }
+            parameters <- parameters_new
         }
         #   Simulate statistics
         reference <- model(parameters = parameters, n_samples_per_parameter_set = n_samples_per_parameter_set, nNoise = nNoise)

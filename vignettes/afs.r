@@ -171,17 +171,23 @@ model <- function(parameters,
 # ======================================Model for parameter perturbation
 #   Input:  data frame of parameters, each row is one set of parameters
 #   Output: data frame of parameters, after perturbation
-perturb <- function(parameters) {
-    parameters$theta <- pmin(pmax(parameters$theta + runif(nrow(parameters), min = -1, max = 1), 1), 20)
-    parameters$beta <- pmin(pmax(parameters$beta + runif(nrow(parameters), min = -1, max = 1), 1), 20)
-    return(parameters)
+# perturb <- function(parameters) {
+#     parameters$theta <- pmin(pmax(parameters$theta + runif(nrow(parameters), min = -1, max = 1), 1), 20)
+#     parameters$beta <- pmin(pmax(parameters$beta + runif(nrow(parameters), min = -1, max = 1), 1), 20)
+#     return(parameters)
+# }
+perturb <- function(parameter) {
+    # parameter <- parameter + runif(1, min = -0.5, max = 0.5)
+    parameter <- parameter + runif(1, min = -1, max = 1)
+    # parameters$theta2 <- pmax(parameters$theta2 + runif(nrow(parameters), min = -0.5, max = 0.5), 0)
+    return(parameter)
 }
 
-# range <- data.frame(
-#     parameter = c("theta", "beta"),
-#     min = c(1, 0),
-#     max = c(20, 1)
-# )
+range <- data.frame(
+    parameter = c("theta", "beta"),
+    min = c(1, 0),
+    max = c(20, 1)
+)
 
 # =====================================================Target statistics
 target_theta <- runif(1, 1, 10)
@@ -218,7 +224,7 @@ drf_output <- smcdrf(
     n_samples_per_parameter_set = n_samples_per_parameter_set,
     nNoise = nNoise,
     perturb = perturb,
-    # range = range,
+    range = range,
     parameters_initial = parameters_initial,
     nIter = 7, # Number of iterations
     nParticles = rep(1000, 7), # Number of particles for each iteration
@@ -234,6 +240,7 @@ rf_output <- smcabcrf(
     n_samples_per_parameter_set = n_samples_per_parameter_set,
     nNoise = nNoise,
     perturb = perturb,
+    range = range,
     parameters_initial = parameters_initial,
     nIter = 7, # Number of iterations
     nParticles = rep(1000, 7), # Number of particles for each iteration
