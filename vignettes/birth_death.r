@@ -1,7 +1,11 @@
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - Macbook
-R_workplace <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/vignettes"
+# # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - Macbook
+# R_workplace <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/vignettes"
+# R_libPaths <- ""
+# R_libPaths_extra <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/R"
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zhihan - Macbook
+R_workplace <- "/Users/lexie/Documents/DNA/SMC-RF/Results for birth death model"
 R_libPaths <- ""
-R_libPaths_extra <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/R"
+R_libPaths_extra <- "/Users/lexie/Documents/DNA/SMC-RF/R"
 # =======================================SET UP FOLDER PATHS & LIBRARIES
 .libPaths(R_libPaths)
 
@@ -14,13 +18,9 @@ files_sources <- list.files(pattern = "\\.[rR]$")
 sapply(files_sources, source)
 setwd(R_workplace)
 
-
-
-
-
-
-
 # ======================================================================
+nNoise <- 20
+N <- 1000
 set.seed(1)
 BD_model <- function(lambda, mu, n_times) {
     #   This simulates a birth-death process
@@ -65,7 +65,9 @@ BD_model <- function(lambda, mu, n_times) {
 #   Output: data frame of parameters & statistics, each row contains statistics for one set of parameters:
 #           first columns = input parameters
 #           next columns = summary statistics
-model <- function(parameters) {
+model <- function(parameters,
+                  n_samples_per_parameter_set,
+                  nNoise) {
     library(parallel)
     library(pbapply)
     library(data.table)
@@ -74,7 +76,7 @@ model <- function(parameters) {
 
     n_times <- 50
 
-    nNoise <- 0 # Number of noise variables
+    nNoise <- nNoise # Number of noise variables
 
     cl <- makePSOCKcluster(detectCores() - 1)
     BD_model <<- BD_model
@@ -106,7 +108,9 @@ perturb <- function(parameters) {
 #---Target statistics
 lambda <- runif(1, 0, 15)
 mu <- runif(1, 0, lambda)
-target <- model(data.frame(lambda = lambda, mu = mu))[-c(1:2)]
+target <- model(data.frame(lambda = lambda, mu = mu), 
+                n_samples_per_parameter_set=1, 
+                nNoise=nNoise)[-c(1:2)]
 cat(paste0("\n\n\n\n\nTRUE VALUE FOR THETA = ", lambda, "\n"))
 cat(paste0("TRUE VALUE FOR MU = ", mu, "\n"))
 cat(paste0("STATISTICS:\n"))
@@ -116,19 +120,83 @@ cat("\n\n\n\n\n")
 lambda <- runif(10000, 0, 15)
 mu <- runif(10000, 0, lambda)
 parameters_initial <- data.frame(lambda = lambda, mu = mu)
-# parameters_initial <- data.frame(
-#     lambda = runif(10000, 0, 10),
-#     mu = runif(10000, 0, 10)
+
+
+
+# #---Run SMC-ABCRF
+# smcabcrf_test_3(
+#     target = target,
+#     model = model,
+#     perturb = perturb,
+#     parameters_initial = parameters_initial,
+#     nIter = 7, # Number of iterations
+#     nParticles = rep(1000, 7), # Number of particles for each iteration
+#     # ntree = 2000,
+#     parallel = T,
+#     parameters_truth = data.frame(theta = theta, beta = beta)
 # )
-#---Run SMC-ABCRF
-smcabcrf_test_3(
+
+# =========================================================Run SMC-DRF
+drf_output <- smcdrf(
     target = target,
     model = model,
+    n_samples_per_parameter_set = 1,
+    nNoise = nNoise,
     perturb = perturb,
     parameters_initial = parameters_initial,
     nIter = 7, # Number of iterations
     nParticles = rep(1000, 7), # Number of particles for each iteration
     # ntree = 2000,
-    parallel = T,
-    parameters_truth = data.frame(theta = theta, beta = beta)
+    parallel = T
+)
+
+# filename <- "ABCSMC_DRF_output.rda"
+# save(drf_output, file = filename)
+# =========================================================Run SMC-ABCRF
+rf_output <- smcabcrf(
+    target = target,
+    model = model,
+    n_samples_per_parameter_set = 1,
+    nNoise = nNoise,
+    perturb = perturb,
+    parameters_initial = parameters_initial,
+    nIter = 7, # Number of iterations
+    nParticles = rep(N, 7), # Number of particles for each iteration
+    # ntree = 2000,
+    parallel = T
+)
+# filename <- "ABCSMC_RF_output.rda"
+# save(rf_output, file = filename)
+# =========================================Plot SMC-ABCRF for Parameters
+# plotting_smcrf(
+#     parameters_truth = parameters_truth,
+#     parameters_initial = parameters_initial,
+#     parameters_id = colnames(parameters_initial),
+#     outputdata = drf_output
+# )
+# plotting_smcrf(
+#     parameters_truth = parameters_truth,
+#     parameters_initial = parameters_initial,
+#     parameters_id = colnames(parameters_initial),
+#     outputdata = rf_output
+# )
+# ==============================================Plot SMC-ABCRF for Stats
+plotting_smcrf(
+    parameters_id = names(target),
+    outputdata = drf_output,
+    Plot_stats = TRUE
+)
+# plotting_smcrf(
+#     parameters_id = names(target),
+#     outputdata = rf_output,
+#     Plot_stats = TRUE
+# )
+
+plot_joint(
+    para_id=c("lambda","mu"), 
+    outputdata=drf_output
+)
+plot_joint(
+    para_id=c("lambda","mu"), 
+    outputdata=rf_output
 )
