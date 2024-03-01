@@ -79,9 +79,16 @@ model <- function(parameters,
 #   Output: data frame of parameters, after perturbation
 perturb <- function(parameters) {
     parameters$theta1 <- parameters$theta1 + runif(nrow(parameters), min = -0.5, max = 0.5)
+    # parameters$theta2 <- parameters$theta2 + runif(nrow(parameters), min = -0.5, max = 0.5)
     parameters$theta2 <- pmax(parameters$theta2 + runif(nrow(parameters), min = -0.5, max = 0.5), 0)
     return(parameters)
 }
+
+# range <- data.frame(
+#     parameter = c("theta1", "theta2"),
+#     min = c(-Inf, 0),
+#     max = c(Inf, Inf)
+# )
 # =====================================================Target statistics
 theta2 <- 1 / rgamma(1, shape = alpha, rate = beta)
 theta1 <- rnorm(1, 0, sqrt(theta2))
@@ -118,23 +125,23 @@ parameters_truth <- data.frame(
     theta1 = theta1_true,
     theta2 = theta2_true
 )
+# ========================================================Run SMC-ABCDRF
+drf_output <- smcdrf(
+    target = target,
+    model = model,
+    n_samples_per_parameter_set = n_samples_per_parameter_set,
+    nNoise = nNoise,
+    perturb = perturb,
+    parameters_initial = parameters_initial,
+    nIter = 7, # Number of iterations
+    nParticles = rep(1000, 7), # Number of particles for each iteration
+    # ntree = 2000,
+    parallel = T,
+)
+filename <- "ABCSMC_DRF_output.rda"
+save(drf_output, file = filename)
 # =========================================================Run SMC-ABCRF
-# output <- smcabcrf_fitting(
-#     target = target,
-#     model = model,
-#     N = N,
-#     n_samples_per_parameter_set = n_samples_per_parameter_set,
-#     nNoise = nNoise,
-#     perturb = perturb,
-#     parameters_initial = parameters_initial,
-#     parameters_truth = parameters_truth,
-#     nIter = 7, # Number of iterations
-#     nParticles = rep(N, 7), # Number of particles for each iteration
-#     # ntree = 2000,
-#     parallel = T
-# )
-
-output <- smcabcrf(
+rf_output <- smcabcrf(
     target = target,
     model = model,
     n_samples_per_parameter_set = n_samples_per_parameter_set,
@@ -147,18 +154,28 @@ output <- smcabcrf(
     parallel = T
 )
 filename <- "ABCSMC_RF_output.rda"
-save(output, file = filename)
-
-# plotting_smcrf(
-#     parameters_truth = parameters_truth,
-#     parameters_initial = parameters_initial,
-#     parameters_id = colnames(parameters_initial),
-#     outputdata = output
-# )
-
-
+save(rf_output, file = filename)
+# =========================================Plot SMC-ABCRF for Parameters
+plotting_smcrf(
+    parameters_truth = parameters_truth,
+    parameters_initial = parameters_initial,
+    parameters_id = colnames(parameters_initial),
+    outputdata = drf_output
+)
+plotting_smcrf(
+    parameters_truth = parameters_truth,
+    parameters_initial = parameters_initial,
+    parameters_id = colnames(parameters_initial),
+    outputdata = rf_output
+)
+# ==============================================Plot SMC-ABCRF for Stats
 plotting_smcrf(
     parameters_id = names(target),
-    outputdata = output,
+    outputdata = drf_output,
+    Plot_stats = TRUE
+)
+plotting_smcrf(
+    parameters_id = names(target),
+    outputdata = rf_output,
     Plot_stats = TRUE
 )

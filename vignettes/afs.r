@@ -1,4 +1,4 @@
-# # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - Macbook
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - Macbook
 # R_workplace <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/vignettes"
 # R_libPaths <- ""
 # R_libPaths_extra <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/R"
@@ -6,36 +6,31 @@
 R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/0224_test/afs"
 R_libPaths <- ""
 R_libPaths_extra <- "/Users/xiangzijin/SMC-RF/R"
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zhihan - Macbook
-R_workplace <- "/Users/lexie/Documents/DNA/SMC-RF/vignettes"
-R_libPaths <- ""
-R_libPaths_extra <- "/Users/lexie/Documents/DNA/SMC-RF/R"
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zhihan - Macbook
+# R_workplace <- "/Users/lexie/Documents/DNA/SMC-RF/vignettes"
+# R_libPaths <- ""
+# R_libPaths_extra <- "/Users/lexie/Documents/DNA/SMC-RF/R"
 # =======================================SET UP FOLDER PATHS & LIBRARIES
 .libPaths(R_libPaths)
-
 library(ggplot2)
 library(gridExtra)
 library(grid)
 library(invgamma)
-
 setwd(R_libPaths_extra)
 files_sources <- list.files(pattern = "\\.[rR]$")
 sapply(files_sources, source)
 setwd(R_workplace)
-
-
-
-
-
-
-
+# =============================================SET UP INITIAL PARAMETERS
+N <- 10000
+n_samples_per_parameter_set <- 100
+nNoise <- 10 # Number of noise variables
 # ======================================================================
 set.seed(1)
-AFS_model <- function(theta, beta, model, n) {
+AFS_model <- function(theta, beta, model_type, n) {
     #   This simulates haplotype and site information
-    #   Model = 1 for regular coalescent (beta = 0)
-    #         = 2 for exponential growth coalescent model
-    #         = 3 for pure death process with rate 1
+    #   Model_type = 1 for regular coalescent (beta = 0)
+    #              = 2 for exponential growth coalescent model
+    #              = 3 for pure death process with rate 1
     #---Set up arrays and initialisation
     hist <- list() # list of sets of common ancestor labels
     muts <- list() # list of mutation lists
@@ -44,12 +39,12 @@ AFS_model <- function(theta, beta, model, n) {
     #---Generate coalescence times and related vectors
     ctimes <- rep(0, n) # coalescence times set to 0
     stimes <- rep(0, n) # jump times set to 0
-    if (model != 3) {
+    if (model_type != 3) {
         #   Generate ordinary coalescence times
         for (j in n:2) {
             ctimes[j] <- rexp(1, rate = j * (j - 1) / 2)
         }
-        if (model == 2) {
+        if (model_type == 2) {
             #   Calculate times from GT eqn (2.7)
             #   First, compute standard coalescent jump times
             stimes[n] <- ctimes[n]
@@ -136,10 +131,8 @@ AFS_model <- function(theta, beta, model, n) {
     lvec <- floor(sqrt(n))
     # stats <- data.frame(matrix(c(theta, beta, nalleles, ss, sval, afs[1:lvec]), nrow = 1))
     # colnames(stats) <- c("theta", "beta", "K", "homzy", "S", paste0("AFS_", 1:lvec))
-
     stats <- data.frame(matrix(c(theta, beta, nalleles), nrow = 1))
     colnames(stats) <- c("theta", "beta", "K")
-
     return(stats)
 }
 #---Model for the Allele Frequency Spectrum (AFS)
@@ -147,29 +140,26 @@ AFS_model <- function(theta, beta, model, n) {
 #   Output: data frame of parameters & statistics, each row contains statistics for one set of parameters:
 #           first columns = input parameters
 #           next columns = summary statistics
-model <- function(parameters) {
+model <- function(parameters,
+                  n_samples_per_parameter_set,
+                  nNoise) {
     library(parallel)
     library(pbapply)
     library(data.table)
     thetas <- parameters$theta
     betas <- parameters$beta
-
-    model <- 1
-    n <- 100
-
-    nNoise <- 10 # Number of noise variables
-
+    model_type <- 1
     cl <- makePSOCKcluster(detectCores() - 1)
     AFS_model <<- AFS_model
-    clusterExport(cl, varlist = c("AFS_model"))
-    stats <- pblapply(cl = cl, X = 1:nrow(parameters), FUN = function(i) AFS_model(thetas[i], betas[i], model, n))
+    n_samples_per_parameter_set <<- n_samples_per_parameter_set
+    clusterExport(cl, varlist = c("AFS_model", "n_samples_per_parameter_set"))
+    stats <- pblapply(cl = cl, X = 1:nrow(parameters), FUN = function(i) AFS_model(thetas[i], betas[i], model_type, n_samples_per_parameter_set))
     stats <- rbindlist(stats)
     class(stats) <- "data.frame"
     #   Add noise statistics
     noise <- matrix(runif(nrow(parameters) * nNoise), nrow(parameters), nNoise)
-    data <- cbind(stats, noise)
     #   Add column names
-    data <- data.frame(data)
+    data <- data.frame(cbind(stats, noise))
     if (nNoise > 0) {
         colnames(data) <- c(
             colnames(stats),
@@ -178,7 +168,7 @@ model <- function(parameters) {
     }
     return(data)
 }
-#---Model for parameter perturbation
+# ======================================Model for parameter perturbation
 #   Input:  data frame of parameters, each row is one set of parameters
 #   Output: data frame of parameters, after perturbation
 perturb <- function(parameters) {
@@ -186,49 +176,93 @@ perturb <- function(parameters) {
     parameters$beta <- pmin(pmax(parameters$beta + runif(nrow(parameters), min = -1, max = 1), 1), 20)
     return(parameters)
 }
-#---Target statistics
-theta <- runif(1, 1, 10)
-beta <- 0
-target <- model(data.frame(theta = theta, beta = beta))[-c(1:2)]
-cat(paste0("\n\n\n\n\nTRUE VALUE FOR THETA = ", theta, "\n"))
+
+# range <- data.frame(
+#     parameter = c("theta", "beta"),
+#     min = c(1, 0),
+#     max = c(20, 1)
+# )
+
+# =====================================================Target statistics
+target_theta <- runif(1, 1, 10)
+target_beta <- 0
+parameters_target <- data.frame(
+    theta = target_theta,
+    beta = target_beta
+)
+target <- model(
+    parameters = parameters_target,
+    n_samples_per_parameter_set = n_samples_per_parameter_set,
+    nNoise = nNoise
+)[-c(1:ncol(parameters_target))]
+parameters_truth <- data.frame(
+    theta = target_theta,
+    beta = target_beta
+)
+cat(paste0("\n\n\n\n\nTRUE VALUE FOR THETA = ", target_theta, "\n"))
 cat(paste0("STATISTICS:\n"))
 print(target)
 cat("\n\n\n\n\n")
-#---Initial guesses for parameters (sampled from prior distributions)
+# ========================================Initial guesses for parameters
+# ====================================(sampled from prior distributions)
+theta <- runif(N, 1, 20)
+beta <- runif(N, 0, 1)
 parameters_initial <- data.frame(
-    theta = runif(10000, 1, 20),
-    beta = runif(10000, 0, 1)
+    theta = theta,
+    beta = beta
 )
-#---Run SMC-ABCRF
-smcabcrf_test_2(
+# ========================================================Run SMC-ABCDRF
+drf_output <- smcdrf(
     target = target,
     model = model,
+    n_samples_per_parameter_set = n_samples_per_parameter_set,
+    nNoise = nNoise,
     perturb = perturb,
+    # range = range,
     parameters_initial = parameters_initial,
     nIter = 7, # Number of iterations
     nParticles = rep(1000, 7), # Number of particles for each iteration
     # ntree = 2000,
     parallel = T,
-    parameters_truth = data.frame(theta = theta, beta = beta)
 )
-# smcabcrf(
-#     target = target,
-#     model = model,
-#     perturb = perturb,
-#     parameters_initial = parameters_initial,
-#     nIter = 7, # Number of iterations
-#     nParticles = rep(1000, 7), # Number of particles for each iteration
-#     # ntree = 2000,
-#     parallel = T
-# )
-smcdrf_test_2(
+filename <- "ABCSMC_DRF_output.rda"
+save(drf_output, file = filename)
+# =========================================================Run SMC-ABCRF
+rf_output <- smcabcrf(
     target = target,
     model = model,
+    n_samples_per_parameter_set = n_samples_per_parameter_set,
+    nNoise = nNoise,
     perturb = perturb,
     parameters_initial = parameters_initial,
     nIter = 7, # Number of iterations
     nParticles = rep(1000, 7), # Number of particles for each iteration
     # ntree = 2000,
-    parallel = T,
-    parameters_truth = data.frame(theta = theta, beta = beta)
+    parallel = T
+)
+filename <- "ABCSMC_RF_output.rda"
+save(rf_output, file = filename)
+# =========================================Plot SMC-ABCRF for Parameters
+plotting_smcrf(
+    parameters_truth = parameters_truth,
+    parameters_initial = parameters_initial,
+    parameters_id = colnames(parameters_initial),
+    outputdata = drf_output
+)
+plotting_smcrf(
+    parameters_truth = parameters_truth,
+    parameters_initial = parameters_initial,
+    parameters_id = colnames(parameters_initial),
+    outputdata = rf_output
+)
+# ==============================================Plot SMC-ABCRF for Stats
+plotting_smcrf(
+    parameters_id = names(target),
+    outputdata = drf_output,
+    Plot_stats = TRUE
+)
+plotting_smcrf(
+    parameters_id = names(target),
+    outputdata = rf_output,
+    Plot_stats = TRUE
 )

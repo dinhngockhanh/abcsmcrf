@@ -3,6 +3,7 @@ smcabcrf <- function(target,
                      n_samples_per_parameter_set,
                      nNoise,
                      perturb,
+                     #  range,
                      parameters_initial,
                      nIter,
                      nParticles,
@@ -25,7 +26,7 @@ smcabcrf <- function(target,
             parameters <- perturb(parameters_new)
         }
         #   Simulate statistics
-        reference <- model(parameters, n_samples_per_parameter_set = n_samples_per_parameter_set, nNoise = nNoise)
+        reference <- model(parameters = parameters, n_samples_per_parameter_set = n_samples_per_parameter_set, nNoise = nNoise)
         #   Run ABCRF for each parameter
         ABCRF_weights <- data.frame(matrix(NA, nrow = nParticles[iteration], ncol = 0))
         for (parameter_id in parameters_id) {
@@ -81,15 +82,24 @@ plotting_smcrf <- function(
                 panel.grid.minor = element_line(colour = "white")
             )
         if (!is.null(parameters_truth)) {
-            true_posterior_df <- data.frame(value = parameters_truth[[parameter_id]], legend = "True Posterior")
-            p_para <- p_para +
-                geom_density(data = true_posterior_df, aes(x = value, fill = legend, color = legend), size = 2)
+            if (parameter_id == "theta") {
+                vec_t <- seq(1, 20, 0.1)
+                const <- integrate(function(t) t^target$K * gamma(t) / gamma(n_samples_per_parameter_set + t), lower = 1, upper = 20)
+                vec_pdf <- vec_t^target$K * gamma(vec_t) / (const$value * gamma(100 + vec_t))
+                p_para <- p_para +
+                    geom_area(aes(x = vec_t, y = vec_pdf, fill = "True Posterior", color = "True Posterior"), size = 4)
+            } else {
+                true_posterior_df <- data.frame(value = parameters_truth[[parameter_id]], legend = "True Posterior")
+                p_para <- p_para +
+                    geom_density(data = true_posterior_df, aes(x = value, fill = legend, color = legend), size = 2)
+            }
         }
         if (!is.null(parameters_initial)) {
             prior_df <- data.frame(value = parameters_initial[[parameter_id]], legend = "Prior Distribution")
             p_para <- p_para +
                 geom_density(data = prior_df, aes(x = value, fill = legend, color = legend), alpha = 0.2, size = 2)
         }
+
         for (iteration in 1:nIter) {
             if (Plot_stats) {
                 if (iteration == 1) {
@@ -104,7 +114,11 @@ plotting_smcrf <- function(
                     ) + xlab(parameter_id)
             } else {
                 para_tmp <- outputdata[[iteration]]$parameters[[parameter_id]]
-                weights_tmp <- outputdata[[iteration]]$weights[[parameter_id]]
+                if (outputdata[["method"]] == "smcrf-single-param") {
+                    weights_tmp <- outputdata[[iteration]]$weights[[parameter_id]]
+                } else if (outputdata[["method"]] == "smcrf-multi-param") {
+                    weights_tmp <- outputdata[[iteration]]$weights[, 1]
+                }
                 iter_df <- data.frame(value = para_tmp, weight = weights_tmp, legend = paste0("Iteration ", iteration))
                 p_para <- p_para +
                     geom_density(
@@ -126,7 +140,8 @@ plotting_smcrf <- function(
             scale_color_manual(values = color_scheme, name = "", breaks = legend_order) +
             theme(legend.position = c(0, 1), legend.justification = c(0, 0.5)) +
             guides(fill = guide_legend(nrow = 1, keywidth = 1, keyheight = 1))
-        file_name <- paste0("Iteration_plots_", parameter_id, ".png")
+
+        file_name <- paste0(outputdata[["method"]], "_iteration_plots_", parameter_id, ".png")
         png(file_name, res = 150, width = 30, height = 15, units = "in", pointsize = 12)
         print(p_para)
         dev.off()
