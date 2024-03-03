@@ -155,7 +155,7 @@ plot_smcrf_joint <- function(smcrf_results,
         legend = "Prior Distribution"
     )
     if (!is.null(lims)) prior_df <- apply_lims(prior_df)
-    p <- p + geom_density_2d(data = prior_df, aes(x = x, y = y, color = legend), linewidth = 2, bins = nBins)
+    p <- p + geom_density_2d(data = prior_df, aes(x = x, y = y, color = legend), linewidth = 3, bins = nBins)
     #---Plot posterior distribution for each iteration
     for (iteration in 2:nIterations) {
         posterior_df <- data.frame(
