@@ -1,11 +1,11 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - Macbook
-# R_workplace <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/vignettes"
-# R_libPaths <- ""
-# R_libPaths_extra <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/R"
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
-R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/0224_test/afs"
+R_workplace <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/vignettes"
 R_libPaths <- ""
-R_libPaths_extra <- "/Users/xiangzijin/SMC-RF/R"
+R_libPaths_extra <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/R"
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
+# R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/0224_test/hierarchical"
+# R_libPaths <- ""
+# R_libPaths_extra <- "/Users/xiangzijin/SMC-RF/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zhihan - Macbook
 # R_workplace <- "/Users/lexie/Documents/DNA/SMC-RF/vignettes"
 # R_libPaths <- ""
@@ -20,12 +20,48 @@ setwd(R_libPaths_extra)
 files_sources <- list.files(pattern = "\\.[rR]$")
 sapply(files_sources, source)
 setwd(R_workplace)
-# =============================================SET UP INITIAL PARAMETERS
-N <- 10000
-n_samples_per_parameter_set <- 100
-nNoise <- 10 # Number of noise variables
-# ======================================================================
+
+
+
 set.seed(1)
+
+
+
+# =========================Model for the Allele Frequency Spectrum (AFS)
+#   Input:  data frame of parameters, each row is one set of parameters
+#   Output: data frame of parameters & statistics, each row contains statistics for one set of parameters:
+#           first columns = input parameters
+#           next columns = summary statistics
+model <- function(parameters) {
+    library(parallel)
+    library(pbapply)
+    library(data.table)
+    nSamples <- 100
+    nNoise <- 0
+    #   Make simulations & compute summary statistics (allele count)
+    cl <- makePSOCKcluster(detectCores() - 1)
+    clusterExport(cl, varlist = c("AFS_model"))
+    stats <- pblapply(
+        cl = cl, X = 1:nrow(parameters),
+        FUN = function(i) {
+            AFS_model(theta = parameters$theta[i], beta = 0, model_type = 1, n = nSamples)
+        }
+    )
+    stopCluster(cl)
+    stats <- rbindlist(stats)
+    class(stats) <- "data.frame"
+    #   Add noise statistics
+    noise <- matrix(runif(nrow(parameters) * nNoise), nrow(parameters), nNoise)
+    #   Add column names
+    data <- data.frame(cbind(stats, noise))
+    if (nNoise > 0) {
+        colnames(data) <- c(
+            colnames(stats),
+            paste0("noise_", c(1:nNoise))
+        )
+    }
+    return(data)
+}
 AFS_model <- function(theta, beta, model_type, n) {
     #   This simulates haplotype and site information
     #   Model_type = 1 for regular coalescent (beta = 0)
@@ -78,37 +114,25 @@ AFS_model <- function(theta, beta, model_type, n) {
     #---Pour mutations down the tree
     for (j in n:2) {
         parent <- setdiff(hist[[j]], hist[[j - 1]]) # parent label
-        # cat("\n")
-        # cat("Parent label: ",parent,"\n")
-        # cat("mutation labels: ",muts[[parent]],"\n")
         children <- setdiff(hist[[j - 1]], hist[[j]]) # children's labels
-        # cat("Child labels: ",children,"\n")
         for (l in children) {
             s <- rpois(1, theta * ctimes[n + 2 - j] / 2)
-            # cat("label, number of mutations on branch: ",c(l,s),"\n")
             if (s == 0) {
                 muts[[l]] <- muts[[parent]]
-                # cat("mutation labels: ",muts[[l]],"\n")
             }
             if (s > 0) {
-                # cat("mutindx: ",mutindx,"\n")
                 mutstoadd <- seq(mutindx + 1, mutindx + s)
-                # cat("Mutation labels to add: ",mutstoadd,"\n")
                 mutindx <- mutindx + s # new last mutation label
                 muts[[l]] <- union(muts[[parent]], mutstoadd)
-                # cat("mutation labels: ",muts[[l]],"\n")
             }
         }
         notmerged <- setdiff(hist[[j - 1]], children) # Set of labels w/ no merges at this level
         for (l in notmerged) {
             s <- rpois(1, theta * ctimes[n + 2 - j] / 2) # generate mutations on branch label l
-            # cat("label, number of mutations on branch: ",c(l,s),"\n")
-            # if(s == 0) cat("mutation labels: ",muts[[l]],"\n")
             if (s > 0) {
                 mutstoadd <- seq(mutindx + 1, mutindx + s)
                 mutindx <- mutindx + s
                 muts[[l]] <- union(muts[[l]], mutstoadd)
-                # cat("mutation labels: ",muts[[l]],"\n")
             }
         }
     }
@@ -129,147 +153,73 @@ AFS_model <- function(theta, beta, model_type, n) {
     ss <- 0
     for (i in 1:n) ss <- ss + afs[i] * (i / n)^2
     lvec <- floor(sqrt(n))
-    # stats <- data.frame(matrix(c(theta, beta, nalleles, ss, sval, afs[1:lvec]), nrow = 1))
-    # colnames(stats) <- c("theta", "beta", "K", "homzy", "S", paste0("AFS_", 1:lvec))
     stats <- data.frame(matrix(c(theta, beta, nalleles), nrow = 1))
     colnames(stats) <- c("theta", "beta", "K")
     return(stats)
 }
-#---Model for the Allele Frequency Spectrum (AFS)
-#   Input:  data frame of parameters, each row is one set of parameters
-#   Output: data frame of parameters & statistics, each row contains statistics for one set of parameters:
-#           first columns = input parameters
-#           next columns = summary statistics
-model <- function(parameters,
-                  n_samples_per_parameter_set,
-                  nNoise) {
-    library(parallel)
-    library(pbapply)
-    library(data.table)
-    thetas <- parameters$theta
-    betas <- parameters$beta
-    model_type <- 1
-    cl <- makePSOCKcluster(detectCores() - 1)
-    AFS_model <<- AFS_model
-    n_samples_per_parameter_set <<- n_samples_per_parameter_set
-    clusterExport(cl, varlist = c("AFS_model", "n_samples_per_parameter_set"))
-    stats <- pblapply(cl = cl, X = 1:nrow(parameters), FUN = function(i) AFS_model(thetas[i], betas[i], model_type, n_samples_per_parameter_set))
-    stats <- rbindlist(stats)
-    class(stats) <- "data.frame"
-    #   Add noise statistics
-    noise <- matrix(runif(nrow(parameters) * nNoise), nrow(parameters), nNoise)
-    #   Add column names
-    data <- data.frame(cbind(stats, noise))
-    if (nNoise > 0) {
-        colnames(data) <- c(
-            colnames(stats),
-            paste0("noise_", c(1:nNoise))
-        )
-    }
-    return(data)
-}
+# =====================================================Target statistics
+theta <- runif(1, 1, 20)
+parameters_truth <- data.frame(
+    theta = theta
+)
+statistics_target <- model(parameters = parameters_truth)[-c(1:ncol(parameters_truth))]
 # ======================================Model for parameter perturbation
 #   Input:  data frame of parameters, each row is one set of parameters
 #   Output: data frame of parameters, after perturbation
-# perturb <- function(parameters) {
-#     parameters$theta <- pmin(pmax(parameters$theta + runif(nrow(parameters), min = -1, max = 1), 1), 20)
-#     parameters$beta <- pmin(pmax(parameters$beta + runif(nrow(parameters), min = -1, max = 1), 1), 20)
-#     return(parameters)
-# }
-perturb <- function(parameter) {
-    # parameter <- parameter + runif(1, min = -0.5, max = 0.5)
-    parameter <- parameter + runif(1, min = -1, max = 1)
-    # parameters$theta2 <- pmax(parameters$theta2 + runif(nrow(parameters), min = -0.5, max = 0.5), 0)
-    return(parameter)
+perturb <- function(parameters) {
+    for (i in 1:ncol(parameters)) parameters[[i]] <- parameters[[i]] + runif(nrow(parameters), min = -0.5, max = 0.5)
+    return(parameters)
 }
-
+# ======================================Define ranges for the parameters
 range <- data.frame(
-    parameter = c("theta", "beta"),
-    min = c(1, 0),
-    max = c(20, 1)
+    parameter = c("theta"),
+    min = c(1),
+    max = c(20)
 )
-
-# =====================================================Target statistics
-target_theta <- runif(1, 1, 10)
-target_beta <- 0
-parameters_target <- data.frame(
-    theta = target_theta,
-    beta = target_beta
-)
-target <- model(
-    parameters = parameters_target,
-    n_samples_per_parameter_set = n_samples_per_parameter_set,
-    nNoise = nNoise
-)[-c(1:ncol(parameters_target))]
-parameters_truth <- data.frame(
-    theta = target_theta,
-    beta = target_beta
-)
-cat(paste0("\n\n\n\n\nTRUE VALUE FOR THETA = ", target_theta, "\n"))
-cat(paste0("STATISTICS:\n"))
-print(target)
-cat("\n\n\n\n\n")
 # ========================================Initial guesses for parameters
 # ====================================(sampled from prior distributions)
-theta <- runif(N, 1, 20)
-beta <- runif(N, 0, 1)
+theta <- runif(1000, 1, 20)
 parameters_initial <- data.frame(
-    theta = theta,
-    beta = beta
+    theta = theta
 )
-# ========================================================Run SMC-ABCDRF
-drf_output <- smcdrf(
-    target = target,
+# ====================================Labels for parameters in the plots
+parameters_labels <- data.frame(
+    parameter = c("theta"),
+    label = c(deparse(expression(theta)))
+)
+# ==========================================SMC-RF for single parameters
+#---Run SMC-RF for single parameters
+smcrf_results_single_param <- smcrf(
+    method = "smcrf-single-param",
+    statistics_target = statistics_target,
+    parameters_initial = parameters_initial,
     model = model,
-    n_samples_per_parameter_set = n_samples_per_parameter_set,
-    nNoise = nNoise,
     perturb = perturb,
     range = range,
-    parameters_initial = parameters_initial,
-    nIter = 7, # Number of iterations
-    nParticles = rep(1000, 7), # Number of particles for each iteration
-    # ntree = 2000,
-    parallel = T,
+    nParticles = rep(1000, 7),
+    parallel = TRUE
 )
-filename <- "ABCSMC_DRF_output.rda"
-save(drf_output, file = filename)
-# =========================================================Run SMC-ABCRF
-rf_output <- smcabcrf(
-    target = target,
+#---Plot marginal distributions
+plot_smcrf_marginal(
+    smcrf_results = smcrf_results_single_param,
+    parameters_labels = parameters_labels,
+    plot_statistics = TRUE
+)
+# ========================================SMC-RF for multiple parameters
+#---Run SMC-RF for multiple parameters
+smcrf_results_multi_param <- smcrf(
+    method = "smcrf-multi-param",
+    statistics_target = statistics_target,
+    parameters_initial = parameters_initial,
     model = model,
-    n_samples_per_parameter_set = n_samples_per_parameter_set,
-    nNoise = nNoise,
     perturb = perturb,
     range = range,
-    parameters_initial = parameters_initial,
-    nIter = 7, # Number of iterations
-    nParticles = rep(1000, 7), # Number of particles for each iteration
-    # ntree = 2000,
-    parallel = T
+    nParticles = rep(1000, 7),
+    parallel = TRUE
 )
-filename <- "ABCSMC_RF_output.rda"
-save(rf_output, file = filename)
-# =========================================Plot SMC-ABCRF for Parameters
-plotting_smcrf(
-    parameters_truth = parameters_truth,
-    parameters_initial = parameters_initial,
-    parameters_id = colnames(parameters_initial),
-    outputdata = drf_output
-)
-plotting_smcrf(
-    parameters_truth = parameters_truth,
-    parameters_initial = parameters_initial,
-    parameters_id = colnames(parameters_initial),
-    outputdata = rf_output
-)
-# ==============================================Plot SMC-ABCRF for Stats
-plotting_smcrf(
-    parameters_id = names(target),
-    outputdata = drf_output,
-    Plot_stats = TRUE
-)
-plotting_smcrf(
-    parameters_id = names(target),
-    outputdata = rf_output,
-    Plot_stats = TRUE
+#---Plot marginal distributions
+plot_smcrf_marginal(
+    smcrf_results = smcrf_results_multi_param,
+    parameters_labels = parameters_labels,
+    plot_statistics = TRUE
 )

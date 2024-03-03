@@ -1,32 +1,73 @@
-# # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - Macbook
-# R_workplace <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/vignettes"
-# R_libPaths <- ""
-# R_libPaths_extra <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/R"
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zhihan - Macbook
-R_workplace <- "/Users/lexie/Documents/DNA/SMC-RF/Results for birth death model"
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - Macbook
+R_workplace <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/vignettes"
 R_libPaths <- ""
-R_libPaths_extra <- "/Users/lexie/Documents/DNA/SMC-RF/R"
+R_libPaths_extra <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/R"
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
+# R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/0224_test/hierarchical"
+# R_libPaths <- ""
+# R_libPaths_extra <- "/Users/xiangzijin/SMC-RF/R"
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zhihan - Macbook
+# R_workplace <- "/Users/lexie/Documents/DNA/SMC-RF/vignettes"
+# R_libPaths <- ""
+# R_libPaths_extra <- "/Users/lexie/Documents/DNA/SMC-RF/R"
 # =======================================SET UP FOLDER PATHS & LIBRARIES
 .libPaths(R_libPaths)
-
 library(ggplot2)
 library(gridExtra)
 library(grid)
-
+library(invgamma)
 setwd(R_libPaths_extra)
 files_sources <- list.files(pattern = "\\.[rR]$")
 sapply(files_sources, source)
 setwd(R_workplace)
 
-# ======================================================================
+
+
+set.seed(1)
+
+
+
 nNoise <- 20
 N <- 1000
-set.seed(1)
-BD_model <- function(lambda, mu, n_times) {
+# =====================================Model for the birth-death process
+#   Input:  data frame of parameters, each row is one set of parameters
+#   Output: data frame of parameters & statistics, each row contains statistics for one set of parameters:
+#           first columns = input parameters
+#           next columns = summary statistics
+model <- function(parameters) {
+    library(parallel)
+    library(pbapply)
+    library(data.table)
+    nTimes <- 50
+    nNoise <- 0
+    #   Make simulations & compute summary statistics (population sizes at each time point)
+    cl <- makePSOCKcluster(detectCores() - 1)
+    clusterExport(cl, varlist = c("BD_model"))
+    stats <- pblapply(
+        cl = cl, X = 1:nrow(parameters),
+        FUN = function(i) BD_model(parameters$lambda[i], parameters$mu[i], nTimes)
+    )
+    stopCluster(cl)
+    stats <- rbindlist(stats)
+    class(stats) <- "data.frame"
+    #   Add noise statistics
+    noise <- matrix(runif(nrow(parameters) * nNoise), nrow(parameters), nNoise)
+    data <- cbind(stats, noise)
+    #   Add column names
+    data <- data.frame(data)
+    if (nNoise > 0) {
+        colnames(data) <- c(
+            colnames(stats),
+            paste0("noise_", c(1:nNoise))
+        )
+    }
+    return(data)
+}
+BD_model <- function(lambda, mu, nTimes) {
     #   This simulates a birth-death process
     #   Input:  lambda = birth rate
     #           mu = death rate
-    times <- seq(1, n_times) / n_times
+    times <- seq(1, nTimes) / nTimes
     npt <- length(times)
     alpha <- rep(0, npt)
     beta <- rep(0, npt)
@@ -52,151 +93,87 @@ BD_model <- function(lambda, mu, n_times) {
         Fsim[j] <- sample(1:zv, size = 1, prob = dbinom(1:zv, size = zv, 1 - alpha[j]))
         Zsim[j] <- rnbinom(1, size = Fsim[j], prob = 1 - beta[j]) + Fsim[j]
     }
-
     stats <- data.frame(matrix(c(lambda, mu, Zsim[1:npt]), nrow = 1))
     colnames(stats) <- c("lambda", "mu", paste0("Z_", 1:npt))
     # stats <- data.frame(matrix(c(lambda, mu, Fsim[1:npt], Zsim[1:npt]), nrow = 1))
     # colnames(stats) <- c("lambda", "mu", paste0("F_", 1:npt), paste0("Z_", 1:npt))
-
     return(stats)
 }
-#---Model for the birth-death process
-#   Input:  data frame of parameters, each row is one set of parameters
-#   Output: data frame of parameters & statistics, each row contains statistics for one set of parameters:
-#           first columns = input parameters
-#           next columns = summary statistics
-model <- function(parameters,
-                  n_samples_per_parameter_set,
-                  nNoise) {
-    library(parallel)
-    library(pbapply)
-    library(data.table)
-    lambda <- parameters$lambda
-    mu <- parameters$mu
-
-    n_times <- 50
-
-    nNoise <- nNoise # Number of noise variables
-
-    cl <- makePSOCKcluster(detectCores() - 1)
-    BD_model <<- BD_model
-    clusterExport(cl, varlist = c("BD_model"))
-    stats <- pblapply(cl = cl, X = 1:nrow(parameters), FUN = function(i) BD_model(lambda[i], mu[i], n_times))
-    stats <- rbindlist(stats)
-    class(stats) <- "data.frame"
-    #   Add noise statistics
-    noise <- matrix(runif(nrow(parameters) * nNoise), nrow(parameters), nNoise)
-    data <- cbind(stats, noise)
-    #   Add column names
-    data <- data.frame(data)
-    if (nNoise > 0) {
-        colnames(data) <- c(
-            colnames(stats),
-            paste0("noise_", c(1:nNoise))
-        )
-    }
-    return(data)
-}
-#---Model for parameter perturbation
+# =====================================================Target statistics
+parameters_truth <- data.frame(
+    lambda = 10,
+    mu = 2
+)
+statistics_target <- model(parameters = parameters_truth)[-c(1:ncol(parameters_truth))]
+# ======================================Model for parameter perturbation
 #   Input:  data frame of parameters, each row is one set of parameters
 #   Output: data frame of parameters, after perturbation
 perturb <- function(parameters) {
-    parameters$lambda <- pmin(pmax(parameters$lambda + runif(nrow(parameters), min = -1, max = 1), 0.0001), 15)
-    parameters$mu <- pmin(pmax(parameters$mu + runif(nrow(parameters), min = -1, max = 1), 0.0001), 15)
+    for (i in 1:ncol(parameters)) parameters[[i]] <- parameters[[i]] + runif(nrow(parameters), min = -0.5, max = 0.5)
     return(parameters)
 }
-#---Target statistics
-lambda <- runif(1, 0, 15)
-mu <- runif(1, 0, lambda)
-target <- model(data.frame(lambda = lambda, mu = mu), 
-                n_samples_per_parameter_set=1, 
-                nNoise=nNoise)[-c(1:2)]
-cat(paste0("\n\n\n\n\nTRUE VALUE FOR THETA = ", lambda, "\n"))
-cat(paste0("TRUE VALUE FOR MU = ", mu, "\n"))
-cat(paste0("STATISTICS:\n"))
-print(target)
-cat("\n\n\n\n\n")
-#---Initial guesses for parameters (sampled from prior distributions)
+# ======================================Define ranges for the parameters
+range <- data.frame(
+    parameter = c("lambda", "mu"),
+    min = c(0, 0),
+    max = c(15, 15)
+)
+# ========================================Initial guesses for parameters
+# ====================================(sampled from prior distributions)
 lambda <- runif(10000, 0, 15)
 mu <- runif(10000, 0, lambda)
-parameters_initial <- data.frame(lambda = lambda, mu = mu)
-
-
-
-# #---Run SMC-ABCRF
-# smcabcrf_test_3(
-#     target = target,
-#     model = model,
-#     perturb = perturb,
-#     parameters_initial = parameters_initial,
-#     nIter = 7, # Number of iterations
-#     nParticles = rep(1000, 7), # Number of particles for each iteration
-#     # ntree = 2000,
-#     parallel = T,
-#     parameters_truth = data.frame(theta = theta, beta = beta)
-# )
-
-# =========================================================Run SMC-DRF
-drf_output <- smcdrf(
-    target = target,
-    model = model,
-    n_samples_per_parameter_set = 1,
-    nNoise = nNoise,
-    perturb = perturb,
+parameters_initial <- data.frame(
+    lambda = lambda,
+    mu = mu
+)
+# ====================================Labels for parameters in the plots
+parameters_labels <- data.frame(
+    parameter = c("lambda", "mu"),
+    label = c(deparse(expression(lambda)), deparse(expression(mu)))
+)
+# ==========================================SMC-RF for single parameters
+#---Run SMC-RF for single parameters
+smcrf_results_single_param <- smcrf(
+    method = "smcrf-single-param",
+    statistics_target = statistics_target,
     parameters_initial = parameters_initial,
-    nIter = 7, # Number of iterations
-    nParticles = rep(1000, 7), # Number of particles for each iteration
-    # ntree = 2000,
-    parallel = T
-)
-
-# filename <- "ABCSMC_DRF_output.rda"
-# save(drf_output, file = filename)
-# =========================================================Run SMC-ABCRF
-rf_output <- smcabcrf(
-    target = target,
     model = model,
-    n_samples_per_parameter_set = 1,
-    nNoise = nNoise,
     perturb = perturb,
+    range = range,
+    nParticles = rep(10000, 3),
+    parallel = TRUE
+)
+#---Plot marginal distributions
+plot_smcrf_marginal(
+    smcrf_results = smcrf_results_single_param,
+    parameters_labels = parameters_labels,
+    plot_statistics = FALSE
+)
+#---Plot joint distributions
+plot_smcrf_joint(
+    smcrf_results = smcrf_results_single_param,
+    parameters_labels = parameters_labels
+)
+# ========================================SMC-RF for multiple parameters
+#---Run SMC-RF for multiple parameters
+smcrf_results_multi_param <- smcrf(
+    method = "smcrf-multi-param",
+    statistics_target = statistics_target,
     parameters_initial = parameters_initial,
-    nIter = 7, # Number of iterations
-    nParticles = rep(N, 7), # Number of particles for each iteration
-    # ntree = 2000,
-    parallel = T
+    model = model,
+    perturb = perturb,
+    range = range,
+    nParticles = rep(10000, 3),
+    parallel = TRUE
 )
-# filename <- "ABCSMC_RF_output.rda"
-# save(rf_output, file = filename)
-# =========================================Plot SMC-ABCRF for Parameters
-# plotting_smcrf(
-#     parameters_truth = parameters_truth,
-#     parameters_initial = parameters_initial,
-#     parameters_id = colnames(parameters_initial),
-#     outputdata = drf_output
-# )
-# plotting_smcrf(
-#     parameters_truth = parameters_truth,
-#     parameters_initial = parameters_initial,
-#     parameters_id = colnames(parameters_initial),
-#     outputdata = rf_output
-# )
-# ==============================================Plot SMC-ABCRF for Stats
-plotting_smcrf(
-    parameters_id = names(target),
-    outputdata = drf_output,
-    Plot_stats = TRUE
+#---Plot marginal distributions
+plot_smcrf_marginal(
+    smcrf_results = smcrf_results_multi_param,
+    parameters_labels = parameters_labels,
+    plot_statistics = FALSE
 )
-# plotting_smcrf(
-#     parameters_id = names(target),
-#     outputdata = rf_output,
-#     Plot_stats = TRUE
-# )
-
-plot_joint(
-    para_id=c("lambda","mu"), 
-    outputdata=drf_output
-)
-plot_joint(
-    para_id=c("lambda","mu"), 
-    outputdata=rf_output
+#---Plot joint distributions
+plot_smcrf_joint(
+    smcrf_results = smcrf_results_multi_param,
+    parameters_labels = parameters_labels
 )
