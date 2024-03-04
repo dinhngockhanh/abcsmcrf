@@ -153,8 +153,13 @@ AFS_model <- function(theta, beta, model_type, n) {
     ss <- 0
     for (i in 1:n) ss <- ss + afs[i] * (i / n)^2
     lvec <- floor(sqrt(n))
-    stats <- data.frame(matrix(c(theta, beta, nalleles), nrow = 1))
-    colnames(stats) <- c("theta", "beta", "K")
+    if (model_type == 1) {
+        stats <- data.frame(matrix(c(theta, nalleles), nrow = 1))
+        colnames(stats) <- c("theta", "K")
+    } else {
+        stats <- data.frame(matrix(c(theta, beta, nalleles), nrow = 1))
+        colnames(stats) <- c("theta", "beta", "K")
+    }
     return(stats)
 }
 # =====================================================Target statistics
@@ -178,7 +183,7 @@ range <- data.frame(
 )
 # ========================================Initial guesses for parameters
 # ====================================(sampled from prior distributions)
-theta <- runif(1000, 1, 20)
+theta <- runif(10000, 1, 20)
 parameters_initial <- data.frame(
     theta = theta
 )
@@ -196,7 +201,7 @@ smcrf_results_single_param <- smcrf(
     model = model,
     perturb = perturb,
     range = range,
-    nParticles = rep(1000, 7),
+    nParticles = rep(10000, 7),
     parallel = TRUE
 )
 #---Plot marginal distributions
@@ -214,7 +219,7 @@ smcrf_results_multi_param <- smcrf(
     model = model,
     perturb = perturb,
     range = range,
-    nParticles = rep(1000, 7),
+    nParticles = rep(10000, 7),
     parallel = TRUE
 )
 #---Plot marginal distributions

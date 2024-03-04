@@ -87,6 +87,8 @@ smcrf_single_param <- function(statistics_target,
         #---Simulate statistics
         cat("Making model simulations...\n")
         reference <- model(parameters = parameters)
+        statistics <- data.frame(reference[, colnames(reference)[!colnames(reference) %in% parameters_ids]])
+        colnames(statistics) <- colnames(reference)[!colnames(reference) %in% parameters_ids]
         #---Run ABCRF for each parameter
         cat("Performing Random Forest prediction...\n")
         ABCRF_weights <- data.frame(matrix(NA, nrow = nParticles[iteration], ncol = 0))
@@ -110,7 +112,7 @@ smcrf_single_param <- function(statistics_target,
         SMCRF_iteration <- list()
         SMCRF_iteration$reference <- reference
         SMCRF_iteration$parameters <- parameters
-        SMCRF_iteration$statistics <- reference[, colnames(reference)[!colnames(reference) %in% parameters_ids]]
+        SMCRF_iteration$statistics <- statistics
         SMCRF_iteration$weights <- ABCRF_weights
         SMCRF_iteration$rf_model <- RFmodel
         SMCRF_iteration$rf_predict <- posterior_gamma_RF
@@ -120,7 +122,7 @@ smcrf_single_param <- function(statistics_target,
     SMCRF[["nIterations"]] <- nIterations
     SMCRF[["nParticles"]] <- nParticles
     SMCRF[["statistics_target"]] <- statistics_target
-    SMCRF[["parameters_labels"]] <- data.frame(ID = parameters_ids)
+    SMCRF[["parameters_labels"]] <- data.frame(parameter = parameters_ids)
     SMCRF[["statistics_labels"]] <- data.frame(ID = colnames(reference)[!colnames(reference) %in% parameters_ids])
     return(SMCRF)
 }
@@ -177,9 +179,11 @@ smcrf_multi_param <- function(statistics_target,
         #---Simulate statistics
         cat("Making model simulations...\n")
         reference <- model(parameters = parameters)
+        statistics <- data.frame(reference[, colnames(reference)[!colnames(reference) %in% parameters_ids]])
+        colnames(statistics) <- colnames(reference)[!colnames(reference) %in% parameters_ids]
         #---Run DRF for all parameter
         cat("Performing Random Forest prediction...\n")
-        Xdrf <- reference[, colnames(reference)[!colnames(reference) %in% parameters_ids]]
+        Xdrf <- statistics
         Ydrf <- reference[, parameters_ids]
         drfmodel <- drf(Xdrf, Ydrf, splitting.rule = splitting.rule)
         def_pred <- predict(drfmodel, statistics_target)
@@ -190,7 +194,7 @@ smcrf_multi_param <- function(statistics_target,
         SMCDRF_iteration <- list()
         SMCDRF_iteration$reference <- reference
         SMCDRF_iteration$parameters <- parameters
-        SMCDRF_iteration$statistics <- reference[, colnames(reference)[!colnames(reference) %in% parameters_ids]]
+        SMCDRF_iteration$statistics <- statistics
         SMCDRF_iteration$weights <- DRF_weights
         SMCDRF_iteration$rf_model <- drfmodel
         SMCDRF_iteration$rf_predict <- def_pred
@@ -200,7 +204,7 @@ smcrf_multi_param <- function(statistics_target,
     SMCDRF[["nIterations"]] <- nIterations
     SMCDRF[["nParticles"]] <- nParticles
     SMCDRF[["statistics_target"]] <- statistics_target
-    SMCDRF[["parameters_labels"]] <- data.frame(ID = parameters_ids)
+    SMCDRF[["parameters_labels"]] <- data.frame(parameter = parameters_ids)
     SMCDRF[["statistics_labels"]] <- data.frame(ID = colnames(reference)[!colnames(reference) %in% parameters_ids])
     return(SMCDRF)
 }

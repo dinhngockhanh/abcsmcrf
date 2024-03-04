@@ -35,7 +35,7 @@ set.seed(1)
 model <- function(parameters) {
     theta1 <- parameters$theta1
     theta2 <- parameters$theta2
-    nSamples <- 20
+    nSamples <- 10
     nNoise <- 1
     #   Make simulations
     y <- matrix(NA, length(theta1), nSamples)
@@ -88,17 +88,13 @@ parameters_truth <- data.frame(
 )
 statistics_target <- model(parameters = parameters_truth)[-c(1:ncol(parameters_truth))]
 # ===============================True marginal posteriors for parameters
-N <- 1000
-nSamples <- 20
+nSamples <- 10
 s_2 <- statistics_target[, "variance"] * (nSamples - 1)
 ybar <- statistics_target[, "expectation"]
-mean_theta1 <- nSamples / (nSamples + 1) * ybar
-scale_theta1 <- sqrt((2 * (3 + s_2 / 2 + nSamples * ybar^2 / (2 * nSamples + 2))) / ((nSamples + 1) * (nSamples + 8)))
-t_deviate <- rt(N * 10, df = nSamples + 8)
-theta1_true <- mean_theta1 + t_deviate * scale_theta1
-shape_theta2 <- nSamples / 2 + 4
-scale_theta2 <- 0.5 * (s_2 + 6 + nSamples * ybar^2 / (nSamples + 1))
-theta2_true <- rinvgamma(N * 10, shape = shape_theta2, scale = 1 / scale_theta2)
+shape_theta2 <- nSamples / 2 + alpha
+scale_theta2 <- 0.5 * (s_2 + 2 * beta + nSamples * ybar^2 / (nSamples + 1))
+theta2_true <- rinvgamma(10000, shape = shape_theta2, scale = 1 / scale_theta2)
+theta1_true <- rnorm(10000, mean = nSamples * ybar / (nSamples + 1), sd = sqrt(2 * theta2_true / (nSamples + 1))) # removed in sd a 2 here
 parameters_truth <- data.frame(
     theta1 = theta1_true,
     theta2 = theta2_true
@@ -188,4 +184,16 @@ plot_smcrf_joint(
         min = c(-2, 0),
         max = c(3, 2)
     )
+)
+# =========Compare final posterior distributions among different methods
+plots <- plot_compare_marginal(
+    abc_results = smcrf_results_single_param,
+    parameters_truth = parameters_truth,
+    parameters_labels = parameters_labels,
+    plot_statistics = TRUE
+)
+plots <- plot_compare_marginal(
+    plots = plots,
+    abc_results = smcrf_results_multi_param,
+    plot_statistics = TRUE
 )

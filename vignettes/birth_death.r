@@ -38,7 +38,7 @@ model <- function(parameters) {
     library(parallel)
     library(pbapply)
     library(data.table)
-    nTimes <- 50
+    nTimes <- 10
     nNoise <- 0
     #   Make simulations & compute summary statistics (population sizes at each time point)
     cl <- makePSOCKcluster(detectCores() - 1)
@@ -140,7 +140,7 @@ smcrf_results_single_param <- smcrf(
     model = model,
     perturb = perturb,
     range = range,
-    nParticles = rep(10000, 3),
+    nParticles = rep(10000, 7),
     parallel = TRUE
 )
 #---Plot marginal distributions
@@ -163,7 +163,7 @@ smcrf_results_multi_param <- smcrf(
     model = model,
     perturb = perturb,
     range = range,
-    nParticles = rep(10000, 3),
+    nParticles = rep(10000, 7),
     parallel = TRUE
 )
 #---Plot marginal distributions
