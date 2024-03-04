@@ -142,6 +142,9 @@ plot_compare_marginal <- function(plots = NULL,
                 plots$statistics[[statistic_id]] <- ggplot()
             }
         }
+        new_plot <- TRUE
+    } else {
+        new_plot <- FALSE
     }
     #---Plot true posterior parameter distributions (if provided)
     if (!is.null(parameters_truth)) {
@@ -166,14 +169,12 @@ plot_compare_marginal <- function(plots = NULL,
         if (plot_statistics) statistics_values <- abc_results[[paste0("Iteration_", nIterations)]]$statistics
     }
     #---Plot marginal distributions for each parameter
-    print(parameters_labels)
     for (parameter_id in parameters_labels$parameter) {
         posterior_df <- data.frame(
             value = parameters_values[[parameter_id]],
             weight = parameters_weights[[parameter_id]],
             legend = legend_label
         )
-        # print(head(posterior_df))
         plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
             geom_density(data = posterior_df, aes(x = value, weight = weight, fill = legend, color = legend), alpha = alpha, linewidth = 2)
     }
@@ -188,7 +189,7 @@ plot_compare_marginal <- function(plots = NULL,
         }
     }
     #---Add label for parameters and statistics
-    if ("label" %in% colnames(parameters_labels)) {
+    if ("label" %in% colnames(parameters_labels) & new_plot == TRUE) {
         for (parameter_id in parameters_labels$parameter) {
             plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
                 labs(x = eval(parse(text = parameters_labels$label[which(parameters_labels$parameter == parameter_id)])))
@@ -200,23 +201,9 @@ plot_compare_marginal <- function(plots = NULL,
         }
     }
     #---Beautify plots
-    for (parameter_id in parameters_labels$parameter) {
-        plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
-            scale_fill_manual(values = color_scheme, name = "", breaks = legend_order) +
-            scale_color_manual(values = color_scheme, name = "", breaks = legend_order) +
-            guides(fill = guide_legend(nrow = 1, keywidth = 2.5, keyheight = 1)) +
-            theme(
-                text = element_text(size = 50),
-                panel.background = element_rect(fill = "white", colour = "white"),
-                panel.grid.major = element_line(colour = "white"),
-                panel.grid.minor = element_line(colour = "white"),
-                legend.position = "top",
-                legend.justification = c(0, 0.5)
-            )
-    }
-    if (plot_statistics) {
-        for (statistic_id in statistics_labels$ID) {
-            plots$statistics[[statistic_id]] <- plots$statistics[[statistic_id]] +
+    if (new_plot) {
+        for (parameter_id in parameters_labels$parameter) {
+            plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
                 scale_fill_manual(values = color_scheme, name = "", breaks = legend_order) +
                 scale_color_manual(values = color_scheme, name = "", breaks = legend_order) +
                 guides(fill = guide_legend(nrow = 1, keywidth = 2.5, keyheight = 1)) +
@@ -229,12 +216,27 @@ plot_compare_marginal <- function(plots = NULL,
                     legend.justification = c(0, 0.5)
                 )
         }
+        if (plot_statistics) {
+            for (statistic_id in statistics_labels$ID) {
+                plots$statistics[[statistic_id]] <- plots$statistics[[statistic_id]] +
+                    scale_fill_manual(values = color_scheme, name = "", breaks = legend_order) +
+                    scale_color_manual(values = color_scheme, name = "", breaks = legend_order) +
+                    guides(fill = guide_legend(nrow = 1, keywidth = 2.5, keyheight = 1)) +
+                    theme(
+                        text = element_text(size = 50),
+                        panel.background = element_rect(fill = "white", colour = "white"),
+                        panel.grid.major = element_line(colour = "white"),
+                        panel.grid.minor = element_line(colour = "white"),
+                        legend.position = "top",
+                        legend.justification = c(0, 0.5)
+                    )
+            }
+        }
     }
     #---Print marginal distribution plots
     for (parameter_id in parameters_labels$parameter) {
         file_name <- paste0("Comparison-marginal-", parameter_id, ".png")
         png(file_name, res = 150, width = 30, height = 15, units = "in", pointsize = 12)
-        print(plots$parameters[[parameter_id]])
         dev.off()
     }
     if (plot_statistics) {
