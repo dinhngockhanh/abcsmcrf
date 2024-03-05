@@ -45,7 +45,7 @@ priors <- data.frame(
 priors$p1 <- c(1)
 priors$p2 <- c(20)
 
-tols <- c(K = 10)
+tols <- c(K = 20)
 
 #   Run ABC-SMC
 post <- ABCSMC(
