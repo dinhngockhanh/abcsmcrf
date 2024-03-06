@@ -1,11 +1,11 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - Macbook
-R_workplace <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/vignettes"
-R_libPaths <- ""
-R_libPaths_extra <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/R"
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
-# R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/0224_test/hierarchical"
+# R_workplace <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/vignettes"
 # R_libPaths <- ""
-# R_libPaths_extra <- "/Users/xiangzijin/SMC-RF/R"
+# R_libPaths_extra <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/R"
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
+R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/0305_test/afs"
+R_libPaths <- ""
+R_libPaths_extra <- "/Users/xiangzijin/SMC-RF/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zhihan - Macbook
 # R_workplace <- "/Users/lexie/Documents/DNA/SMC-RF/vignettes"
 # R_libPaths <- ""
@@ -183,7 +183,7 @@ range <- data.frame(
 )
 # ========================================Initial guesses for parameters
 # ====================================(sampled from prior distributions)
-theta <- runif(10000, 1, 20)
+theta <- runif(1000, 1, 20)
 parameters_initial <- data.frame(
     theta = theta
 )
@@ -201,7 +201,7 @@ smcrf_results_single_param <- smcrf(
     model = model,
     perturb = perturb,
     range = range,
-    nParticles = rep(10000, 7),
+    nParticles = rep(1000, 7),
     parallel = TRUE
 )
 #---Plot marginal distributions
@@ -219,7 +219,7 @@ smcrf_results_multi_param <- smcrf(
     model = model,
     perturb = perturb,
     range = range,
-    nParticles = rep(10000, 7),
+    nParticles = rep(1000, 7),
     parallel = TRUE
 )
 #---Plot marginal distributions
@@ -227,4 +227,24 @@ plot_smcrf_marginal(
     smcrf_results = smcrf_results_multi_param,
     parameters_labels = parameters_labels,
     plot_statistics = TRUE
+)
+
+# =========================================ABC-REJ for single parameters
+# ========================================Initial guesses for parameters
+# ====================================(sampled from prior distributions)
+theta <- runif(7000, 1, 20)
+parameters_initial <- data.frame(
+    theta = theta
+)
+#---Run SMC-RF for single parameters
+abcrej_results <- abc_rejection(
+    statistics_target = statistics_target,
+    model = model,
+    parameters_initial = parameters_initial
+)
+#---Plot marginal distributions
+plot_abc_marginal(
+    abc_results = abcrej_results,
+    parameters_truth = parameters_truth,
+    parameters_labels = parameters_labels
 )

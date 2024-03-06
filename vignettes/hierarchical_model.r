@@ -1,11 +1,11 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - Macbook
-R_workplace <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/vignettes"
-R_libPaths <- ""
-R_libPaths_extra <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/R"
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
-# R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/0224_test/hierarchical"
+# R_workplace <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/vignettes"
 # R_libPaths <- ""
-# R_libPaths_extra <- "/Users/xiangzijin/SMC-RF/R"
+# R_libPaths_extra <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/R"
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
+R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/0305_test/hierarchical"
+R_libPaths <- ""
+R_libPaths_extra <- "/Users/xiangzijin/SMC-RF/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zhihan - Macbook
 # R_workplace <- "/Users/lexie/Documents/DNA/SMC-RF/vignettes"
 # R_libPaths <- ""
@@ -20,13 +20,7 @@ setwd(R_libPaths_extra)
 files_sources <- list.files(pattern = "\\.[rR]$")
 sapply(files_sources, source)
 setwd(R_workplace)
-
-
-
 set.seed(1)
-
-
-
 # ==============================Model for the hierarchical model example
 #   Input:  data frame of parameters, each row is one set of parameters
 #   Output: data frame of parameters & statistics, each row contains statistics for one set of parameters:
@@ -196,4 +190,26 @@ plots <- plot_compare_marginal(
     plots = plots,
     abc_results = smcrf_results_multi_param,
     plot_statistics = TRUE
+)
+
+# =========================================ABC-REJ for single parameters
+# ========================================Initial guesses for parameters
+# ====================================(sampled from prior distributions)
+theta2 <- 1 / rgamma(3000, shape = alpha, rate = beta)
+theta1 <- rnorm(3000, 0, sqrt(theta2))
+parameters_initial <- data.frame(
+    theta1 = theta1,
+    theta2 = theta2
+)
+#---Run SMC-RF for single parameters
+abcrej_results <- abc_rejection(
+    statistics_target = statistics_target,
+    model = model,
+    parameters_initial = parameters_initial
+)
+#---Plot marginal distributions
+plot_abc_marginal(
+    abc_results = abcrej_results,
+    parameters_truth = parameters_truth,
+    parameters_labels = parameters_labels
 )

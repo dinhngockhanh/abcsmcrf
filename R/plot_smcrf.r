@@ -154,6 +154,7 @@ plot_compare_marginal <- function(plots = NULL,
                 geom_density(data = true_posterior_df, aes(x = value, fill = legend, color = legend), linewidth = 2)
         }
     }
+
     #---Extract final posterior distributions
     if (method == "smcrf-single-param") {
         legend_label <- "SMC-RF for single parameters"
@@ -237,6 +238,7 @@ plot_compare_marginal <- function(plots = NULL,
     for (parameter_id in parameters_labels$parameter) {
         file_name <- paste0("Comparison-marginal-", parameter_id, ".png")
         png(file_name, res = 150, width = 30, height = 15, units = "in", pointsize = 12)
+        print(plots$parameters[[parameter_id]])
         dev.off()
     }
     if (plot_statistics) {
