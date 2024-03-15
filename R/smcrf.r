@@ -50,8 +50,15 @@ smcrf_single_param <- function(statistics_target,
     nIterations <- length(nParticles)
     parameters_ids <- colnames(parameters_initial)
     SMCRF <- list()
-    for (iteration in 1:nIterations) {
-        cat(paste0("\n\nSMC-RF FOR SINGLE PARAMETERS: iteration ", iteration, "...\n"))
+    nSimulations <<- 0
+    cat("\n\n==============================================================================================================================================\n")
+    for (iteration in 1:(nIterations + 1)) {
+        if (iteration == (nIterations + 1)) {
+            cat(paste0("\n\n++++++++++++++++++++++++\nSimulation count: ", nSimulations, "\n++++++++++++++++++++++++\n\n\n"))
+            cat("\n\nSIMULATING STATISTICS FROM FINAL POSTERIOR DISTRIBUTION...\n")
+        } else {
+            cat(paste0("SMC-RF FOR SINGLE PARAMETERS: iteration ", iteration, "...\n"))
+        }
         #---Sample prior parameters for this round of iteration...
         if (iteration == 1) {
             #   ... For iteration 1: sample from initial parameters
@@ -59,16 +66,17 @@ smcrf_single_param <- function(statistics_target,
             colnames(parameters) <- parameters_ids
         } else {
             #   ... For later iterations:
-            parameters_next <- data.frame(matrix(NA, nrow = nParticles[iteration], ncol = length(parameters_ids)))
+            ifelse(iteration == (nIterations + 1), nrow <- nParticles[nIterations], nrow <- nParticles[iteration])
+            parameters_next <- data.frame(matrix(NA, nrow = nrow, ncol = length(parameters_ids)))
             colnames(parameters_next) <- parameters_ids
             for (parameter_id in parameters_ids) {
-                invalid_indices <- 1:nParticles[iteration]
+                invalid_indices <- 1:nrow
                 while (length(invalid_indices) > 0) {
                     #   Sample parameters from previous posterior distribution
                     parameter_replace <- data.frame(sample(parameters[, parameter_id], size = length(invalid_indices), prob = ABCRF_weights[, parameter_id], replace = TRUE))
                     colnames(parameter_replace) <- parameter_id
                     #   Perturb parameters
-                    parameter_replace <- perturb(parameters = parameter_replace)
+                    if (iteration < (nIterations + 1)) parameter_replace <- perturb(parameters = parameter_replace)
                     #   Check if parameters are within range, otherwise redo the failed parameters
                     parameters_next[[parameter_id]][invalid_indices] <- parameter_replace[[parameter_id]]
                     if (is.null(range)) {
@@ -89,6 +97,14 @@ smcrf_single_param <- function(statistics_target,
         reference <- model(parameters = parameters)
         statistics <- data.frame(reference[, colnames(reference)[!colnames(reference) %in% parameters_ids]])
         colnames(statistics) <- colnames(reference)[!colnames(reference) %in% parameters_ids]
+        if (iteration == (nIterations + 1)) {
+            SMCRF_iteration <- list()
+            SMCRF_iteration$reference <- reference
+            SMCRF_iteration$parameters <- parameters
+            SMCRF_iteration$statistics <- statistics
+            SMCRF[[paste0("Iteration_", iteration)]] <- SMCRF_iteration
+            break
+        }
         #---Run ABCRF for each parameter
         cat("Performing Random Forest prediction...\n")
         ABCRF_weights <- data.frame(matrix(NA, nrow = nParticles[iteration], ncol = 0))
@@ -108,6 +124,7 @@ smcrf_single_param <- function(statistics_target,
             )
             ABCRF_weights[, parameter_id] <- posterior_gamma_RF$weights
         }
+        cat("\n\n")
         #---Save SMC-RF results from this iteration
         SMCRF_iteration <- list()
         SMCRF_iteration$reference <- reference
@@ -141,7 +158,7 @@ smcrf_multi_param <- function(statistics_target,
     nIterations <- length(nParticles)
     parameters_ids <- colnames(parameters_initial)
     SMCDRF <- list()
-    for (iteration in 1:nIterations) {
+    for (iteration in 1:(nIterations + 1)) {
         cat(paste0("\n\nSMC-RF FOR MULTIPLE PARAMETERS: iteration ", iteration, "...\n"))
         #---Sample prior parameters for this round of iteration...
         if (iteration == 1) {
@@ -150,15 +167,16 @@ smcrf_multi_param <- function(statistics_target,
             colnames(parameters) <- parameters_ids
         } else {
             #   ... For later iterations:
-            parameters_next <- data.frame(matrix(NA, nrow = nParticles[iteration], ncol = length(parameters_ids)))
+            ifelse(iteration == (nIterations + 1), nrow <- nParticles[nIterations], nrow <- nParticles[iteration])
+            parameters_next <- data.frame(matrix(NA, nrow = nrow, ncol = length(parameters_ids)))
             colnames(parameters_next) <- parameters_ids
-            invalid_indices <- 1:nParticles[iteration]
+            invalid_indices <- 1:nrow
             while (length(invalid_indices) > 0) {
                 #   Sample parameters from previous posterior distribution
                 parameter_replace <- data.frame(parameters[sample(nrow(parameters), size = length(invalid_indices), prob = DRF_weights[, 1], replace = T), ])
                 colnames(parameter_replace) <- parameters_ids
                 #   Perturb parameters
-                parameter_replace <- perturb(parameters = parameter_replace)
+                if (iteration < (nIterations + 1)) parameter_replace <- perturb(parameters = parameter_replace)
                 #   Check if parameters are within range, otherwise redo the failed parameters
                 parameters_next[invalid_indices, ] <- parameter_replace
                 if (is.null(range)) {
@@ -181,6 +199,14 @@ smcrf_multi_param <- function(statistics_target,
         reference <- model(parameters = parameters)
         statistics <- data.frame(reference[, colnames(reference)[!colnames(reference) %in% parameters_ids]])
         colnames(statistics) <- colnames(reference)[!colnames(reference) %in% parameters_ids]
+        if (iteration == (nIterations + 1)) {
+            SMCDRF_iteration <- list()
+            SMCDRF_iteration$reference <- reference
+            SMCDRF_iteration$parameters <- parameters
+            SMCDRF_iteration$statistics <- statistics
+            SMCDRF[[paste0("Iteration_", iteration)]] <- SMCDRF_iteration
+            break
+        }
         #---Run DRF for all parameter
         cat("Performing Random Forest prediction...\n")
         Xdrf <- statistics

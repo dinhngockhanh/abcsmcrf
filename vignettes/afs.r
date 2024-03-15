@@ -1,11 +1,11 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - Macbook
-# R_workplace <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/vignettes"
-# R_libPaths <- ""
-# R_libPaths_extra <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/R"
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
-R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/0305_test/afs"
+R_workplace <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/vignettes"
 R_libPaths <- ""
-R_libPaths_extra <- "/Users/xiangzijin/SMC-RF/R"
+R_libPaths_extra <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/R"
+# # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
+# R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/0305_test/afs"
+# R_libPaths <- ""
+# R_libPaths_extra <- "/Users/xiangzijin/SMC-RF/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zhihan - Macbook
 # R_workplace <- "/Users/lexie/Documents/DNA/SMC-RF/vignettes"
 # R_libPaths <- ""
@@ -23,33 +23,37 @@ setwd(R_workplace)
 
 
 
-set.seed(1)
-
-
-
 # =========================Model for the Allele Frequency Spectrum (AFS)
 #   Input:  data frame of parameters, each row is one set of parameters
 #   Output: data frame of parameters & statistics, each row contains statistics for one set of parameters:
 #           first columns = input parameters
 #           next columns = summary statistics
-model <- function(parameters) {
-    library(parallel)
-    library(pbapply)
-    library(data.table)
+model <- function(parameters, parallel = TRUE) {
     nSamples <- 100
     nNoise <- 0
+    if (exists("nSimulations")) nSimulations <<- nSimulations + nrow(parameters)
     #   Make simulations & compute summary statistics (allele count)
-    cl <- makePSOCKcluster(detectCores() - 1)
-    clusterExport(cl, varlist = c("AFS_model"))
-    stats <- pblapply(
-        cl = cl, X = 1:nrow(parameters),
-        FUN = function(i) {
-            AFS_model(theta = parameters$theta[i], beta = 0, model_type = 1, n = nSamples)
+    if (parallel) {
+        library(parallel)
+        library(pbapply)
+        library(data.table)
+        cl <- makePSOCKcluster(detectCores() - 1)
+        clusterExport(cl, varlist = c("AFS_model"))
+        stats <- pblapply(
+            cl = cl, X = 1:nrow(parameters),
+            FUN = function(i) {
+                AFS_model(theta = parameters$theta[i], beta = 0, model_type = 1, n = nSamples)
+            }
+        )
+        stopCluster(cl)
+        stats <- rbindlist(stats)
+        class(stats) <- "data.frame"
+    } else {
+        stats <- c()
+        for (i in 1:nrow(parameters)) {
+            stats <- rbind(stats, AFS_model(theta = parameters$theta[i], beta = 0, model_type = 1, n = nSamples))
         }
-    )
-    stopCluster(cl)
-    stats <- rbindlist(stats)
-    class(stats) <- "data.frame"
+    }
     #   Add noise statistics
     noise <- matrix(runif(nrow(parameters) * nNoise), nrow(parameters), nNoise)
     #   Add column names
@@ -154,8 +158,10 @@ AFS_model <- function(theta, beta, model_type, n) {
     for (i in 1:n) ss <- ss + afs[i] * (i / n)^2
     lvec <- floor(sqrt(n))
     if (model_type == 1) {
-        stats <- data.frame(matrix(c(theta, nalleles), nrow = 1))
-        colnames(stats) <- c("theta", "K")
+        # stats <- data.frame(matrix(c(theta, nalleles), nrow = 1))
+        # colnames(stats) <- c("theta", "K")
+        stats <- data.frame(matrix(c(theta, nalleles, sval, ss, afs[1:lvec]), nrow = 1))
+        colnames(stats) <- c("theta", "Allele_count_K", "Mutation_count_S", "Homozygosity_statistic_F", paste0("AFS_", 1:lvec))
     } else {
         stats <- data.frame(matrix(c(theta, beta, nalleles), nrow = 1))
         colnames(stats) <- c("theta", "beta", "K")
@@ -164,15 +170,33 @@ AFS_model <- function(theta, beta, model_type, n) {
 }
 # =====================================================Target statistics
 theta <- runif(1, 1, 20)
-parameters_truth <- data.frame(
+parameters_ground_truth <- data.frame(
     theta = theta
 )
-statistics_target <- model(parameters = parameters_truth)[-c(1:ncol(parameters_truth))]
+set.seed(1)
+statistics_target <- model(parameters = parameters_ground_truth, parallel = FALSE)[-c(1:ncol(parameters_ground_truth))]
+# ===============================True marginal posteriors for parameters
+nSamples <- 100
+K <- statistics_target[, "Allele_count_K"]
+pdf <- function(theta) {
+    val <- theta^K
+    for (i in 0:(nSamples - 1)) val <- val / (theta + i)
+    return(val)
+}
+x <- seq(1, 20, length.out = 100000)
+y <- pdf(x)
+y <- y / sum(y)
+cdf <- cumsum(y)
+u <- runif(10000)
+random_samples <- approx(cdf, x, u)$y
+parameters_truth <- data.frame(
+    theta = random_samples
+)
 # ======================================Model for parameter perturbation
 #   Input:  data frame of parameters, each row is one set of parameters
 #   Output: data frame of parameters, after perturbation
 perturb <- function(parameters) {
-    for (i in 1:ncol(parameters)) parameters[[i]] <- parameters[[i]] + runif(nrow(parameters), min = -0.5, max = 0.5)
+    for (i in 1:ncol(parameters)) parameters[[i]] <- parameters[[i]] + runif(nrow(parameters), min = -1, max = 1)
     return(parameters)
 }
 # ======================================Define ranges for the parameters
@@ -183,7 +207,7 @@ range <- data.frame(
 )
 # ========================================Initial guesses for parameters
 # ====================================(sampled from prior distributions)
-theta <- runif(1000, 1, 20)
+theta <- runif(100000, 1, 20)
 parameters_initial <- data.frame(
     theta = theta
 )
@@ -192,59 +216,102 @@ parameters_labels <- data.frame(
     parameter = c("theta"),
     label = c(deparse(expression(theta)))
 )
-# ==========================================SMC-RF for single parameters
-#---Run SMC-RF for single parameters
-smcrf_results_single_param <- smcrf(
+# =========================================================ABC-rejection
+#---Run ABC-rejection
+abc_rej_results <- abc_rejection(
+    statistics_target = statistics_target,
+    model = model,
+    parameters_labels = parameters_labels,
+    prior_distributions = list(c("unif", 1, 20)),
+    nParticles = 10000, tolerance_quantile = 0.1, progress_bar = TRUE
+)
+#---Plot posterior marginal distributions against other methods
+plots <- plot_compare_marginal(
+    abc_results = abc_rej_results,
+    parameters_labels = parameters_labels,
+    parameters_truth = parameters_truth,
+    plot_statistics = TRUE
+)
+# ==============================================================ABC-MCMC
+#---Run ABC-rejection
+abc_mcmc_results <- abc_mcmc(
+    statistics_target = statistics_target,
+    model = model,
+    parameters_labels = parameters_labels,
+    prior_distributions = list(c("unif", 1, 20)),
+    nParticles = 1000, method = "Marjoram_original", progress_bar = TRUE
+)
+#---Plot posterior marginal distributions against other methods
+plots <- plot_compare_marginal(
+    plots = plots,
+    abc_results = abc_mcmc_results,
+    parameters_labels = parameters_labels,
+    plot_statistics = TRUE
+)
+# ===============================================================ABC-SMC
+#---Find minimum tolerance compatible with noisiness in model
+parameters_test <- do.call(rbind, replicate(1000, parameters_ground_truth, simplify = FALSE))
+statistics_test <- model(parameters = parameters_test)[-c(1:ncol(parameters_test))]
+distance_matrix <- as.matrix(dist(statistics_test, method = "euclidean"))
+tolerance_min <- mean(distance_matrix)
+#---Run ABC-SMC
+abc_smc_results <- abc_smc(
+    statistics_target = statistics_target,
+    model = model,
+    parameters_labels = parameters_labels,
+    prior_distributions = list(c("unif", 1, 20)),
+    nParticles = 1000, method = "Beaumont", progress_bar = TRUE,
+    tolerance = c(2 * tolerance_min, 1.5 * tolerance_min, tolerance_min)
+)
+#---Plot posterior marginal distributions against other methods
+plots <- plot_compare_marginal(
+    plots = plots,
+    abc_results = abc_smc_results,
+    parameters_labels = parameters_labels,
+    plot_statistics = TRUE
+)
+# ================================================================ABC-RF
+#---Run ABC-RF
+abcrf_results <- smcrf(
     method = "smcrf-single-param",
     statistics_target = statistics_target,
     parameters_initial = parameters_initial,
     model = model,
     perturb = perturb,
     range = range,
-    nParticles = rep(1000, 7),
+    nParticles = rep(10000, 1),
     parallel = TRUE
 )
-#---Plot marginal distributions
-plot_smcrf_marginal(
-    smcrf_results = smcrf_results_single_param,
+#---Plot posterior marginal distributions against other methods
+plots <- plot_compare_marginal(
+    plots = plots,
+    abc_results = abcrf_results,
     parameters_labels = parameters_labels,
     plot_statistics = TRUE
 )
-# ========================================SMC-RF for multiple parameters
-#---Run SMC-RF for multiple parameters
-smcrf_results_multi_param <- smcrf(
-    method = "smcrf-multi-param",
+# ==========================================SMC-RF for single parameters
+#---Run SMC-RF for single parameters
+smcrf_results <- smcrf(
+    method = "smcrf-single-param",
     statistics_target = statistics_target,
     parameters_initial = parameters_initial,
     model = model,
     perturb = perturb,
     range = range,
-    nParticles = rep(1000, 7),
+    nParticles = rep(1000, 10),
     parallel = TRUE
 )
 #---Plot marginal distributions
 plot_smcrf_marginal(
-    smcrf_results = smcrf_results_multi_param,
+    smcrf_results = smcrf_results,
+    parameters_truth = parameters_truth,
     parameters_labels = parameters_labels,
     plot_statistics = TRUE
 )
-
-# =========================================ABC-REJ for single parameters
-# ========================================Initial guesses for parameters
-# ====================================(sampled from prior distributions)
-theta <- runif(7000, 1, 20)
-parameters_initial <- data.frame(
-    theta = theta
-)
-#---Run SMC-RF for single parameters
-abcrej_results <- abc_rejection(
-    statistics_target = statistics_target,
-    model = model,
-    parameters_initial = parameters_initial
-)
-#---Plot marginal distributions
-plot_abc_marginal(
-    abc_results = abcrej_results,
-    parameters_truth = parameters_truth,
-    parameters_labels = parameters_labels
+#---Plot posterior marginal distributions against other methods
+plots <- plot_compare_marginal(
+    plots = plots,
+    abc_results = smcrf_results,
+    parameters_labels = parameters_labels,
+    plot_statistics = TRUE
 )
