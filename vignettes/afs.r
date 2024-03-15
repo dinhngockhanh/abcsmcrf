@@ -301,13 +301,13 @@ smcrf_results <- smcrf(
     nParticles = rep(1000, 10),
     parallel = TRUE
 )
-# #---Plot marginal distributions
-# plot_smcrf_marginal(
-#     smcrf_results = smcrf_results,
-#     parameters_truth = parameters_truth,
-#     parameters_labels = parameters_labels,
-#     plot_statistics = TRUE
-# )
+#---Plot marginal distributions
+plot_smcrf_marginal(
+    smcrf_results = smcrf_results,
+    parameters_truth = parameters_truth,
+    parameters_labels = parameters_labels,
+    plot_statistics = TRUE
+)
 #---Plot posterior marginal distributions against other methods
 plots <- plot_compare_marginal(
     plots = plots,
