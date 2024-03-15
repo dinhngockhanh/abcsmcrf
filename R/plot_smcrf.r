@@ -23,11 +23,15 @@ plot_smcrf_marginal <- function(smcrf_results,
         #   Plot true posterior distribution (if provided)
         if (!is.null(parameters_truth)) {
             true_posterior_df <- data.frame(value = parameters_truth[[parameter_id]], legend = "True Posterior")
-            p <- p + geom_density(data = true_posterior_df, aes(x = value, fill = legend, color = legend), linewidth = 2)
+            if (nrow(parameters_truth) == 1) {
+                p <- p + geom_vline(data = true_posterior_df, aes(xintercept = value), linetype = "solid", linewidth = 5)
+            } else {
+                p <- p + geom_density(data = true_posterior_df, aes(x = value, fill = legend, color = legend), alpha = 1, linewidth = 2)
+            }
         }
         #   Plot prior distribution
         prior_df <- data.frame(value = smcrf_results[["Iteration_1"]]$parameters[[parameter_id]], legend = "Prior Distribution")
-        p <- p + geom_density(data = prior_df, aes(x = value, fill = legend, color = legend), alpha = 0.2, linewidth = 2)
+        p <- p + geom_density(data = prior_df, aes(x = value, fill = legend, color = legend), alpha = alpha, linewidth = 2)
         #   Plot posterior distribution for each iteration
         for (iteration in 1:nIterations) {
             posterior_df <- data.frame(
@@ -57,7 +61,7 @@ plot_smcrf_marginal <- function(smcrf_results,
                 legend.justification = c(0, 0.5)
             )
         #   Print marginal distribution plot
-        file_name <- paste0(smcrf_results[["method"]], "-marginal-", parameter_id, ".png")
+        file_name <- paste0(smcrf_results[["method"]], "-marginal-parameter=", parameter_id, ".png")
         png(file_name, res = 150, width = 30, height = 15, units = "in", pointsize = 12)
         print(p)
         dev.off()
@@ -68,13 +72,13 @@ plot_smcrf_marginal <- function(smcrf_results,
             statistic_id <- statistics_labels$ID[i]
             p <- ggplot()
             #   Plot statistic value from target data
-            data_df <- data.frame(value = smcrf_results$statistics_target[[statistic_id]])
+            data_df <- data.frame(value = smcrf_results$statistics_target[[statistic_id]], legend = "Data statistic")
             p <- p + geom_vline(data = data_df, aes(xintercept = value), linetype = "solid", linewidth = 5)
             #   Plot prior distribution
             prior_df <- data.frame(value = smcrf_results[["Iteration_1"]]$statistics[[statistic_id]], legend = "Prior Distribution")
-            p <- p + geom_density(data = prior_df, aes(x = value, fill = legend, color = legend), alpha = 0.2, linewidth = 2)
+            p <- p + geom_density(data = prior_df, aes(x = value, fill = legend, color = legend), alpha = alpha, linewidth = 2)
             #   Plot posterior distribution for each iteration
-            for (iteration in 2:nIterations) {
+            for (iteration in 2:(nIterations + 1)) {
                 posterior_df <- data.frame(
                     value = smcrf_results[[paste0("Iteration_", iteration)]]$statistics[[statistic_id]],
                     legend = paste0("Iter. ", iteration - 1)
@@ -101,7 +105,7 @@ plot_smcrf_marginal <- function(smcrf_results,
                     legend.justification = c(0, 0.5)
                 )
             #   Print marginal distribution plot
-            file_name <- paste0(smcrf_results[["method"]], "-marginal-", statistic_id, ".png")
+            file_name <- paste0(smcrf_results[["method"]], "-marginal-statistic=", statistic_id, ".png")
             png(file_name, res = 150, width = 30, height = 15, units = "in", pointsize = 12)
             print(p)
             dev.off()
@@ -122,12 +126,20 @@ plot_compare_marginal <- function(plots = NULL,
     #---Set up color scheme for plotting
     color_scheme <- c(
         "True Posterior" = "black",
+        "ABC-rejection" = "forestgreen",
+        "ABC-RF" = "royalblue4",
+        "ABC-MCMC" = "goldenrod2",
+        "ABC-SMC" = "magenta4",
         "SMC-RF for single parameters" = "salmon",
-        "SMC-RF for multiple parameters" = "royalblue4"
+        "SMC-RF for multiple parameters" = "salmon"
     )
     #---Set up legend order for plotting
     legend_order <- c(
         "True Posterior",
+        "ABC-rejection",
+        "ABC-MCMC",
+        "ABC-SMC",
+        "ABC-RF",
         "SMC-RF for single parameters",
         "SMC-RF for multiple parameters"
     )
@@ -150,24 +162,55 @@ plot_compare_marginal <- function(plots = NULL,
     if (!is.null(parameters_truth)) {
         for (parameter_id in parameters_labels$parameter) {
             true_posterior_df <- data.frame(value = parameters_truth[[parameter_id]], legend = "True Posterior")
-            plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
-                geom_density(data = true_posterior_df, aes(x = value, fill = legend, color = legend), linewidth = 2)
+            if (nrow(parameters_truth) == 1) {
+                plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
+                    geom_vline(data = true_posterior_df, aes(xintercept = value), linetype = "solid", linewidth = 5)
+            } else {
+                plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
+                    geom_density(data = true_posterior_df, aes(x = value, fill = legend, color = legend), alpha = 0.8, linewidth = 2)
+            }
         }
     }
-
+    #---Plot statistic value from target data
+    if (plot_statistics & new_plot) {
+        for (statistic_id in statistics_labels$ID) {
+            data_df <- data.frame(value = abc_results$statistics_target[[statistic_id]], legend = "Data statistic")
+            plots$statistics[[statistic_id]] <- plots$statistics[[statistic_id]] +
+                geom_vline(data = data_df, aes(xintercept = value), linetype = "solid", linewidth = 5)
+        }
+    }
     #---Extract final posterior distributions
     if (method == "smcrf-single-param") {
-        legend_label <- "SMC-RF for single parameters"
         nIterations <- abc_results[["nIterations"]]
+        if (nIterations == 1) {
+            legend_label <- "ABC-RF"
+        } else {
+            legend_label <- "SMC-RF for single parameters"
+        }
         parameters_values <- abc_results[[paste0("Iteration_", nIterations)]]$parameters
         parameters_weights <- abc_results[[paste0("Iteration_", nIterations)]]$weights
-        if (plot_statistics) statistics_values <- abc_results[[paste0("Iteration_", nIterations)]]$statistics
+        if (plot_statistics) statistics_values <- abc_results[[paste0("Iteration_", nIterations + 1)]]$statistics
     } else if (method == "smcrf-multi-param") {
-        legend_label <- "SMC-RF for multiple parameters"
         nIterations <- abc_results[["nIterations"]]
+        legend_label <- "SMC-RF for multiple parameters"
         parameters_values <- abc_results[[paste0("Iteration_", nIterations)]]$parameters
         parameters_weights <- abc_results[[paste0("Iteration_", nIterations)]]$weights
-        if (plot_statistics) statistics_values <- abc_results[[paste0("Iteration_", nIterations)]]$statistics
+        if (plot_statistics) statistics_values <- abc_results[[paste0("Iteration_", nIterations + 1)]]$statistics
+    } else if (method == "abc-rejection") {
+        legend_label <- "ABC-rejection"
+        parameters_values <- abc_results[["Iteration_1"]]$parameters
+        parameters_weights <- abc_results[["Iteration_1"]]$weights
+        if (plot_statistics) statistics_values <- abc_results[["Iteration_2"]]$statistics
+    } else if (method == "abc-smc") {
+        legend_label <- "ABC-SMC"
+        parameters_values <- abc_results[["Iteration_1"]]$parameters
+        parameters_weights <- abc_results[["Iteration_1"]]$weights
+        if (plot_statistics) statistics_values <- abc_results[["Iteration_2"]]$statistics
+    } else if (method == "abc-mcmc") {
+        legend_label <- "ABC-MCMC"
+        parameters_values <- abc_results[["Iteration_1"]]$parameters
+        parameters_weights <- abc_results[["Iteration_1"]]$weights
+        if (plot_statistics) statistics_values <- abc_results[["Iteration_2"]]$statistics
     }
     #---Plot marginal distributions for each parameter
     for (parameter_id in parameters_labels$parameter) {
@@ -199,6 +242,19 @@ plot_compare_marginal <- function(plots = NULL,
         for (parameter_id in parameters_labels$parameter) {
             plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
                 labs(x = parameter_id)
+        }
+    }
+    if (plot_statistics) {
+        if ("label" %in% colnames(statistics_labels) & new_plot == TRUE) {
+            for (statistic_id in statistics_labels$ID) {
+                plots$statistics[[statistic_id]] <- plots$statistics[[statistic_id]] +
+                    labs(x = eval(parse(text = statistics_labels$label[which(statistics_labels$ID == statistic_id)])))
+            }
+        } else {
+            for (statistic_id in statistics_labels$ID) {
+                plots$statistics[[statistic_id]] <- plots$statistics[[statistic_id]] +
+                    labs(x = statistic_id)
+            }
         }
     }
     #---Beautify plots
@@ -236,14 +292,14 @@ plot_compare_marginal <- function(plots = NULL,
     }
     #---Print marginal distribution plots
     for (parameter_id in parameters_labels$parameter) {
-        file_name <- paste0("Comparison-marginal-", parameter_id, ".png")
+        file_name <- paste0("comparison-marginal-parameter=", parameter_id, ".png")
         png(file_name, res = 150, width = 30, height = 15, units = "in", pointsize = 12)
         print(plots$parameters[[parameter_id]])
         dev.off()
     }
     if (plot_statistics) {
         for (statistic_id in statistics_labels$ID) {
-            file_name <- paste0("Comparison-marginal-", statistic_id, ".png")
+            file_name <- paste0("comparison-marginal-statistic=", statistic_id, ".png")
             png(file_name, res = 150, width = 30, height = 15, units = "in", pointsize = 12)
             print(plots$statistics[[statistic_id]])
             dev.off()
@@ -307,7 +363,7 @@ plot_smcrf_joint <- function(smcrf_results,
             legend = paste0("Iter. ", iteration - 1)
         )
         if (!is.null(lims)) posterior_df <- apply_lims(posterior_df)
-        p <- p + geom_density_2d(data = posterior_df, aes(x = x, y = y, color = legend), linewidth = 2, bins = nBins)
+        p <- p + geom_density_2d(data = posterior_df, aes(x = x, y = y, color = legend), linewidth = 3, bins = nBins)
     }
     #---Add label for parameter
     if ("label" %in% colnames(parameters_labels)) {
@@ -328,7 +384,7 @@ plot_smcrf_joint <- function(smcrf_results,
             legend.justification = c(0, 0.5)
         )
     #---Print joint distribution plot
-    file_name <- paste0(smcrf_results[["method"]], "-joint-", parameters_labels$parameter[1], "-", parameters_labels$parameter[2], ".png")
+    file_name <- paste0(smcrf_results[["method"]], "-joint-parameters=", parameters_labels$parameter[1], "-vs-", parameters_labels$parameter[2], ".png")
     png(file_name, res = 150, width = 30, height = 31, units = "in", pointsize = 12)
     print(p)
     dev.off()
