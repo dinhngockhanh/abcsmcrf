@@ -159,12 +159,12 @@ AFS_model <- function(theta, beta, model_type, n) {
     lvec <- floor(sqrt(n))
     if (model_type == 1) {
         # stats <- data.frame(matrix(c(theta, nalleles), nrow = 1))
-        # colnames(stats) <- c("theta", "K")
+        # colnames(stats) <- c("theta", "Allele_count_K")
         stats <- data.frame(matrix(c(theta, nalleles, sval, ss, afs[1:lvec]), nrow = 1))
         colnames(stats) <- c("theta", "Allele_count_K", "Mutation_count_S", "Homozygosity_statistic_F", paste0("AFS_", 1:lvec))
     } else {
         stats <- data.frame(matrix(c(theta, beta, nalleles), nrow = 1))
-        colnames(stats) <- c("theta", "beta", "K")
+        colnames(stats) <- c("theta", "beta", "Allele_count_K")
     }
     return(stats)
 }
@@ -216,44 +216,44 @@ parameters_labels <- data.frame(
     parameter = c("theta"),
     label = c(deparse(expression(theta)))
 )
-# =========================================================ABC-rejection
-#---Run ABC-rejection
-abc_rej_results <- abc_rejection(
-    statistics_target = statistics_target,
-    model = model,
-    parameters_labels = parameters_labels,
-    prior_distributions = list(c("unif", 1, 20)),
-    nParticles = 10000, tolerance_quantile = 0.1, progress_bar = TRUE
-)
-#---Plot posterior marginal distributions against other methods
-plots <- plot_compare_marginal(
-    abc_results = abc_rej_results,
-    parameters_labels = parameters_labels,
-    parameters_truth = parameters_truth,
-    plot_statistics = TRUE
-)
-# ==============================================================ABC-MCMC
-#---Run ABC-rejection
-abc_mcmc_results <- abc_mcmc(
-    statistics_target = statistics_target,
-    model = model,
-    parameters_labels = parameters_labels,
-    prior_distributions = list(c("unif", 1, 20)),
-    nParticles = 1000, method = "Marjoram_original", progress_bar = TRUE
-)
-#---Plot posterior marginal distributions against other methods
-plots <- plot_compare_marginal(
-    plots = plots,
-    abc_results = abc_mcmc_results,
-    parameters_labels = parameters_labels,
-    plot_statistics = TRUE
-)
+# # =========================================================ABC-rejection
+# #---Run ABC-rejection
+# abc_rej_results <- abc_rejection(
+#     statistics_target = statistics_target,
+#     model = model,
+#     parameters_labels = parameters_labels,
+#     prior_distributions = list(c("unif", 1, 20)),
+#     nParticles = 10000, tolerance_quantile = 0.1, progress_bar = TRUE
+# )
+# #---Plot posterior marginal distributions against other methods
+# plots <- plot_compare_marginal(
+#     abc_results = abc_rej_results,
+#     parameters_labels = parameters_labels,
+#     parameters_truth = parameters_truth,
+#     plot_statistics = TRUE
+# )
+# # ==============================================================ABC-MCMC
+# #---Run ABC-rejection
+# abc_mcmc_results <- abc_mcmc(
+#     statistics_target = statistics_target,
+#     model = model,
+#     parameters_labels = parameters_labels,
+#     prior_distributions = list(c("unif", 1, 20)),
+#     nParticles = 1000, method = "Marjoram_original", progress_bar = TRUE
+# )
+# #---Plot posterior marginal distributions against other methods
+# plots <- plot_compare_marginal(
+#     plots = plots,
+#     abc_results = abc_mcmc_results,
+#     parameters_labels = parameters_labels,
+#     plot_statistics = TRUE
+# )
 # ===============================================================ABC-SMC
 #---Find minimum tolerance compatible with noisiness in model
 parameters_test <- do.call(rbind, replicate(1000, parameters_ground_truth, simplify = FALSE))
 statistics_test <- model(parameters = parameters_test)[-c(1:ncol(parameters_test))]
-distance_matrix <- as.matrix(dist(statistics_test, method = "euclidean"))
-tolerance_min <- mean(distance_matrix)
+distance_matrix <- as.matrix(dist(statistics_test, method = "euclidean"))^2
+tolerance_min <- sum(distance_matrix) / (nrow(distance_matrix) * (ncol(distance_matrix) - 1))
 #---Run ABC-SMC
 abc_smc_results <- abc_smc(
     statistics_target = statistics_target,
@@ -261,7 +261,8 @@ abc_smc_results <- abc_smc(
     parameters_labels = parameters_labels,
     prior_distributions = list(c("unif", 1, 20)),
     nParticles = 1000, method = "Beaumont", progress_bar = TRUE,
-    tolerance = c(2 * tolerance_min, 1.5 * tolerance_min, tolerance_min)
+    tolerance = c(2 * tolerance_min, 1.5 * tolerance_min, tolerance_min),
+    dist_weights = rep(1, ncol(statistics_target))
 )
 #---Plot posterior marginal distributions against other methods
 plots <- plot_compare_marginal(
