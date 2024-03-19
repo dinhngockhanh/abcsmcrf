@@ -233,30 +233,6 @@ plots <- plot_compare_marginal(
     parameters_labels = parameters_labels,
     plot_statistics = TRUE
 )
-# ===============================================================ABC-SMC
-#---Find minimum tolerance compatible with noisiness in model
-parameters_test <- do.call(rbind, replicate(1000, parameters_truth, simplify = FALSE))
-statistics_test <- model(parameters = parameters_test)[-c(1:ncol(parameters_test))]
-distance_matrix <- as.matrix(dist(statistics_test, method = "euclidean"))^2
-tolerance_min <- sum(distance_matrix) / (nrow(distance_matrix) * (ncol(distance_matrix) - 1))
-#---Run ABC-SMC
-abc_smc_results <- abc_smc(
-    statistics_target = statistics_target,
-    model = model,
-    parameters_labels = parameters_labels,
-    prior_distributions = list(c("unif", 0, 15),c("unif", 0, 15)), 
-    prior_test = "X1 > X2", 
-    nParticles = 1000, method = "Beaumont", progress_bar = TRUE,
-    tolerance = c(2 * tolerance_min, 1.5 * tolerance_min, tolerance_min),
-    dist_weights = rep(1, ncol(statistics_target))
-)
-#---Plot posterior marginal distributions against other methods
-plots <- plot_compare_marginal(
-    plots = plots,
-    abc_results = abc_smc_results,
-    parameters_labels = parameters_labels,
-    plot_statistics = TRUE
-)
 # ================================================================ABC-RF
 #---Run ABC-RF
 abcrf_results <- smcrf(
@@ -273,6 +249,30 @@ abcrf_results <- smcrf(
 plots <- plot_compare_marginal(
     plots = plots,
     abc_results = abcrf_results,
+    parameters_labels = parameters_labels,
+    plot_statistics = TRUE
+)
+# ===============================================================ABC-SMC
+#---Find minimum tolerance compatible with noisiness in model
+parameters_test <- do.call(rbind, replicate(1000, parameters_truth, simplify = FALSE))
+statistics_test <- model(parameters = parameters_test)[-c(1:ncol(parameters_test))]
+distance_matrix <- as.matrix(dist(statistics_test, method = "euclidean"))^2
+tolerance_min <- sum(distance_matrix) / (nrow(distance_matrix) * (ncol(distance_matrix) - 1))
+#---Run ABC-SMC
+abc_smc_results <- abc_smc(
+    statistics_target = statistics_target,
+    model = model,
+    parameters_labels = parameters_labels,
+    prior_distributions = list(c("unif", 0, 15),c("unif", 0, 15)), 
+    prior_test = "X1 > X2", 
+    nParticles = 100, method = "Beaumont", progress_bar = TRUE,
+    tolerance = c(2 * tolerance_min, 1.5 * tolerance_min, tolerance_min),
+    dist_weights = rep(1, ncol(statistics_target))
+)
+#---Plot posterior marginal distributions against other methods
+plots <- plot_compare_marginal(
+    plots = plots,
+    abc_results = abc_smc_results,
     parameters_labels = parameters_labels,
     plot_statistics = TRUE
 )
