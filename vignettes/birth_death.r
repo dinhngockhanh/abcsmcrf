@@ -1,15 +1,15 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - Macbook
-R_workplace <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/vignettes"
-R_libPaths <- ""
-R_libPaths_extra <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/R"
+# R_workplace <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/vignettes"
+# R_libPaths <- ""
+# R_libPaths_extra <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
 # R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/0224_test/hierarchical"
 # R_libPaths <- ""
 # R_libPaths_extra <- "/Users/xiangzijin/SMC-RF/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zhihan - Macbook
-# R_workplace <- "/Users/lexie/Documents/DNA/SMC-RF/vignettes"
-# R_libPaths <- ""
-# R_libPaths_extra <- "/Users/lexie/Documents/DNA/SMC-RF/R"
+R_workplace <- "/Users/lexie/Documents/DNA/SMC-RF/vignettes/birth_death"
+R_libPaths <- ""
+R_libPaths_extra <- "/Users/lexie/Documents/DNA/SMC-RF/R"
 # =======================================SET UP FOLDER PATHS & LIBRARIES
 .libPaths(R_libPaths)
 library(ggplot2)
@@ -34,22 +34,30 @@ N <- 1000
 #   Output: data frame of parameters & statistics, each row contains statistics for one set of parameters:
 #           first columns = input parameters
 #           next columns = summary statistics
-model <- function(parameters) {
-    library(parallel)
-    library(pbapply)
-    library(data.table)
+model <- function(parameters, parallel = TRUE) {
     nTimes <- 10
     nNoise <- 0
+    if (exists("nSimulations")) nSimulations <<- nSimulations + nrow(parameters)
     #   Make simulations & compute summary statistics (population sizes at each time point)
-    cl <- makePSOCKcluster(detectCores() - 1)
-    clusterExport(cl, varlist = c("BD_model"))
-    stats <- pblapply(
-        cl = cl, X = 1:nrow(parameters),
-        FUN = function(i) BD_model(parameters$lambda[i], parameters$mu[i], nTimes)
-    )
-    stopCluster(cl)
-    stats <- rbindlist(stats)
-    class(stats) <- "data.frame"
+    if (parallel) {
+        library(parallel)
+        library(pbapply)
+        library(data.table)
+        cl <- makePSOCKcluster(detectCores() - 1)
+        clusterExport(cl, varlist = c("BD_model"))
+        stats <- pblapply(
+            cl = cl, X = 1:nrow(parameters),
+            FUN = function(i) BD_model(parameters$lambda[i], parameters$mu[i], nTimes)
+        )
+        stopCluster(cl)
+        stats <- rbindlist(stats)
+        class(stats) <- "data.frame"
+    } else {
+        stats <- c()
+        for (i in 1:nrow(parameters)) {
+            stats <- rbind(stats, BD_model(parameters$lambda[i], parameters$mu[i], nTimes))
+        }
+    }
     #   Add noise statistics
     noise <- matrix(runif(nrow(parameters) * nNoise), nrow(parameters), nNoise)
     data <- cbind(stats, noise)
@@ -104,7 +112,7 @@ parameters_truth <- data.frame(
     lambda = 10,
     mu = 2
 )
-statistics_target <- model(parameters = parameters_truth)[-c(1:ncol(parameters_truth))]
+statistics_target <- model(parameters = parameters_truth, parallel = FALSE)[-c(1:ncol(parameters_truth))]
 # ======================================Model for parameter perturbation
 #   Input:  data frame of parameters, each row is one set of parameters
 #   Output: data frame of parameters, after perturbation
@@ -154,6 +162,12 @@ plot_smcrf_joint(
     smcrf_results = smcrf_results_single_param,
     parameters_labels = parameters_labels
 )
+#---Plot posterior marginal distributions against other methods
+plots <- plot_compare_marginal(
+    abc_results = smcrf_results_single_param,
+    parameters_labels = parameters_labels,
+    plot_statistics = TRUE
+)
 # ========================================SMC-RF for multiple parameters
 #---Run SMC-RF for multiple parameters
 smcrf_results_multi_param <- smcrf(
@@ -176,4 +190,89 @@ plot_smcrf_marginal(
 plot_smcrf_joint(
     smcrf_results = smcrf_results_multi_param,
     parameters_labels = parameters_labels
+)
+#---Plot posterior marginal distributions against other methods
+plots <- plot_compare_marginal(
+    plot = plots,
+    abc_results = smcrf_results_multi_param,
+    parameters_labels = parameters_labels,
+    plot_statistics = TRUE
+)
+# =========================================================ABC-rejection
+#---Run ABC-rejection
+abc_rej_results <- abc_rejection(
+    statistics_target = statistics_target,
+    model = model,
+    parameters_labels = parameters_labels,
+    prior_distributions = list(c("unif", 0, 15),c("unif", 0, 15)), 
+    prior_test = "X1 > X2", 
+    nParticles = 70000, tolerance_quantile = 0.1, progress_bar = TRUE
+)
+#---Plot posterior marginal distributions against other methods
+plots <- plot_compare_marginal(
+    plot = plots,
+    abc_results = abc_rej_results,
+    parameters_labels = parameters_labels,
+    parameters_truth = parameters_truth,
+    plot_statistics = TRUE
+)
+# ==============================================================ABC-MCMC
+#---Run ABC-MCMC
+abc_mcmc_results <- abc_mcmc(
+    statistics_target = statistics_target,
+    model = model,
+    parameters_labels = parameters_labels,
+    prior_distributions = list(c("unif", 0, 15),c("unif", 0, 15)), 
+    prior_test = "X1 > X2", 
+    nParticles = 1000, method = "Marjoram_original", progress_bar = TRUE
+)
+#---Plot posterior marginal distributions against other methods
+plots <- plot_compare_marginal(
+    plots = plots,
+    abc_results = abc_mcmc_results,
+    parameters_labels = parameters_labels,
+    plot_statistics = TRUE
+)
+# ===============================================================ABC-SMC
+#---Find minimum tolerance compatible with noisiness in model
+parameters_test <- do.call(rbind, replicate(1000, parameters_truth, simplify = FALSE))
+statistics_test <- model(parameters = parameters_test)[-c(1:ncol(parameters_test))]
+distance_matrix <- as.matrix(dist(statistics_test, method = "euclidean"))^2
+tolerance_min <- sum(distance_matrix) / (nrow(distance_matrix) * (ncol(distance_matrix) - 1))
+#---Run ABC-SMC
+abc_smc_results <- abc_smc(
+    statistics_target = statistics_target,
+    model = model,
+    parameters_labels = parameters_labels,
+    prior_distributions = list(c("unif", 0, 15),c("unif", 0, 15)), 
+    prior_test = "X1 > X2", 
+    nParticles = 1000, method = "Beaumont", progress_bar = TRUE,
+    tolerance = c(2 * tolerance_min, 1.5 * tolerance_min, tolerance_min),
+    dist_weights = rep(1, ncol(statistics_target))
+)
+#---Plot posterior marginal distributions against other methods
+plots <- plot_compare_marginal(
+    plots = plots,
+    abc_results = abc_smc_results,
+    parameters_labels = parameters_labels,
+    plot_statistics = TRUE
+)
+# ================================================================ABC-RF
+#---Run ABC-RF
+abcrf_results <- smcrf(
+    method = "smcrf-single-param",
+    statistics_target = statistics_target,
+    parameters_initial = parameters_initial,
+    model = model,
+    perturb = perturb,
+    range = range,
+    nParticles = rep(10000, 1),
+    parallel = TRUE
+)
+#---Plot posterior marginal distributions against other methods
+plots <- plot_compare_marginal(
+    plots = plots,
+    abc_results = abcrf_results,
+    parameters_labels = parameters_labels,
+    plot_statistics = TRUE
 )
