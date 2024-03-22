@@ -35,9 +35,9 @@ model <- function(parameters, parallel = TRUE) {
         stats <- pblapply(
             cl = cl, X = 1:nrow(parameters),
             FUN = function(i) {
-                mut_rate <<- parameters$mut_rate[i]
+                mut_rate <<- parameters$theta[i]
                 # mut_rate <- 1e-6
-                SFS_model(mut_rate = mut_rate, pop_size = 55, generation_num = 100)
+                SFS_model(mut_rate = mut_rate, generation_num = 100)
             }
         )
         stopCluster(cl)
@@ -46,8 +46,8 @@ model <- function(parameters, parallel = TRUE) {
     } else {
         stats <- c()
         for (i in 1:nrow(parameters)) {
-            mut_rate <<- parameters$mut_rate[i]
-            stats <- rbind(stats, SFS_model(mut_rate = mut_rate, pop_size = 55, generation_num = 100))
+            mut_rate <<- parameters$theta[i]
+            stats <- rbind(stats, SFS_model(mut_rate = mut_rate, generation_num = 100))
         }
     }
     #   Add noise statistics
@@ -63,7 +63,7 @@ model <- function(parameters, parallel = TRUE) {
     return(data)
 }
 
-SFS_model <- function(mut_rate = c(1e-5), pop_size = 55, generation_num = 100) {
+SFS_model <- function(mut_rate = c(1e-5), generation_num = 100) {
     library(slimr)
     library(adegenet)
     generation_num <- 100
@@ -87,7 +87,7 @@ SFS_model <- function(mut_rate = c(1e-5), pop_size = 55, generation_num = 100) {
         }),
         slim_block(1, early(), {
             ## create a population of 33 individuals
-            sim.addSubpop("p1", 55)
+            sim.addSubpop("p1", 100)
         }),
         slim_block(1, 100, late(), {
             # create an output
@@ -102,38 +102,76 @@ SFS_model <- function(mut_rate = c(1e-5), pop_size = 55, generation_num = 100) {
     mutlist <- slim_extract_full(slim_result$output_data, type = "genomes")[slim_extract_full(slim_result$output_data, type = "genomes")["generation"] == generation_num, ]["mut_list"]
     mutlist_all <- unlist(mutlist)
     mutlist_all[mutlist_all == 0] <- max(mutlist_all) + 1
-    sfs <- sort(tabulate(mutlist_all), decreasing = TRUE)
+    sfs <- tabulate(tabulate(mutlist_all))
     mutation_count <- sum(sfs)
     # ====================================================GET STATISTICS
     stats <- data.frame(matrix(c(mut_rate, mutation_count, sfs[1:20]), nrow = 1))
-    colnames(stats) <- c("mut_rate", "Mutation_count_S", paste0("SFS_", 1:20))
+    colnames(stats) <- c("theta", "Mutation_count_S", paste0("SFS_", 1:20))
     return(stats)
 }
-
-# mut_rates <- runif(100, 1e-6, 2e-5)
-# mut_rate <- mut_rates[1]
-# pop_size <- 55
-# SFS_model(mut_rate = mut_rate, pop_size = pop_size, generation_num = 100)
-
 # =====================================================Target statistics
-# mut_rate <- runif(1, 1e-6, 2e-5)
-# parameters_ground_truth <- data.frame(
-#     mut_rate = mut_rate
-# )
-# set.seed(1)
-# statistics_target <- model(parameters = parameters_ground_truth, parallel = FALSE)[-c(1:ncol(parameters_ground_truth))]
-# print(statistics_target)
-# =====================================================Target statistics
-mut_rates <- runif(100, 1e-6, 2e-5)
-parameters_initial <- data.frame(
-    mut_rate = mut_rates
+theta <- runif(1, 1e-6, 1e-4)
+parameters_ground_truth <- data.frame(
+    theta = theta
 )
-# parameters_ground_truth$mut_rate[9]
-
 set.seed(1)
-# statistics_target <- model(parameters = parameters_initial, parallel = FALSE)
-statistics_target <- model(parameters = parameters_initial, parallel = TRUE)
+statistics_target <- model(parameters = parameters_ground_truth, parallel = FALSE)[-c(1:ncol(parameters_ground_truth))]
 print(statistics_target)
+# ======================================Model for parameter perturbation
+#   Input:  data frame of parameters, each row is one set of parameters
+#   Output: data frame of parameters, after perturbation
+perturb <- function(parameters) {
+    for (i in 1:ncol(parameters)) parameters[[i]] <- parameters[[i]] + runif(nrow(parameters), min = -1, max = 1)
+    return(parameters)
+}
+# ======================================Define ranges for the parameters
+range <- data.frame(
+    parameter = c("theta"),
+    min = c(1e-6),
+    max = c(1e-4)
+)
+# ========================================Initial guesses for parameters
+# ====================================(sampled from prior distributions)
+theta <- runif(100000, 1e-6, 1e-4)
+parameters_initial <- data.frame(
+    theta = theta
+)
+# ====================================Labels for parameters in the plots
+parameters_labels <- data.frame(
+    parameter = c("theta"),
+    label = c(deparse(expression(theta)))
+)
+# ================================================================ABC-RF
+#---Run ABC-RF
+abcrf_results <- smcrf(
+    method = "smcrf-single-param",
+    statistics_target = statistics_target,
+    parameters_initial = parameters_initial,
+    model = model,
+    perturb = perturb,
+    range = range,
+    nParticles = rep(500, 1),
+    parallel = TRUE
+)
+#---Plot posterior marginal distributions against other methods
+plots <- plot_compare_marginal(
+    abc_results = abcrf_results,
+    parameters_truth = parameters_ground_truth,
+    parameters_labels = parameters_labels,
+    plot_statistics = TRUE
+)
+
+# # =====================================================Target statistics
+# mut_rates <- runif(100, 1e-6, 2e-5)
+# parameters_initial <- data.frame(
+#     mut_rate = mut_rates
+# )
+# # parameters_ground_truth$mut_rate[9]
+
+# set.seed(1)
+# # statistics_target <- model(parameters = parameters_initial, parallel = FALSE)
+# statistics_target <- model(parameters = parameters_initial, parallel = TRUE)
+# print(statistics_target)
 
 
 # library(slimr)
@@ -172,7 +210,14 @@ print(statistics_target)
 #     })
 # )
 
-
+# slim_result <- slim_run(script_1, show_output = TRUE, capture_output = TRUE)
+# mutlist <- slim_extract_full(slim_result$output_data, type = "genomes")[slim_extract_full(slim_result$output_data, type = "genomes")["generation"] == generation_num, ]["mut_list"]
+# View(mutlist)
+# mutlist_all <- unlist(mutlist)
+# tabulate(mutlist_all)
+# tabulate(tabulate(mutlist_all))
+# sfs <- sort(tabulate(mutlist_all), decreasing = TRUE)
+#     mutation_count <- sum(sfs)
 # table(mutlist_all)
 # tail(order(tabulate(mutlist_all)), 50)
 # sort(tabulate(mutlist_all),decreasing = TRUE)
