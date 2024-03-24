@@ -158,8 +158,14 @@ smcrf_multi_param <- function(statistics_target,
     nIterations <- length(nParticles)
     parameters_ids <- colnames(parameters_initial)
     SMCDRF <- list()
+    nSimulations <<- 0
     for (iteration in 1:(nIterations + 1)) {
-        cat(paste0("\n\nSMC-RF FOR MULTIPLE PARAMETERS: iteration ", iteration, "...\n"))
+        if (iteration == (nIterations + 1)) {
+            cat(paste0("\n\n++++++++++++++++++++++++\nSimulation count: ", nSimulations, "\n++++++++++++++++++++++++\n\n\n"))
+            cat("\n\nSIMULATING STATISTICS FROM FINAL POSTERIOR DISTRIBUTION...\n")
+        } else {
+            cat(paste0("SMC-RF FOR MULTIPLE PARAMETERS: iteration ", iteration, "...\n"))
+        }
         #---Sample prior parameters for this round of iteration...
         if (iteration == 1) {
             #   ... For iteration 1: sample from initial parameters

@@ -1,15 +1,15 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - Macbook
-# R_workplace <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/vignettes"
-# R_libPaths <- ""
-# R_libPaths_extra <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/R"
+R_workplace <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/vignettes"
+R_libPaths <- ""
+R_libPaths_extra <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
 # R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/0224_test/hierarchical"
 # R_libPaths <- ""
 # R_libPaths_extra <- "/Users/xiangzijin/SMC-RF/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zhihan - Macbook
-R_workplace <- "/Users/lexie/Documents/DNA/SMC-RF/vignettes/birth_death"
-R_libPaths <- ""
-R_libPaths_extra <- "/Users/lexie/Documents/DNA/SMC-RF/R"
+# R_workplace <- "/Users/lexie/Documents/DNA/SMC-RF/vignettes/birth_death"
+# R_libPaths <- ""
+# R_libPaths_extra <- "/Users/lexie/Documents/DNA/SMC-RF/R"
 # =======================================SET UP FOLDER PATHS & LIBRARIES
 .libPaths(R_libPaths)
 library(ggplot2)
@@ -27,8 +27,6 @@ set.seed(1)
 
 
 
-nNoise <- 20
-N <- 1000
 # =====================================Model for the birth-death process
 #   Input:  data frame of parameters, each row is one set of parameters
 #   Output: data frame of parameters & statistics, each row contains statistics for one set of parameters:
@@ -139,34 +137,38 @@ parameters_labels <- data.frame(
     parameter = c("lambda", "mu"),
     label = c(deparse(expression(lambda)), deparse(expression(mu)))
 )
-# ==========================================SMC-RF for single parameters
-#---Run SMC-RF for single parameters
-smcrf_results_single_param <- smcrf(
-    method = "smcrf-single-param",
+# ==============================================================ABC-MCMC
+#---Run ABC-MCMC
+abc_mcmc_results <- abc_mcmc(
+    statistics_target = statistics_target,
+    model = model,
+    parameters_labels = parameters_labels,
+    prior_distributions = list(c("unif", 0, 15), c("unif", 0, 15)),
+    prior_test = "X1 > X2",
+    nParticles = 1000, method = "Marjoram_original", progress_bar = TRUE
+)
+#---Plot posterior joint distributions against other methods
+plots <- plot_compare_joint(
+    abc_results = abc_mcmc_results,
+    parameters_labels = parameters_labels
+)
+# ===================================================================DRF
+#---Run ABC-RF
+abcrf_results <- smcrf(
+    method = "smcrf-multi-param",
     statistics_target = statistics_target,
     parameters_initial = parameters_initial,
     model = model,
     perturb = perturb,
     range = range,
-    nParticles = rep(10000, 7),
+    nParticles = rep(10000, 1),
     parallel = TRUE
 )
-#---Plot marginal distributions
-plot_smcrf_marginal(
-    smcrf_results = smcrf_results_single_param,
-    parameters_labels = parameters_labels,
-    plot_statistics = FALSE
-)
-#---Plot joint distributions
-plot_smcrf_joint(
-    smcrf_results = smcrf_results_single_param,
+#---Plot posterior joint distributions against other methods
+plots <- plot_compare_joint(
+    plots = plots,
+    abc_results = abcrf_results,
     parameters_labels = parameters_labels
-)
-#---Plot posterior marginal distributions against other methods
-plots <- plot_compare_marginal(
-    abc_results = smcrf_results_single_param,
-    parameters_labels = parameters_labels,
-    plot_statistics = TRUE
 )
 # ========================================SMC-RF for multiple parameters
 #---Run SMC-RF for multiple parameters
@@ -180,99 +182,14 @@ smcrf_results_multi_param <- smcrf(
     nParticles = rep(10000, 7),
     parallel = TRUE
 )
-#---Plot marginal distributions
-plot_smcrf_marginal(
-    smcrf_results = smcrf_results_multi_param,
-    parameters_labels = parameters_labels,
-    plot_statistics = FALSE
-)
 #---Plot joint distributions
 plot_smcrf_joint(
     smcrf_results = smcrf_results_multi_param,
     parameters_labels = parameters_labels
 )
-#---Plot posterior marginal distributions against other methods
-plots <- plot_compare_marginal(
-    plot = plots,
+#---Plot posterior joint distributions against other methods
+plots <- plot_compare_joint(
+    plots = plots,
     abc_results = smcrf_results_multi_param,
-    parameters_labels = parameters_labels,
-    plot_statistics = TRUE
-)
-# =========================================================ABC-rejection
-#---Run ABC-rejection
-abc_rej_results <- abc_rejection(
-    statistics_target = statistics_target,
-    model = model,
-    parameters_labels = parameters_labels,
-    prior_distributions = list(c("unif", 0, 15),c("unif", 0, 15)), 
-    prior_test = "X1 > X2", 
-    nParticles = 70000, tolerance_quantile = 0.1, progress_bar = TRUE
-)
-#---Plot posterior marginal distributions against other methods
-plots <- plot_compare_marginal(
-    plot = plots,
-    abc_results = abc_rej_results,
-    parameters_labels = parameters_labels,
-    parameters_truth = parameters_truth,
-    plot_statistics = TRUE
-)
-# ==============================================================ABC-MCMC
-#---Run ABC-MCMC
-abc_mcmc_results <- abc_mcmc(
-    statistics_target = statistics_target,
-    model = model,
-    parameters_labels = parameters_labels,
-    prior_distributions = list(c("unif", 0, 15),c("unif", 0, 15)), 
-    prior_test = "X1 > X2", 
-    nParticles = 1000, method = "Marjoram_original", progress_bar = TRUE
-)
-#---Plot posterior marginal distributions against other methods
-plots <- plot_compare_marginal(
-    plots = plots,
-    abc_results = abc_mcmc_results,
-    parameters_labels = parameters_labels,
-    plot_statistics = TRUE
-)
-# ================================================================ABC-RF
-#---Run ABC-RF
-abcrf_results <- smcrf(
-    method = "smcrf-single-param",
-    statistics_target = statistics_target,
-    parameters_initial = parameters_initial,
-    model = model,
-    perturb = perturb,
-    range = range,
-    nParticles = rep(10000, 1),
-    parallel = TRUE
-)
-#---Plot posterior marginal distributions against other methods
-plots <- plot_compare_marginal(
-    plots = plots,
-    abc_results = abcrf_results,
-    parameters_labels = parameters_labels,
-    plot_statistics = TRUE
-)
-# ===============================================================ABC-SMC
-#---Find minimum tolerance compatible with noisiness in model
-parameters_test <- do.call(rbind, replicate(1000, parameters_truth, simplify = FALSE))
-statistics_test <- model(parameters = parameters_test)[-c(1:ncol(parameters_test))]
-distance_matrix <- as.matrix(dist(statistics_test, method = "euclidean"))^2
-tolerance_min <- sum(distance_matrix) / (nrow(distance_matrix) * (ncol(distance_matrix) - 1))
-#---Run ABC-SMC
-abc_smc_results <- abc_smc(
-    statistics_target = statistics_target,
-    model = model,
-    parameters_labels = parameters_labels,
-    prior_distributions = list(c("unif", 0, 15),c("unif", 0, 15)), 
-    prior_test = "X1 > X2", 
-    nParticles = 100, method = "Beaumont", progress_bar = TRUE,
-    tolerance = c(2 * tolerance_min, 1.5 * tolerance_min, tolerance_min),
-    dist_weights = rep(1, ncol(statistics_target))
-)
-#---Plot posterior marginal distributions against other methods
-plots <- plot_compare_marginal(
-    plots = plots,
-    abc_results = abc_smc_results,
-    parameters_labels = parameters_labels,
-    plot_statistics = TRUE
+    parameters_labels = parameters_labels
 )
