@@ -1,11 +1,11 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
-R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/0321_sfs"
-R_libPaths <- ""
-R_libPaths_extra <- "/Users/xiangzijin/SMC-RF/R"
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macmini
-# R_workplace <- "/Users/khanhngocdinh/Documents/Zijin/0322_sfs_experiments"
+# R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/0321_sfs"
 # R_libPaths <- ""
-# R_libPaths_extra <- "/Users/khanhngocdinh/Documents/Zijin/SMC-RF/R"
+# R_libPaths_extra <- "/Users/xiangzijin/SMC-RF/R"
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macmini
+R_workplace <- "/Users/khanhngocdinh/Documents/Zijin/0322_sfs_experiments"
+R_libPaths <- ""
+R_libPaths_extra <- "/Users/khanhngocdinh/Documents/Zijin/SMC-RF/R"
 # =======================================SET UP FOLDER PATHS & LIBRARIES
 # devtools::install_github("rdinnager/slimr", force = TRUE)
 # slim_setup()
@@ -40,7 +40,6 @@ model <- function(parameters, parallel = TRUE) {
             cl = cl, X = 1:nrow(parameters),
             FUN = function(i) {
                 mut_rate <<- parameters$theta[i]
-                # mut_rate <- 1e-6
                 SFS_model(mut_rate = mut_rate, generation_num = 100)
             }
         )
@@ -67,7 +66,7 @@ model <- function(parameters, parallel = TRUE) {
     return(data)
 }
 
-SFS_model <- function(mut_rate = c(1e-5), generation_num = 100) {
+SFS_model <- function(mut_rate, generation_num = 100) {
     library(slimr)
     library(adegenet)
     generation_num <- 100
@@ -109,10 +108,10 @@ SFS_model <- function(mut_rate = c(1e-5), generation_num = 100) {
     sfs <- tabulate(tabulate(mutlist_all))
     mutation_count <- sum(sfs)
     # ====================================================GET STATISTICS
-    # stats <- data.frame(matrix(c(mut_rate, mutation_count, sfs[1:20]), nrow = 1))
-    stats <- data.frame(matrix(c(mut_rate, mutation_count), nrow = 1))
-    # colnames(stats) <- c("theta", "Mutation_count_S", paste0("SFS_", 1:20))
-    colnames(stats) <- c("theta", "Mutation_count_S")
+    stats <- data.frame(matrix(c(mut_rate, mutation_count, sfs[1:20]), nrow = 1))
+    # stats <- data.frame(matrix(c(mut_rate, mutation_count), nrow = 1))
+    colnames(stats) <- c("theta", "Mutation_count_S", paste0("SFS_", 1:20))
+    # colnames(stats) <- c("theta", "Mutation_count_S")
     return(stats)
 }
 # =====================================================Target statistics
@@ -123,6 +122,7 @@ parameters_ground_truth <- data.frame(
 set.seed(1)
 statistics_target <- model(parameters = parameters_ground_truth, parallel = FALSE)[-c(1:ncol(parameters_ground_truth))]
 print(statistics_target)
+statistics_target
 # ======================================Model for parameter perturbation
 #   Input:  data frame of parameters, each row is one set of parameters
 #   Output: data frame of parameters, after perturbation
@@ -138,7 +138,7 @@ range <- data.frame(
 )
 # ========================================Initial guesses for parameters
 # ====================================(sampled from prior distributions)
-theta <- runif(100000, 1e-5, 1e-3)
+theta <- runif(1000, 1e-5, 1e-3)
 parameters_initial <- data.frame(
     theta = theta
 )
@@ -156,7 +156,7 @@ abcrf_results <- smcrf(
     model = model,
     perturb = perturb,
     range = range,
-    nParticles = rep(50, 1),
+    nParticles = rep(500, 1),
     parallel = TRUE
 )
 #---Plot posterior marginal distributions against other methods
@@ -167,7 +167,7 @@ plots <- plot_compare_marginal(
     plot_statistics = TRUE
 )
 
-# # save(abcrf_results,file="ABCRF_results.rda")
+save(abcrf_results,file="ABCRF_results.rda")
 
 # ========================================
 #   Plot the out-of-bag estimates (equivalent to cross-validation)
@@ -189,15 +189,13 @@ plot(oob_error[, "ntree"], oob_error[, "oob_mse"], type = "l", xlab = "Number of
 dev.off()
 #   Variance Importance of each statistic in inferring gamma
 png(paste0("NEUTRAL_abcrf_theta_variance_importance.png"), width = 1500, height = 800, res = 150)
-n.var <- min(22, length(abcrf_results$Iteration_1$rf_model$model.rf$variable.importance))
+n.var <- min(30, length(abcrf_results$Iteration_1$rf_model$model.rf$variable.importance))
 imp <- abcrf_results$Iteration_1$rf_model$model.rf$variable.importance
 names(imp) <- colnames(statistics_target)
 ord <- rev(order(imp, decreasing = TRUE)[1:n.var])
-# colors <- group_colors[groups[ord]]
 xmin <- 0
 xlim <- c(xmin, max(imp) + 1)
 dotchart(imp[ord], pch = 19, xlab = "Variable Importance", ylab = "", xlim = xlim, main = NULL, bg = "white", cex = 0.7)
-# legend("bottomright", legend = names(group_colors), fill = group_colors, bty = "n", cex = 0.7)
 dev.off()
 # ========================================
 # parameters <- data.frame(parameters_initial[1:100, ])
