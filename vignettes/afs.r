@@ -216,38 +216,38 @@ parameters_labels <- data.frame(
     parameter = c("theta"),
     label = c(deparse(expression(theta)))
 )
-# # =========================================================ABC-rejection
-# #---Run ABC-rejection
-# abc_rej_results <- abc_rejection(
-#     statistics_target = statistics_target,
-#     model = model,
-#     parameters_labels = parameters_labels,
-#     prior_distributions = list(c("unif", 1, 20)),
-#     nParticles = 10000, tolerance_quantile = 0.1, progress_bar = TRUE
-# )
-# #---Plot posterior marginal distributions against other methods
-# plots <- plot_compare_marginal(
-#     abc_results = abc_rej_results,
-#     parameters_labels = parameters_labels,
-#     parameters_truth = parameters_truth,
-#     plot_statistics = TRUE
-# )
-# # ==============================================================ABC-MCMC
-# #---Run ABC-rejection
-# abc_mcmc_results <- abc_mcmc(
-#     statistics_target = statistics_target,
-#     model = model,
-#     parameters_labels = parameters_labels,
-#     prior_distributions = list(c("unif", 1, 20)),
-#     nParticles = 1000, method = "Marjoram_original", progress_bar = TRUE
-# )
-# #---Plot posterior marginal distributions against other methods
-# plots <- plot_compare_marginal(
-#     plots = plots,
-#     abc_results = abc_mcmc_results,
-#     parameters_labels = parameters_labels,
-#     plot_statistics = TRUE
-# )
+# =========================================================ABC-rejection
+#---Run ABC-rejection
+abc_rej_results <- abc_rejection(
+    statistics_target = statistics_target,
+    model = model,
+    parameters_labels = parameters_labels,
+    prior_distributions = list(c("unif", 1, 20)),
+    nParticles = 10000, tolerance_quantile = 0.1, progress_bar = TRUE
+)
+#---Plot posterior marginal distributions against other methods
+plots <- plot_compare_marginal(
+    abc_results = abc_rej_results,
+    parameters_labels = parameters_labels,
+    parameters_truth = parameters_truth,
+    plot_statistics = TRUE
+)
+# ==============================================================ABC-MCMC
+#---Run ABC-rejection
+abc_mcmc_results <- abc_mcmc(
+    statistics_target = statistics_target,
+    model = model,
+    parameters_labels = parameters_labels,
+    prior_distributions = list(c("unif", 1, 20)),
+    nParticles = 1000, method = "Marjoram_original", progress_bar = TRUE
+)
+#---Plot posterior marginal distributions against other methods
+plots <- plot_compare_marginal(
+    plots = plots,
+    abc_results = abc_mcmc_results,
+    parameters_labels = parameters_labels,
+    plot_statistics = TRUE
+)
 # ===============================================================ABC-SMC
 #---Find minimum tolerance compatible with noisiness in model
 parameters_test <- do.call(rbind, replicate(1000, parameters_ground_truth, simplify = FALSE))
