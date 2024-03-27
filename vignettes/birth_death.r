@@ -1,15 +1,15 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - Macbook
-R_workplace <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/vignettes"
-R_libPaths <- ""
-R_libPaths_extra <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/R"
+# R_workplace <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/vignettes"
+# R_libPaths <- ""
+# R_libPaths_extra <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
 # R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/0224_test/hierarchical"
 # R_libPaths <- ""
 # R_libPaths_extra <- "/Users/xiangzijin/SMC-RF/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zhihan - Macbook
-# R_workplace <- "/Users/lexie/Documents/DNA/SMC-RF/vignettes/birth_death"
-# R_libPaths <- ""
-# R_libPaths_extra <- "/Users/lexie/Documents/DNA/SMC-RF/R"
+R_workplace <- "/Users/lexie/Documents/DNA/SMC-RF/vignettes/birth_death"
+R_libPaths <- ""
+R_libPaths_extra <- "/Users/lexie/Documents/DNA/SMC-RF/R"
 # =======================================SET UP FOLDER PATHS & LIBRARIES
 .libPaths(R_libPaths)
 library(ggplot2)
@@ -33,7 +33,7 @@ set.seed(1)
 #           first columns = input parameters
 #           next columns = summary statistics
 model <- function(parameters, parallel = TRUE) {
-    nTimes <- 10
+    nTimes <- 25
     nNoise <- 0
     if (exists("nSimulations")) nSimulations <<- nSimulations + nrow(parameters)
     #   Make simulations & compute summary statistics (population sizes at each time point)
@@ -91,7 +91,7 @@ BD_model <- function(lambda, mu, nTimes) {
     }
     # Now generate observations on F and Z. We assume F > 0 at each stage,
     # so we are conditioning on Z > 0 at the end
-    zv <- 1 # start from single individual
+    zv <- 10 # start from single individual
     Fsim[1] <- sample(1:zv, size = 1, prob = dbinom(1:zv, size = zv, 1 - alpha[1]))
     Zsim[1] <- rnbinom(1, size = Fsim[1], prob = 1 - beta[1]) + Fsim[1]
     for (j in seq(2, npt)) {
@@ -107,10 +107,12 @@ BD_model <- function(lambda, mu, nTimes) {
 }
 # =====================================================Target statistics
 parameters_truth <- data.frame(
-    lambda = 10,
-    mu = 2
+    lambda = 6,
+    mu = 3
 )
-statistics_target <- model(parameters = parameters_truth, parallel = FALSE)[-c(1:ncol(parameters_truth))]
+# statistics_target <- model(parameters = parameters_truth, parallel = FALSE)[-c(1:ncol(parameters_truth))]
+statistics_target <- data.frame(matrix(c(11, 13, 16, 17, 17, 21, 23, 23, 28, 32, 36, 48, 61, 68, 80, 96, 123, 135, 161, 173, 87, 197, 221, 253, 289), nrow = 1))
+colnames(statistics_target) <- c(paste0("Z_", 1:25))
 # ======================================Model for parameter perturbation
 #   Input:  data frame of parameters, each row is one set of parameters
 #   Output: data frame of parameters, after perturbation
@@ -147,10 +149,24 @@ abc_mcmc_results <- abc_mcmc(
     prior_test = "X1 > X2",
     nParticles = 1000, method = "Marjoram_original", progress_bar = TRUE
 )
+# abc_mcmc_results <- abc_mcmc(
+#     statistics_target = statistics_target,
+#     model = model,
+#     parameters_labels = parameters_labels,
+#     prior_distributions = list(c("unif", 0, 20), c("unif", 0, 20)),
+#     prior_test = "X1 > X2",
+#     tolerance_quantile = 0.2,
+#     nParticles = 1000, method = "Marjoram", progress_bar = TRUE
+# )
 #---Plot posterior joint distributions against other methods
 plots <- plot_compare_joint(
     abc_results = abc_mcmc_results,
     parameters_labels = parameters_labels
+)
+#---Plot marginal distributions compare
+plots_marginal <- plot_compare_marginal(
+    abc_results = abc_mcmc_results,
+    parameters_labels = parameters_labels,
 )
 # ===================================================================DRF
 #---Run ABC-RF
@@ -169,6 +185,12 @@ plots <- plot_compare_joint(
     plots = plots,
     abc_results = abcrf_results,
     parameters_labels = parameters_labels
+)
+#---Plot marginal distributions compare
+plots_marginal <- plot_compare_marginal(
+    plots = plots_marginal,
+    abc_results = abcrf_results,
+    parameters_labels = parameters_labels,
 )
 # ========================================SMC-RF for multiple parameters
 #---Run SMC-RF for multiple parameters
@@ -192,4 +214,14 @@ plots <- plot_compare_joint(
     plots = plots,
     abc_results = smcrf_results_multi_param,
     parameters_labels = parameters_labels
+)
+#---Plot marginal distributions compare
+plots_marginal <- plot_compare_marginal(
+    plots = plots_marginal,
+    abc_results = smcrf_results_multi_param,
+    parameters_labels = parameters_labels,
+)
+plot_smcrf_marginal(
+    smcrf_results = smcrf_results_multi_param,
+    parameters_labels = parameters_labels,
 )
