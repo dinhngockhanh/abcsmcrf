@@ -117,6 +117,8 @@ plot_compare_marginal <- function(plots = NULL,
                                   parameters_truth = NULL,
                                   parameters_labels = NULL,
                                   statistics_labels = NULL,
+                                  xlimit = NULL,
+                                  sample_num = NULL,
                                   plot_statistics = FALSE,
                                   alpha = 0.3) {
     if (is.null(parameters_labels)) parameters_labels <- abc_results[["parameters_labels"]]
@@ -189,6 +191,9 @@ plot_compare_marginal <- function(plots = NULL,
             legend_label <- "SMC-RF for single parameters"
         }
         parameters_values <- abc_results[[paste0("Iteration_", nIterations + 1)]]$parameters
+        if (!is.null(sample_num)) {
+            parameters_values <- abc_results[[paste0("Iteration_", nIterations + 1)]]$parameters[1:sample_num, , drop = FALSE]
+        }
         if (plot_statistics) statistics_values <- abc_results[[paste0("Iteration_", nIterations + 1)]]$statistics
     } else if (method == "smcrf-multi-param") {
         nIterations <- abc_results[["nIterations"]]
@@ -221,6 +226,10 @@ plot_compare_marginal <- function(plots = NULL,
         )
         plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
             geom_density(data = posterior_df, aes(x = value, fill = legend, color = legend), alpha = alpha, linewidth = 2)
+        if (!is.null(xlimit)) {
+            plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
+                xlim(xlimit[1], xlimit[2])
+        }
     }
     if (plot_statistics) {
         for (statistic_id in statistics_labels$ID) {
@@ -309,6 +318,7 @@ plot_compare_marginal <- function(plots = NULL,
     }
     return(plots)
 }
+
 
 plot_smcrf_joint <- function(smcrf_results,
                              parameters_truth = NULL,
