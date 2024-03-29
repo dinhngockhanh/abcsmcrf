@@ -7,7 +7,7 @@
 # R_libPaths <- ""
 # R_libPaths_extra <- "/Users/xiangzijin/SMC-RF/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zhihan - Macbook
-R_workplace <- "/Users/lexie/Documents/DNA/SMC-RF/vignettes/birth_death"
+R_workplace <- "/Users/lexie/Documents/DNA/SMC-RF/vignettes/birth_death/test"
 R_libPaths <- ""
 R_libPaths_extra <- "/Users/lexie/Documents/DNA/SMC-RF/R"
 # =======================================SET UP FOLDER PATHS & LIBRARIES
@@ -23,7 +23,7 @@ setwd(R_workplace)
 
 
 
-set.seed(1)
+# set.seed(1)
 
 
 
@@ -111,6 +111,7 @@ parameters_truth <- data.frame(
     mu = 3
 )
 # statistics_target <- model(parameters = parameters_truth, parallel = FALSE)[-c(1:ncol(parameters_truth))]
+# c(8,11,11,15,14,17,19,20,21,27,30,35,42,54,67,72,93,111,119,146,157,163,173,202,230)
 statistics_target <- data.frame(matrix(c(11, 13, 16, 17, 17, 21, 23, 23, 28, 32, 36, 48, 61, 68, 80, 96, 123, 135, 161, 173, 87, 197, 221, 253, 289), nrow = 1))
 colnames(statistics_target) <- c(paste0("Z_", 1:25))
 # ======================================Model for parameter perturbation
@@ -139,6 +140,28 @@ parameters_labels <- data.frame(
     parameter = c("lambda", "mu"),
     label = c(deparse(expression(lambda)), deparse(expression(mu)))
 )
+# ==============================================================ABC-Rejection
+#---Run ABC
+abc_rej_results <- abc_rejection(
+    statistics_target = statistics_target,
+    model = model,
+    parameters_labels = parameters_labels,
+    prior_distributions = list(c("unif", 0, 15), c("unif", 0, 15)),
+    # prior_test = "X1 > X2",
+    tolerance_quantile = 0.02,
+    nParticles = 500000, progress_bar = TRUE
+)
+#---Plot posterior joint distributions against other methods
+plots_joint <- plot_compare_joint(
+    abc_results = abc_rej_results,
+    parameters_labels = parameters_labels
+)
+#---Plot marginal distributions compare
+plots_marginal <- plot_compare_marginal(
+    abc_results = abc_rej_results,
+    parameters_labels = parameters_labels,
+    parameters_truth = parameters_truth,
+)
 # ==============================================================ABC-MCMC
 #---Run ABC-MCMC
 abc_mcmc_results <- abc_mcmc(
@@ -146,27 +169,21 @@ abc_mcmc_results <- abc_mcmc(
     model = model,
     parameters_labels = parameters_labels,
     prior_distributions = list(c("unif", 0, 15), c("unif", 0, 15)),
-    prior_test = "X1 > X2",
-    nParticles = 1000, method = "Marjoram_original", progress_bar = TRUE
+    # prior_test = "X1 > X2",
+    nParticles = 50000, method = "Marjoram", progress_bar = TRUE
 )
-# abc_mcmc_results <- abc_mcmc(
-#     statistics_target = statistics_target,
-#     model = model,
-#     parameters_labels = parameters_labels,
-#     prior_distributions = list(c("unif", 0, 20), c("unif", 0, 20)),
-#     prior_test = "X1 > X2",
-#     tolerance_quantile = 0.2,
-#     nParticles = 1000, method = "Marjoram", progress_bar = TRUE
-# )
 #---Plot posterior joint distributions against other methods
-plots <- plot_compare_joint(
+plots_joint <- plot_compare_joint( 
+    plots = plots_joint,
     abc_results = abc_mcmc_results,
     parameters_labels = parameters_labels
 )
 #---Plot marginal distributions compare
 plots_marginal <- plot_compare_marginal(
+    plots = plots_marginal,
     abc_results = abc_mcmc_results,
     parameters_labels = parameters_labels,
+    parameters_truth = parameters_truth,
 )
 # ===================================================================DRF
 #---Run ABC-RF
@@ -181,8 +198,8 @@ abcrf_results <- smcrf(
     parallel = TRUE
 )
 #---Plot posterior joint distributions against other methods
-plots <- plot_compare_joint(
-    plots = plots,
+plots_joint <- plot_compare_joint(
+    plots = plots_joint,
     abc_results = abcrf_results,
     parameters_labels = parameters_labels
 )
@@ -201,7 +218,7 @@ smcrf_results_multi_param <- smcrf(
     model = model,
     perturb = perturb,
     range = range,
-    nParticles = rep(10000, 7),
+    nParticles = rep(10000, 5),
     parallel = TRUE
 )
 #---Plot joint distributions
@@ -210,8 +227,8 @@ plot_smcrf_joint(
     parameters_labels = parameters_labels
 )
 #---Plot posterior joint distributions against other methods
-plots <- plot_compare_joint(
-    plots = plots,
+plots_joint <- plot_compare_joint(
+    plots = plots_joint,
     abc_results = smcrf_results_multi_param,
     parameters_labels = parameters_labels
 )
@@ -220,8 +237,10 @@ plots_marginal <- plot_compare_marginal(
     plots = plots_marginal,
     abc_results = smcrf_results_multi_param,
     parameters_labels = parameters_labels,
+    parameters_truth = parameters_truth,
 )
 plot_smcrf_marginal(
     smcrf_results = smcrf_results_multi_param,
     parameters_labels = parameters_labels,
+    parameters_truth = parameters_truth,
 )
