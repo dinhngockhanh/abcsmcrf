@@ -160,8 +160,8 @@ SFS_model <- function(theta, beta, model_type, n) {
     if (model_type == 1) {
         # stats <- data.frame(matrix(c(theta, nalleles), nrow = 1))
         # colnames(stats) <- c("theta", "Allele_count_K")
-        stats <- data.frame(matrix(c(theta, sval, sfs[1:lvec]), nrow = 1))
-        colnames(stats) <- c("theta", "Mutation_count_S", paste0("SFS_", 1:lvec))
+        stats <- data.frame(matrix(c(theta, sval, sfs[1:20]), nrow = 1))
+        colnames(stats) <- c("theta", "Mutation_count_S", paste0("SFS_", 1:20))
         # stats <- data.frame(matrix(c(theta, nalleles, sval, ss, afs[1:lvec]), nrow = 1))
         # colnames(stats) <- c("theta", "Allele_count_K", "Mutation_count_S", "Homozygosity_statistic_F", paste0("AFS_", 1:lvec))
     } else {
@@ -191,7 +191,7 @@ range <- data.frame(
 )
 # ========================================Initial guesses for parameters
 # ====================================(sampled from prior distributions)
-theta <- runif(1000000, 1, 20)
+theta <- runif(10000, 1, 20)
 parameters_initial <- data.frame(
     theta = theta
 )
@@ -209,7 +209,7 @@ abcrf_results <- smcrf(
     model = model,
     perturb = perturb,
     range = range,
-    nParticles = rep(200000, 1),
+    nParticles = rep(10000, 1),
     parallel = TRUE
 )
 #---Plot posterior marginal distributions against other methods
@@ -330,3 +330,8 @@ dev.off()
 #     parameters_labels = parameters_labels,
 #     plot_statistics = TRUE
 # )
+
+library(abcrf)
+?snp
+data(snp)
+View(snp)
