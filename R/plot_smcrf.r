@@ -3,7 +3,9 @@ plot_smcrf_marginal <- function(smcrf_results,
                                 parameters_labels = NULL,
                                 statistics_labels = NULL,
                                 plot_statistics = FALSE,
-                                alpha = 0.3) {
+                                alpha = 0.3,
+                                plot_hist = FALSE,
+                                bin_counts = NULL) {
     nIterations <- smcrf_results[["nIterations"]]
     if (is.null(parameters_labels)) parameters_labels <- smcrf_results[["parameters_labels"]]
     if (is.null(statistics_labels)) statistics_labels <- smcrf_results[["statistics_labels"]]
@@ -26,19 +28,31 @@ plot_smcrf_marginal <- function(smcrf_results,
             if (nrow(parameters_truth) == 1) {
                 p <- p + geom_vline(data = true_posterior_df, aes(xintercept = value), linetype = "solid", linewidth = 5)
             } else {
-                p <- p + geom_density(data = true_posterior_df, aes(x = value, fill = legend, color = legend), alpha = 1, linewidth = 2)
+                if (plot_hist) {
+                    p <- p + geom_histogram(data = true_posterior_df, aes(x = value, y = ..density.., fill = legend, color = legend), alpha = 1, bins = bin_counts)
+                } else {
+                    p <- p + geom_density(data = true_posterior_df, aes(x = value, fill = legend, color = legend), alpha = 1, linewidth = 2)
+                }
             }
         }
         #   Plot prior distribution
         prior_df <- data.frame(value = smcrf_results[["Iteration_1"]]$parameters[[parameter_id]], legend = "Prior Distribution")
-        p <- p + geom_density(data = prior_df, aes(x = value, fill = legend, color = legend), alpha = alpha, linewidth = 2)
+        if (plot_hist) {
+            p <- p + geom_histogram(data = prior_df, aes(x = value, y = ..density.., fill = legend, color = legend), alpha = alpha, bins = bin_counts)
+        } else {
+            p <- p + geom_density(data = prior_df, aes(x = value, fill = legend, color = legend), alpha = alpha, linewidth = 2)
+        }
         #   Plot posterior distribution for each iteration
         for (iteration in 1:nIterations) {
             posterior_df <- data.frame(
                 value = smcrf_results[[paste0("Iteration_", iteration + 1)]]$parameters[[parameter_id]],
                 legend = paste0("Iter. ", iteration)
             )
-            p <- p + geom_density(data = posterior_df, aes(x = value, fill = legend, color = legend), alpha = alpha, linewidth = 2)
+            if (plot_hist) {
+                p <- p + geom_histogram(data = posterior_df, aes(x = value, y = ..density.., fill = legend, color = legend), alpha = alpha, bins = bin_counts)
+            } else {
+                p <- p + geom_density(data = posterior_df, aes(x = value, fill = legend, color = legend), alpha = alpha, linewidth = 2)
+            }
         }
         #   Add label for parameter
         if ("label" %in% colnames(parameters_labels)) {
@@ -75,14 +89,23 @@ plot_smcrf_marginal <- function(smcrf_results,
             p <- p + geom_vline(data = data_df, aes(xintercept = value), linetype = "solid", linewidth = 5)
             #   Plot prior distribution
             prior_df <- data.frame(value = smcrf_results[["Iteration_1"]]$statistics[[statistic_id]], legend = "Prior Distribution")
-            p <- p + geom_density(data = prior_df, aes(x = value, fill = legend, color = legend), alpha = alpha, linewidth = 2)
+            if (plot_hist) {
+                p <- p + geom_histogram(data = prior_df, aes(x = value, y = ..density.., fill = legend, color = legend), alpha = alpha, bins = bin_counts)
+            } else {
+                p <- p + geom_density(data = prior_df, aes(x = value, fill = legend, color = legend), alpha = alpha, linewidth = 2)
+            }
+
             #   Plot posterior distribution for each iteration
             for (iteration in 1:nIterations) {
                 posterior_df <- data.frame(
                     value = smcrf_results[[paste0("Iteration_", iteration + 1)]]$statistics[[statistic_id]],
                     legend = paste0("Iter. ", iteration)
                 )
-                p <- p + geom_density(data = posterior_df, aes(x = value, fill = legend, color = legend), alpha = alpha, linewidth = 2)
+                if (plot_hist) {
+                    p <- p + geom_histogram(data = posterior_df, aes(x = value, y = ..density.., fill = legend, color = legend), alpha = alpha, bins = bin_counts)
+                } else {
+                    p <- p + geom_density(data = posterior_df, aes(x = value, fill = legend, color = legend), alpha = alpha, linewidth = 2)
+                }
             }
             #   Add label for parameter
             if ("label" %in% colnames(statistics_labels)) {
@@ -120,12 +143,16 @@ plot_compare_marginal <- function(plots = NULL,
                                   xlimit = NULL,
                                   sample_num = NULL,
                                   plot_statistics = FALSE,
-                                  alpha = 0.3) {
+                                  plot_hist = FALSE,
+                                  bin_counts = NULL,
+                                  alpha = 0.3,
+                                  plot_prior = FALSE) {
     if (is.null(parameters_labels)) parameters_labels <- abc_results[["parameters_labels"]]
     if (is.null(statistics_labels)) statistics_labels <- abc_results[["statistics_labels"]]
     method <- abc_results[["method"]]
     #---Set up color scheme for plotting
     color_scheme <- c(
+        "Prior Distribution" = "gray",
         "True Posterior" = "black",
         "ABC-rejection" = "forestgreen",
         "ABC-RF" = "royalblue4",
@@ -137,6 +164,7 @@ plot_compare_marginal <- function(plots = NULL,
     )
     #---Set up legend order for plotting
     legend_order <- c(
+        "Prior Distribution",
         "True Posterior",
         "ABC-rejection",
         "ABC-MCMC",
@@ -169,8 +197,26 @@ plot_compare_marginal <- function(plots = NULL,
                 plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
                     geom_vline(data = true_posterior_df, aes(xintercept = value), linetype = "solid", linewidth = 5)
             } else {
+                if (plot_hist) {
+                    plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
+                        geom_histogram(data = true_posterior_df, aes(x = value, y = ..density.., fill = legend, color = legend), alpha = 0.8, bins = bin_counts)
+                } else {
+                    plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
+                        geom_density(data = true_posterior_df, aes(x = value, fill = legend, color = legend), alpha = 0.8, linewidth = 2)
+                }
+            }
+        }
+    }
+    #---Plot prior distributions (if provided)
+    if (plot_prior) {
+        for (parameter_id in parameters_labels$parameter) {
+            prior_df <- data.frame(value = smcrf_results[["Iteration_1"]]$parameters[[parameter_id]], legend = "Prior Distribution")
+            if (plot_hist) {
                 plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
-                    geom_density(data = true_posterior_df, aes(x = value, fill = legend, color = legend), alpha = 0.8, linewidth = 2)
+                    geom_histogram(data = prior_df, aes(x = value, y = ..density.., fill = legend, color = legend), alpha = alpha, bins = bin_counts)
+            } else {
+                plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
+                    geom_density(data = prior_df, aes(x = value, fill = legend, color = legend), alpha = alpha, linewidth = 2)
             }
         }
     }
@@ -224,8 +270,13 @@ plot_compare_marginal <- function(plots = NULL,
             value = parameters_values[[parameter_id]],
             legend = legend_label
         )
-        plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
-            geom_density(data = posterior_df, aes(x = value, fill = legend, color = legend), alpha = alpha, linewidth = 2)
+        if (plot_hist) {
+            plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
+                geom_histogram(data = posterior_df, aes(x = value, y = ..density.., fill = legend, color = legend), alpha = alpha, bins = bin_counts)
+        } else {
+            plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
+                geom_density(data = posterior_df, aes(x = value, fill = legend, color = legend), alpha = alpha, linewidth = 2)
+        }
         if (!is.null(xlimit)) {
             plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
                 xlim(xlimit[1], xlimit[2])
@@ -237,8 +288,13 @@ plot_compare_marginal <- function(plots = NULL,
                 value = statistics_values[[statistic_id]],
                 legend = legend_label
             )
-            plots$statistics[[statistic_id]] <- plots$statistics[[statistic_id]] +
-                geom_density(data = posterior_df, aes(x = value, fill = legend, color = legend), alpha = alpha, linewidth = 2)
+            if (plot_hist) {
+                plots$statistics[[statistic_id]] <- plots$statistics[[statistic_id]] +
+                    geom_histogram(data = posterior_df, aes(x = value, y = ..density.., fill = legend, color = legend), alpha = alpha, bins = bin_counts)
+            } else {
+                plots$statistics[[statistic_id]] <- plots$statistics[[statistic_id]] +
+                    geom_density(data = posterior_df, aes(x = value, fill = legend, color = legend), alpha = alpha, linewidth = 2)
+            }
         }
     }
     #---Add label for parameters and statistics

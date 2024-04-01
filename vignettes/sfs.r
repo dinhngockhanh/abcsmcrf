@@ -3,7 +3,7 @@
 # R_libPaths <- ""
 # R_libPaths_extra <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/R"
 # # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
-R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/0326_sfs"
+R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper/sfs_npop=1000_nsim=10000"
 R_libPaths <- ""
 R_libPaths_extra <- "/Users/xiangzijin/SMC-RF/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zhihan - Macbook
@@ -29,7 +29,7 @@ setwd(R_workplace)
 #           first columns = input parameters
 #           next columns = summary statistics
 model <- function(parameters, parallel = TRUE) {
-    nSamples <- 100
+    nSamples <- 1000
     nNoise <- 0
     if (exists("nSimulations")) nSimulations <<- nSimulations + nrow(parameters)
     #   Make simulations & compute summary statistics (allele count)
@@ -152,6 +152,7 @@ SFS_model <- function(theta, beta, model_type, n) {
     b2 <- tabulate(b1)
     sfs <- tabulate(b2, nbins = n - 1)
     sval <- sum(sfs)
+    mean_sfs <- mean(sfs)
     # #---Combine table of statistics:
     # #---number of alleles, the homozygoity statistic and the first sqrt(n) frequencies in the ESF
     # ss <- 0
@@ -160,8 +161,8 @@ SFS_model <- function(theta, beta, model_type, n) {
     if (model_type == 1) {
         # stats <- data.frame(matrix(c(theta, nalleles), nrow = 1))
         # colnames(stats) <- c("theta", "Allele_count_K")
-        stats <- data.frame(matrix(c(theta, sval, sfs[1:20]), nrow = 1))
-        colnames(stats) <- c("theta", "Mutation_count_S", paste0("SFS_", 1:20))
+        stats <- data.frame(matrix(c(theta, sval, mean_sfs, sfs[1:lvec]), nrow = 1))
+        colnames(stats) <- c("theta", "Mutation_count_S", "mean_sfs", paste0("SFS_", 1:lvec))
         # stats <- data.frame(matrix(c(theta, nalleles, sval, ss, afs[1:lvec]), nrow = 1))
         # colnames(stats) <- c("theta", "Allele_count_K", "Mutation_count_S", "Homozygosity_statistic_F", paste0("AFS_", 1:lvec))
     } else {
@@ -171,7 +172,8 @@ SFS_model <- function(theta, beta, model_type, n) {
     return(stats)
 }
 # =====================================================Target statistics
-theta <- 10
+set.seed(1)
+theta <- runif(1, 1, 20)
 parameters_ground_truth <- data.frame(
     theta = theta
 )
@@ -191,6 +193,7 @@ range <- data.frame(
 )
 # ========================================Initial guesses for parameters
 # ====================================(sampled from prior distributions)
+set.seed(1)
 theta <- runif(10000, 1, 20)
 parameters_initial <- data.frame(
     theta = theta
@@ -221,6 +224,7 @@ plots <- plot_compare_marginal(
     plot_statistics = TRUE
 )
 # ========================================
+save(abcrf_results, file = "abcrf_results.rda")
 #   Plot the out-of-bag estimates (equivalent to cross-validation)
 abcrf_results[["Iteration_1"]][["rf_model"]][["model.rf"]]$predictions
 abcrf_results$Iteration_1$rf_model$model.rf$predictions
@@ -331,7 +335,38 @@ dev.off()
 #     plot_statistics = TRUE
 # )
 
-library(abcrf)
-?snp
-data(snp)
-View(snp)
+# setwd("/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper")
+# load("/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper/sfs_npop=1000_nsim=10000/abcrf_results.rda")
+# load("/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper/coala_length1000_npop=1000_nsim=10000/abcrf_results.rda")
+# sfs_S <- abcrf_results[["Iteration_1"]][["statistics"]][["Mutation_count_S"]]
+# sfs_mean <- abcrf_results[["Iteration_1"]][["statistics"]][["mean_sfs"]]
+# coala_S <- abcrf_results[["Iteration_1"]][["statistics"]][["Mutation_count_S"]]
+# coala_mean <- abcrf_results[["Iteration_1"]][["statistics"]][["mean_sfs"]]
+# qqplot()
+
+
+# # sfs_S
+# png(paste0("qqplot_S.png"))
+# qqplot(coala_S, sfs_S)
+# abline(0, 1)
+# dev.off()
+
+# png(paste0("qqplot_mean.png"))
+# qqplot(coala_mean, sfs_mean)
+# abline(0, 1)
+# dev.off()
+
+# png(paste0("scatter_mean.png"))
+# plot(x = sfs_mean, y = coala_mean)
+# abline(0, 1)
+# dev.off()
+
+
+
+# png(paste0("coala_theta_mean.png"))
+# plot(x = parameters_initial$theta, y = coala_mean, xlab = "theta", ylab = "coala_sfs_mean")
+# dev.off()
+
+# png(paste0("sfs_theta_mean.png"))
+# plot(x = parameters_initial$theta, y = sfs_mean, xlab = "theta", ylab = "sfs_sfs_mean")
+# dev.off()
