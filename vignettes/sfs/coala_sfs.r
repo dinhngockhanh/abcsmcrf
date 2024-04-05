@@ -1,5 +1,5 @@
 # # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
-R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper/coala_npop=1000_nsim=10000"
+R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper/coala_npop=1000_nsim=10000/new_results/10000sim npop=1000;abcrf&abc-rej"
 R_libPaths <- ""
 R_libPaths_extra <- "/Users/xiangzijin/SMC-RF/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macmini
@@ -67,18 +67,23 @@ model <- function(parameters, parallel = TRUE) {
 SFS_model <- function(theta, n) {
     library(coala)
     model <- coal_model(n, 0) +
-        locus_single(1000) +
+        locus_single(1) +
         feat_mutation(par_const(theta)) +
         sumstat_sfs()
     sim_data <- simulate(model, nsim = 1)
     sfs <- create_abc_sumstat(sim_data, model)
+    indices <- seq_along(sfs)
+    weights <- 1 / (match(sfs, sfs)^2)
+    weighted_sfs <- sfs * weights
+    colnames(weighted_sfs) <- colnames(sfs)
     sval <- sum(sfs)
+    sval_weighted <- sum(weighted_sfs)
     mean_sfs <- mean(sfs)
     lvec <- floor(sqrt(n))
-    # stats <- data.frame(matrix(c(theta, sval), nrow = 1))
-    # colnames(stats) <- c("theta", "Mutation_count_S")
-    stats <- data.frame(matrix(c(theta, sval, mean_sfs, sfs[1:lvec]), nrow = 1))
-    colnames(stats) <- c("theta", "Mutation_count_S", "mean_sfs", paste0("SFS_", 1:lvec))
+    # stats <- data.frame(matrix(c(theta, sval, sfs[1:lvec]), nrow = 1))
+    # colnames(stats) <- c("theta", "Mutation_count_S", paste0("SFS_", 1:lvec))
+    stats <- data.frame(matrix(c(theta, sval, weighted_sfs[1:lvec]), nrow = 1))
+    colnames(stats) <- c("theta", "Mutation_count_S", paste0("SFS_", 1:lvec))
     return(stats)
 }
 # =====================================================Target statistics
@@ -126,8 +131,8 @@ abcrf_results <- smcrf(
     parallel = TRUE
 )
 save(abcrf_results, file = "abcrf_results.rda")
-#+++++++++++++++++++testplot
-load("/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper/coala_npop=1000_nsim=10000/abcrf_results.rda")
+
+load("/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper/coala_npop=1000_nsim=10000/new_results/10000sim npop=1000;abcrf&abc-rej/abcrf_results.rda")
 #---Plot posterior marginal distributions against other methods
 plots <- plot_compare_marginal(
     # plots = plots,
@@ -137,7 +142,6 @@ plots <- plot_compare_marginal(
     plot_statistics = TRUE,
     xlimit = c(0, 20),
     plot_hist = TRUE,
-    bin_counts = 55,
     plot_prior = TRUE
 )
 # ========================================
@@ -165,35 +169,86 @@ xmin <- 0
 xlim <- c(xmin, max(imp) + 1)
 dotchart(imp[ord], pch = 19, xlab = "Variable Importance", ylab = "", xlim = xlim, main = NULL, bg = "white", cex = 0.7)
 dev.off()
-# ==========================================SMC-RF for single parameters
-#---Run SMC-RF for single parameters
-smcrf_results <- smcrf(
-    method = "smcrf-single-param",
+# =========================================================ABC-Rejection
+#---Run ABC
+abc_rej_results <- abc_rejection(
     statistics_target = statistics_target,
-    parameters_initial = parameters_initial,
     model = model,
-    perturb = perturb,
-    range = range,
-    nParticles = rep(2000, 5),
-    parallel = TRUE
-)
-#---Plot marginal distributions
-plot_smcrf_marginal(
-    smcrf_results = smcrf_results,
-    parameters_truth = parameters_ground_truth,
     parameters_labels = parameters_labels,
-    plot_statistics = TRUE,
-    plot_hist = TRUE,
-    bin_counts = 55
+    prior_distributions = list(c("unif", 0, 20)),
+    tolerance_quantile = 0.05,
+    nParticles = 10000, progress_bar = TRUE
 )
-#---Plot posterior marginal distributions against other methods
-plots <- plot_compare_marginal(
+
+
+save(abc_rej_results, file = "abcrej_results.rda")
+#---Plot marginal distributions compare
+plots_marginal <- plot_compare_marginal(
     plots = plots,
-    abc_results = smcrf_results,
+    abc_results = abc_rej_results,
     parameters_labels = parameters_labels,
+    parameters_truth = parameters_ground_truth,
     plot_statistics = TRUE,
-    xlimit = c(0, 20),
+    # xlimit = c(0, 20),
     plot_hist = TRUE,
-    bin_counts = 55,
-    plot_prior = TRUE
+    plot_prior = FALSE
 )
+
+
+# # ==========================================SMC-RF for single parameters
+# #---Run SMC-RF for single parameters
+# smcrf_results <- smcrf(
+#     method = "smcrf-single-param",
+#     statistics_target = statistics_target,
+#     parameters_initial = parameters_initial,
+#     model = model,
+#     perturb = perturb,
+#     range = range,
+#     nParticles = rep(2000, 5),
+#     parallel = TRUE
+# )
+# #---Plot marginal distributions
+# plot_smcrf_marginal(
+#     smcrf_results = smcrf_results,
+#     parameters_truth = parameters_ground_truth,
+#     parameters_labels = parameters_labels,
+#     plot_statistics = TRUE,
+#     plot_hist = TRUE,
+#     bin_counts = 55
+# )
+# #---Plot posterior marginal distributions against other methods
+# plots <- plot_compare_marginal(
+#     plots = plots,
+#     abc_results = smcrf_results,
+#     parameters_labels = parameters_labels,
+#     plot_statistics = TRUE,
+#     xlimit = c(0, 20),
+#     plot_hist = TRUE,
+#     bin_counts = 55,
+#     plot_prior = TRUE
+# )
+
+# # =============================================ABC-package-ABC-Rejection
+# #---Run ABC
+# load("/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper/coala_npop=1000_nsim=10000/new_results/10000sim npop=1000;abcrf&abc-rej/abcrf_results.rda")
+# abc_params <- abcrf_results[["Iteration_1"]][["reference"]][, 1]
+# abc_stats <- abcrf_results[["Iteration_1"]][["reference"]][, c(3:12)]
+# library(abc)
+# posterior <- abc(statistics_target[2:11], abc_params, abc_stats, 0.05, method = "rejection")
+# png(paste0("ABC_package_test_10_SFS.png"))
+# hist(posterior, breaks = 20)
+# dev.off()
+
+# library(coala)
+sfs_test <- as.matrix(c(112, 57, 24, 34, 16, 29, 8, 10, 15), nrow = 1)
+sfs_test
+new_sfs_test <- sapply(sfs_test, function(x) x / (which(sfs_test == x))^2)
+new_sfs_test
+# test_model <- coal_model(10, 50) +
+#     feat_mutation(par_prior("theta", runif(1, 1, 5))) +
+#     sumstat_sfs()
+# sim_data <- simulate(test_model, nsim = 2000, seed = 17)
+# sim_param <- create_abc_param(sim_data, test_model)
+# sim_sumstat <- create_abc_sumstat(sim_data, test_model)
+# posterior <- abc(sfs_test, sim_param, sim_sumstat, 0.05, method = "rejection")
+# hist(posterior, breaks = 20)
