@@ -248,7 +248,6 @@ plot_compare_marginal <- function(plots = NULL,
         } else {
             legend_label <- "SMC-RF for multiple parameters"
         }
-        legend_label <- "SMC-RF for multiple parameters"
         parameters_values <- abc_results[[paste0("Iteration_", nIterations + 1)]]$parameters
         if (plot_statistics) statistics_values <- abc_results[[paste0("Iteration_", nIterations + 1)]]$statistics
     } else if (method == "abc-rejection") {
@@ -478,7 +477,7 @@ plot_compare_joint <- function(plots = NULL,
         "True Posterior" = "black",
         "ABC-rejection" = "forestgreen",
         "ABC-RF" = "royalblue4",
-        "DRF" = "royalblue4",
+        "DRF" = "#12fff3eb",
         "MCMC" = "goldenrod2",
         "ABC-MCMC" = "goldenrod2",
         "ABC-SMC" = "magenta4",
@@ -579,8 +578,13 @@ plot_compare_joint <- function(plots = NULL,
     }
     if (!is.null(lims)) posterior_df <- apply_lims(posterior_df)
     #---Plot joint distribution
-    plots <- plots +
-        geom_density_2d(data = posterior_df, aes(x = x, y = y, color = legend), linewidth = 3, bins = nBins)
+    if (method == "mcmc") {
+        plots <- plots +
+            geom_density_2d_filled(data = posterior_df, aes(x = x, y = y), show.legend = FALSE)
+    } else {
+        plots <- plots +
+            geom_density_2d(data = posterior_df, aes(x = x, y = y, color = legend), linewidth = 3, bins = nBins)
+    }
     #---Add label for parameter
     if (new_plot == TRUE) {
         if ("label" %in% colnames(parameters_labels)) {
