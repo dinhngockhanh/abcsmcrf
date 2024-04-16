@@ -469,20 +469,22 @@ plot_compare_joint <- function(plots = NULL,
                                nBins = 5) {
     library(MASS)
     library(dplyr)
+    library(RColorBrewer)
     method <- abc_results[["method"]]
+
     if (is.null(parameters_labels)) parameters_labels <- abc_results[["parameters_labels"]]
     if (nrow(parameters_labels) != 2) stop("ERROR: plot_compare_joint only works for two parameters. Please check parameters_labels.")
     #---Set up color scheme for plotting
     color_scheme <- c(
-        "True Posterior" = "black",
+        "TRUE-JOINT" = "black",
         "ABC-rejection" = "forestgreen",
         "ABC-RF" = "royalblue4",
-        "DRF" = "#12fff3eb",
-        "MCMC" = "goldenrod2",
+        "DRF" = "burlywood2",
+        "MCMC" = "firebrick2",
         "ABC-MCMC" = "goldenrod2",
         "ABC-SMC" = "magenta4",
         "SMC-RF for single parameters" = "salmon",
-        "SMC-RF for multiple parameters" = "salmon"
+        "SMC-RF for multiple parameters" = "plum1"
     )
     #---Set up legend order for plotting
     legend_order <- c(
@@ -496,6 +498,8 @@ plot_compare_joint <- function(plots = NULL,
         "SMC-RF for single parameters",
         "SMC-RF for multiple parameters"
     )
+    my_palette <- colorRampPalette(c("#170756ad", "#0b50a4", "#0beac8", "#ffff0f"))
+
     #---Function to apply limits to data (if provided)
     apply_lims <- function(df) {
         df <- df %>%
@@ -575,15 +579,25 @@ plot_compare_joint <- function(plots = NULL,
             y = abc_results$selected_params[[parameters_labels$parameter[2]]],
             legend = legend_label
         )
+    } else if (method == "true-joint") {
+        legend_label <- "TRUE-JOINT"
+        likelihood_df <- abc_results$likelihood
     }
     if (!is.null(lims)) posterior_df <- apply_lims(posterior_df)
     #---Plot joint distribution
-    if (method == "mcmc") {
+    if (method == "true-joint") {
         plots <- plots +
-            geom_density_2d_filled(data = posterior_df, aes(x = x, y = y), show.legend = FALSE)
-    } else {
+            geom_tile(data = abc_results$likelihood, aes(x = lambda, y = mu, fill = likelihood), show.legend = FALSE) +
+            # scale_fill_gradientn(colors = brewer.pal(10, "RdYlBu"))
+            scale_fill_gradientn(colors = my_palette(15))
+    }
+    # else if (method == "mcmc") {
+    #     plots <- plots +
+    #         geom_density_2d_filled(data = posterior_df, aes(x = x, y = y), show.legend = FALSE)
+    # }
+    else {
         plots <- plots +
-            geom_density_2d(data = posterior_df, aes(x = x, y = y, color = legend), linewidth = 3, bins = nBins)
+            geom_density_2d(data = posterior_df, aes(x = x, y = y, color = legend), linewidth = 3, bins = 3)
     }
     #---Add label for parameter
     if (new_plot == TRUE) {
