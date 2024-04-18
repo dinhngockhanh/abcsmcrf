@@ -1,5 +1,6 @@
 # # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
 R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper/coala_npop=1000_nsim=10000/new_results/10000sim;npop=1000;abcrf&abc-rej;onlyS"
+# R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper/coala_npop=1000_nsim=10000/new_results/10000sim npop=1000;abcrf&abc-rej"
 R_libPaths <- ""
 R_libPaths_extra <- "/Users/xiangzijin/SMC-RF/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macmini
@@ -99,7 +100,7 @@ list_target <- list()
 list_target$ground_truth_para <- parameters_target
 list_target$statistics_target <- statistics_target
 # save(list_target, file = "sfs_target_statistics.rda")
-# load("/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper/coala_npop=1000_nsim=10000/new_results/10000sim;npop=1000;abcrf&abc-rej;onlyS/sfs_target_statistics.rda")
+load("/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper/coala_npop=1000_nsim=10000/new_results/10000sim;npop=1000;abcrf&abc-rej;onlyS/sfs_target_statistics.rda")
 parameters_target <- list_target$ground_truth_para
 statistics_target <- list_target$statistics_target
 # ======================================Model for parameter perturbation
@@ -128,51 +129,52 @@ parameters_labels <- data.frame(
     label = c(deparse(expression(theta)))
 )
 # ========================================================True posterior
-theta_single <- function(sample_size, a, b, s, theta) {
-    # uncomment the print statements to get a check … should get same value twice
+# theta_single <- function(sample_size, a, b, s, theta) {
+#     # uncomment the print statements to get a check … should get same value twice
 
-    # prior for theta is U(a,b)
-    # sample_size = number of sequences in a single sample
-    # s = observed number of segregating sites
-    # theta is value you want density of
-    n <- sample_size
-    ln <- sum(1 / 1:(n - 1))
-    cons <- (pgamma(a * ln, s + 1, 1, lower = FALSE) - pgamma(b * ln, s + 1, 1, lower = FALSE)) / ln # could use log(n) for ln
-    print(cons)
-    dens <- dpois(s, theta * ln) / cons
-    ## a check
-    integrand <- function(x, s, n) {
-        dpois(s, x * sum(1 / 1:(n - 1)))
-    } # could use log(n) here
-    val <- integrate(integrand, a, b, s, n)
-    print(val)
-    return(dens)
-}
-density <- c()
-test_theta <- sample(parameters_initial$theta, 1000)
-for (theta in test_theta) {
-    density <- c(density, theta_single(1000, 0, 20, statistics_target$Mutation_count_S, theta))
-}
-parameters_truth <- data.frame(
-    theta = test_theta,
-    density = density
-)
-save(parameters_truth, file = "true_posterior.rda")
+#     # prior for theta is U(a,b)
+#     # sample_size = number of sequences in a single sample
+#     # s = observed number of segregating sites
+#     # theta is value you want density of
+#     n <- sample_size
+#     ln <- sum(1 / 1:(n - 1))
+#     cons <- (pgamma(a * ln, s + 1, 1, lower = FALSE) - pgamma(b * ln, s + 1, 1, lower = FALSE)) / ln # could use log(n) for ln
+#     print(cons)
+#     dens <- dpois(s, theta * ln) / cons
+#     ## a check
+#     integrand <- function(x, s, n) {
+#         dpois(s, x * sum(1 / 1:(n - 1)))
+#     } # could use log(n) here
+#     val <- integrate(integrand, a, b, s, n)
+#     print(val)
+#     return(dens)
+# }
+# density <- c()
+# test_theta <- sample(parameters_initial$theta, 1000)
+# for (theta in test_theta) {
+#     density <- c(density, theta_single(1000, 0, 20, statistics_target$Mutation_count_S, theta))
+# }
+# parameters_truth <- data.frame(
+#     theta = test_theta,
+#     density = density
+# )
+# save(parameters_truth, file = "true_posterior.rda")
 load("/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper/coala_npop=1000_nsim=10000/new_results/10000sim;npop=1000;abcrf&abc-rej;onlyS/true_posterior.rda")
 # ================================================================ABC-RF
 #---Run ABC-RF
-abcrf_results <- smcrf(
-    method = "smcrf-single-param-test",
-    statistics_target = statistics_target,
-    parameters_initial = parameters_initial,
-    model = model,
-    perturb = perturb,
-    range = range,
-    nParticles = rep(10000, 1),
-    parallel = TRUE
-)
+# abcrf_results <- smcrf(
+#     method = "smcrf-single-param-test",
+#     statistics_target = statistics_target,
+#     parameters_initial = parameters_initial,
+#     model = model,
+#     perturb = perturb,
+#     range = range,
+#     nParticles = rep(10000, 1),
+#     parallel = TRUE
+# )
 # save(abcrf_results, file = "abcrf_results.rda")
-# load("/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper/coala_npop=1000_nsim=10000/new_results/10000sim;npop=1000;abcrf&abc-rej;onlyS/abcrf_results.rda")
+load("/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper/coala_npop=1000_nsim=10000/new_results/10000sim;npop=1000;abcrf&abc-rej;onlyS/abcrf_results.rda")
+# load("/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper/coala_npop=1000_nsim=10000/new_results/10000sim npop=1000;abcrf&abc-rej/abcrf_results.rda")
 #---Plot posterior marginal distributions against other methods
 plots <- plot_compare_marginal(
     # plots = plots,
@@ -221,6 +223,7 @@ dev.off()
 # )
 # save(abc_rej_results, file = "abcrej_results.rda")
 load("/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper/coala_npop=1000_nsim=10000/new_results/10000sim;npop=1000;abcrf&abc-rej;onlyS/abcrej_results.rda")
+# load("/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper/coala_npop=1000_nsim=10000/new_results/10000sim npop=1000;abcrf&abc-rej/abcrej_results.rda")
 #---Plot marginal distributions compare
 plots_marginal <- plot_compare_marginal(
     plots = plots,

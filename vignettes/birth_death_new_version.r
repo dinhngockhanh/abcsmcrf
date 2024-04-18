@@ -153,81 +153,81 @@ parameters_labels <- data.frame(
 )
 # =====================================True joint density for parameters
 #---Define the negative log-likelihood function
-# nLL <- function(param) { # this version edited for MCMC example
-#     lambda <- param[1]
-#     mu <- param[2]
-#     # zvals <- c(10, c(statistics_target))
-#     # list(10, statistics_target)
-#     zvals <- c(10, 11, 13, 16, 17, 17, 21, 23, 23, 28, 32, 36, 48, 61, 68, 80, 96, 123, 135, 161, 173, 187, 197, 221, 253, 289)
-#     times <- seq(1, 25) / 25
-#     npt <- length(times)
-#     alpha <- rep(0, npt)
-#     beta <- rep(0, npt)
-#     tdiff <- c(times[1], diff(times))
-#     # compute alpha and beta vectors
-#     if (lambda == mu) {
-#         alpha <- lambda * tdiff / (1 + lambda * tdiff)
-#         beta <- alpha
-#     } else {
-#         elm <- exp((lambda - mu) * tdiff)
-#         alpha <- mu * (elm - 1) / (lambda * elm - mu)
-#         beta <- lambda * alpha / mu
-#     }
-#     totLL <- 0.0
-#     # Now calculate log-likelihood from the decomposition
-#     for (j in seq(1, npt)) {
-#         n <- zvals[j]
-#         m <- zvals[j + 1]
-#         alph <- alpha[j]
-#         bet <- beta[j]
-#         mn <- min(m, n)
-#         tot <- 0
-#         for (l in 1:mn) {
-#             tot <- tot + dbinom(l, size = n, prob = 1 - alph) * dnbinom(m - l, size = l, prob = 1 - bet)
-#         }
-#         totLL <- totLL - log(tot) # negative log-likelihood
-#     }
-#     return(-totLL) # return log-likelihood
-# }
+nLL <- function(param) { # this version edited for MCMC example
+    lambda <- param[1]
+    mu <- param[2]
+    # zvals <- c(10, c(statistics_target))
+    # list(10, statistics_target)
+    zvals <- c(10, 11, 13, 16, 17, 17, 21, 23, 23, 28, 32, 36, 48, 61, 68, 80, 96, 123, 135, 161, 173, 187, 197, 221, 253, 289)
+    times <- seq(1, 25) / 25
+    npt <- length(times)
+    alpha <- rep(0, npt)
+    beta <- rep(0, npt)
+    tdiff <- c(times[1], diff(times))
+    # compute alpha and beta vectors
+    if (lambda == mu) {
+        alpha <- lambda * tdiff / (1 + lambda * tdiff)
+        beta <- alpha
+    } else {
+        elm <- exp((lambda - mu) * tdiff)
+        alpha <- mu * (elm - 1) / (lambda * elm - mu)
+        beta <- lambda * alpha / mu
+    }
+    totLL <- 0.0
+    # Now calculate log-likelihood from the decomposition
+    for (j in seq(1, npt)) {
+        n <- zvals[j]
+        m <- zvals[j + 1]
+        alph <- alpha[j]
+        bet <- beta[j]
+        mn <- min(m, n)
+        tot <- 0
+        for (l in 1:mn) {
+            tot <- tot + dbinom(l, size = n, prob = 1 - alph) * dnbinom(m - l, size = l, prob = 1 - bet)
+        }
+        totLL <- totLL - log(tot) # negative log-likelihood
+    }
+    return(-totLL) # return log-likelihood
+}
 
-# lambdas <- seq(0.1, 20, 0.1)
-# mus <- seq(0.1, 20, 0.1)
-# vec_lambda <- c()
-# vec_mu <- c()
-# vec_nLL <- c()
-# cnt <- 0
-# for (i in 1:length(lambdas)) {
-#     for (j in 1:length(mus)) {
-#         cnt <- cnt + 1
-#         print(cnt)
-#         print("=====")
-#         print(length(lambdas) * length(mus))
-#         lambda <- lambdas[i]
-#         mu <- mus[j]
-#         vec_lambda <- c(vec_lambda, lambda)
-#         vec_mu <- c(vec_mu, mu)
-#         vec_nLL <- c(vec_nLL, nLL(c(lambda, mu)))
-#     }
-# }
-# max_likelihood <- max(vec_nLL)
-# lln_weights <- exp(vec_nLL - max_likelihood)
-# lln_weights <- lln_weights / sum(sort(lln_weights))
-# df_nLL <- data.frame(lambda = vec_lambda, mu = vec_mu, likelihood = vec_nLL)
-# sampled_parameters <- df_nLL[sample(nrow(df_nLL), 1e6, prob = lln_weights, replace = T), ]
-# parameters_truth <- data.frame(
-#     lambda = sampled_parameters$lambda,
-#     mu = sampled_parameters$mu
-# )
-# true_joint <- c()
-# true_joint$likelihood <- df_nLL
-# true_joint$method <- "true-joint"
-# true_joint$parameters_truth <- parameters_truth
-# save(true_joint, file = "likelihood.rda")
+lambdas <- seq(0.1, 20, 0.1)
+mus <- seq(0.1, 20, 0.1)
+vec_lambda <- c()
+vec_mu <- c()
+vec_nLL <- c()
+cnt <- 0
+for (i in 1:length(lambdas)) {
+    for (j in 1:length(mus)) {
+        cnt <- cnt + 1
+        print(cnt)
+        print("=====")
+        print(length(lambdas) * length(mus))
+        lambda <- lambdas[i]
+        mu <- mus[j]
+        vec_lambda <- c(vec_lambda, lambda)
+        vec_mu <- c(vec_mu, mu)
+        vec_nLL <- c(vec_nLL, nLL(c(lambda, mu)))
+    }
+}
+max_likelihood <- max(vec_nLL)
+lln_weights <- exp(vec_nLL - max_likelihood)
+lln_weights <- lln_weights / sum(sort(lln_weights))
+df_nLL <- data.frame(lambda = vec_lambda, mu = vec_mu, likelihood = vec_nLL)
+sampled_parameters <- df_nLL[sample(nrow(df_nLL), 2000, prob = lln_weights, replace = T), ]
+parameters_truth <- data.frame(
+    lambda = sampled_parameters$lambda + runif(nrow(sampled_parameters), min = -0.05, max = 0.05),
+    mu = sampled_parameters$mu + runif(nrow(sampled_parameters), min = -0.05, max = 0.05)
+)
+true_joint <- c()
+true_joint$likelihood <- df_nLL
+true_joint$method <- "true-joint"
+true_joint$parameters_truth <- parameters_truth
+save(true_joint, file = "likelihood.rda")
 #-----------------------------------------------------------------------
 #---Load likelihood
 df_nLL <- load("/Users/xiangzijin/Documents/ABC_SMCRF/Birth_death/test_0411(try new model)/perturb=+-2;mtry=default;num.tree=1000;5000*4/likelihood.rda")
 parameters_truth <- true_joint$parameters_truth
-#---Plot posterior joint distributions against other methods
+# #---Plot posterior joint distributions against other methods
 plots_joint <- plot_compare_joint(
     abc_results = true_joint,
     parameters_labels = parameters_labels
