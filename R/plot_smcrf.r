@@ -151,7 +151,7 @@ plot_compare_marginal <- function(plots = NULL,
     #---Set up color scheme for plotting
     color_scheme <- c(
         "Prior Distribution" = "gray",
-        "True Posterior" = "black",
+        "True Posterior" = "azure4",
         "ABC-rejection" = "forestgreen",
         "ABC-RF" = "royalblue4",
         "DRF" = "royalblue4",
@@ -192,17 +192,29 @@ plot_compare_marginal <- function(plots = NULL,
     #---Plot true posterior parameter distributions (if provided)
     if (!is.null(parameters_truth)) {
         for (parameter_id in parameters_labels$parameter) {
-            true_posterior_df <- data.frame(value = parameters_truth[[parameter_id]], legend = "True Posterior")
-            if (nrow(parameters_truth) == 1) {
-                plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
-                    geom_vline(data = true_posterior_df, aes(xintercept = value), linetype = "solid", linewidth = 5)
-            } else {
+            if (any(grepl("density", colnames(parameters_truth)))) {
+                true_posterior_df <- data.frame(value = parameters_truth[[parameter_id]], density = parameters_truth[["density"]], legend = "True Posterior")
                 if (plot_hist) {
                     plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
-                        geom_histogram(data = true_posterior_df, aes(x = value, y = ..density.., fill = legend, color = legend), alpha = 0.8)
+                        geom_histogram(data = true_posterior_df, aes(x = value, weight = density, y = ..density.., fill = legend, color = legend), alpha = 0.7)
                 } else {
                     plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
-                        geom_density(data = true_posterior_df, aes(x = value, fill = legend, color = legend), alpha = 0.8, linewidth = 2)
+                        geom_line(data = true_posterior_df, aes(x = value, y = density, color = legend), alpha = 0.7, linetype = "solid", linewidth = 5) +
+                        geom_area(alpha = 0.7, fill = legend)
+                }
+            } else {
+                true_posterior_df <- data.frame(value = parameters_truth[[parameter_id]], legend = "True Posterior")
+                if (nrow(parameters_truth) == 1) {
+                    plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
+                        geom_vline(data = true_posterior_df, aes(xintercept = value), linetype = "solid", linewidth = 5)
+                } else {
+                    if (plot_hist) {
+                        plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
+                            geom_histogram(data = true_posterior_df, aes(x = value, y = ..density.., fill = legend, color = legend), alpha = 0.7)
+                    } else {
+                        plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
+                            geom_density(data = true_posterior_df, aes(x = value, fill = legend, color = legend), alpha = 0.7, linewidth = 2)
+                    }
                 }
             }
         }
@@ -476,19 +488,19 @@ plot_compare_joint <- function(plots = NULL,
     if (nrow(parameters_labels) != 2) stop("ERROR: plot_compare_joint only works for two parameters. Please check parameters_labels.")
     #---Set up color scheme for plotting
     color_scheme <- c(
-        "TRUE-JOINT" = "black",
         "ABC-rejection" = "forestgreen",
         "ABC-RF" = "royalblue4",
-        "DRF" = "burlywood2",
+        # "DRF" = "burlywood2",
+        "DRF" = "cadetblue",
         "MCMC" = "firebrick2",
         "ABC-MCMC" = "goldenrod2",
         "ABC-SMC" = "magenta4",
         "SMC-RF for single parameters" = "salmon",
-        "SMC-RF for multiple parameters" = "plum1"
+        # "SMC-RF for multiple parameters" = "plum1"
+        "SMC-RF for multiple parameters" = "lightpink"
     )
     #---Set up legend order for plotting
     legend_order <- c(
-        "True Posterior",
         "ABC-rejection",
         "MCMC",
         "ABC-MCMC",
@@ -581,15 +593,18 @@ plot_compare_joint <- function(plots = NULL,
         )
     } else if (method == "true-joint") {
         legend_label <- "TRUE-JOINT"
-        likelihood_df <- abc_results$likelihood
+        posterior_df <- data.frame(
+            x = abc_results$parameters_truth[[parameters_labels$parameter[1]]],
+            y = abc_results$parameters_truth[[parameters_labels$parameter[2]]],
+            legend = legend_label
+        )
     }
-    if (!is.null(lims)) posterior_df <- apply_lims(posterior_df)
-    #---Plot joint distribution
+    if (!is.null(lims)) {
+        posterior_df <- apply_lims(posterior_df)
+    } #---Plot joint distribution
     if (method == "true-joint") {
         plots <- plots +
-            geom_tile(data = abc_results$likelihood, aes(x = lambda, y = mu, fill = likelihood), show.legend = FALSE) +
-            # scale_fill_gradientn(colors = brewer.pal(10, "RdYlBu"))
-            scale_fill_gradientn(colors = my_palette(15))
+            geom_density_2d_filled(data = posterior_df, aes(x = x, y = y), show.legend = FALSE)
     }
     # else if (method == "mcmc") {
     #     plots <- plots +
@@ -624,5 +639,147 @@ plot_compare_joint <- function(plots = NULL,
     png(file_name, res = 150, width = 30, height = 31, units = "in", pointsize = 12)
     print(plots)
     dev.off()
+    return(plots)
+}
+
+plot_compare_qqplot <- function(plots = NULL,
+                                abc_results,
+                                parameters_truth = NULL,
+                                parameters_labels = NULL,
+                                statistics_labels = NULL,
+                                xlimit = NULL,
+                                sample_num = NULL,
+                                plot_statistics = FALSE,
+                                plot_hist = FALSE,
+                                alpha = 0.3,
+                                plot_prior = FALSE) {
+    if (is.null(parameters_labels)) parameters_labels <- abc_results[["parameters_labels"]]
+    method <- abc_results[["method"]]
+    #---Set up color scheme for plotting
+    color_scheme <- c(
+        "ABC-rejection" = "forestgreen",
+        "ABC-RF" = "royalblue4",
+        "DRF" = "royalblue4",
+        "MCMC" = "goldenrod2",
+        "ABC-MCMC" = "goldenrod2",
+        "ABC-SMC" = "magenta4",
+        "SMC-RF for single parameters" = "salmon",
+        "SMC-RF for multiple parameters" = "salmon"
+    )
+    #---Set up legend order for plotting
+    legend_order <- c(
+        "ABC-rejection",
+        "ABC-MCMC",
+        "ABC-SMC",
+        "ABC-RF",
+        "DRF",
+        "MCMC",
+        "SMC-RF for single parameters",
+        "SMC-RF for multiple parameters"
+    )
+    #---Begin plots
+    if (is.null(plots)) {
+        plots <- list()
+        for (parameter_id in parameters_labels$parameter) {
+            plots$parameters[[parameter_id]] <- ggplot()
+        }
+        new_plot <- TRUE
+    } else {
+        new_plot <- FALSE
+    }
+    #---Extract final posterior distributions
+    if (method == "smcrf-single-param") {
+        nIterations <- abc_results[["nIterations"]]
+        if (nIterations == 1) {
+            legend_label <- "ABC-RF"
+        } else {
+            legend_label <- "SMC-RF for single parameters"
+        }
+        parameters_values <- abc_results[[paste0("Iteration_", nIterations + 1)]]$parameters
+        if (!is.null(sample_num)) {
+            parameters_values <- abc_results[[paste0("Iteration_", nIterations + 1)]]$parameters[1:sample_num, , drop = FALSE]
+        }
+    } else if (method == "smcrf-multi-param") {
+        nIterations <- abc_results[["nIterations"]]
+        if (nIterations == 1) {
+            legend_label <- "DRF"
+        } else {
+            legend_label <- "SMC-RF for multiple parameters"
+        }
+        parameters_values <- abc_results[[paste0("Iteration_", nIterations + 1)]]$parameters
+    } else if (method == "abc-rejection") {
+        legend_label <- "ABC-rejection"
+        parameters_values <- abc_results[["Iteration_2"]]$paramet
+    } else if (method == "abc-smc") {
+        legend_label <- "ABC-SMC"
+        parameters_values <- abc_results[["Iteration_2"]]$parameters
+    } else if (method == "abc-mcmc") {
+        legend_label <- "ABC-MCMC"
+        parameters_values <- abc_results[["Iteration_2"]]$parameters
+    } else if (method == "mcmc") {
+        legend_label <- "MCMC"
+        parameters_values <- abc_results$selected_params
+    }
+
+    for (parameter_id in parameters_labels$parameter) {
+        true_para <- qqplot(x = parameters_truth[[parameter_id]], y = parameters_values[[parameter_id]], plot.it = FALSE)$x
+        fitted_para <- qqplot(x = parameters_truth[[parameter_id]], y = parameters_values[[parameter_id]], plot.it = FALSE)$y
+        qq_data <- data.frame(True_parameter = true_para, Fitted_parameter = fitted_para, legend = legend_label)
+        plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
+            geom_point(data = qq_data, aes(x = True_parameter, y = Fitted_parameter, color = legend), size = 3)
+    }
+    if (new_plot == TRUE) {
+        if ("label" %in% colnames(parameters_labels)) {
+            for (parameter_id in parameters_labels$parameter) {
+                label_for_id <- parameters_labels$label[parameters_labels$parameter == parameter_id]
+                label_string <- gsub("expression\\((.*)\\)", "\\1", label_for_id)
+                label_expression <- parse(text = label_string)[[1]]
+                plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
+                    labs(
+                        x = bquote("True " ~ .(label_expression)),
+                        y = bquote("Fitted " ~ .(label_expression)),
+                    )
+            }
+        } else {
+            for (parameter_id in parameters_labels$parameter) {
+                plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
+                    labs(
+                        x = paste0(
+                            "True ", parameter_id
+                        ),
+                        y = paste0(
+                            "Fitted ", parameter_id
+                        )
+                    )
+            }
+        }
+    }
+    #---Beautify plots
+    if (new_plot) {
+        for (parameter_id in parameters_labels$parameter) {
+            plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
+                geom_abline(intercept = 0, slope = 1, color = "black", size = 1.5) +
+                # scale_fill_manual(values = color_scheme, name = "", breaks = legend_order) +
+                scale_color_manual(values = color_scheme, name = "", breaks = legend_order) +
+                guides(color = guide_legend(override.aes = list(size = 10))) +
+                # guides(fill = guide_legend(nrow = 1, keywidth = 2.5, keyheight = 1)) +
+                theme(
+                    text = element_text(size = 50),
+                    panel.background = element_rect(fill = "white", colour = "white"),
+                    panel.grid.major = element_line(colour = "white"),
+                    panel.grid.minor = element_line(colour = "white"),
+                    legend.key.size = unit(10, "points"),
+                    legend.position = "top",
+                    legend.justification = c(0, 0.5)
+                )
+        }
+    }
+    #---Print marginal distribution plots
+    for (parameter_id in parameters_labels$parameter) {
+        file_name <- paste0("qq-plot-compare-parameter=", parameter_id, ".png")
+        png(file_name, res = 150, width = 30, height = 15, units = "in", pointsize = 12)
+        print(plots$parameters[[parameter_id]])
+        dev.off()
+    }
     return(plots)
 }

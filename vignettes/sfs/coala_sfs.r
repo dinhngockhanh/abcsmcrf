@@ -1,5 +1,5 @@
 # # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
-R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper/coala_npop=1000_nsim=10000/new_results/10000sim npop=1000;abcrf&abc-rej"
+R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper/coala_npop=1000_nsim=10000/new_results/10000sim;npop=1000;abcrf&abc-rej;onlyS"
 R_libPaths <- ""
 R_libPaths_extra <- "/Users/xiangzijin/SMC-RF/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macmini
@@ -82,17 +82,26 @@ SFS_model <- function(theta, n) {
     lvec <- floor(sqrt(n))
     # stats <- data.frame(matrix(c(theta, sval, sfs[1:lvec]), nrow = 1))
     # colnames(stats) <- c("theta", "Mutation_count_S", paste0("SFS_", 1:lvec))
-    stats <- data.frame(matrix(c(theta, sval, weighted_sfs[1:lvec]), nrow = 1))
-    colnames(stats) <- c("theta", "Mutation_count_S", paste0("SFS_", 1:lvec))
+    # stats <- data.frame(matrix(c(theta, sval, weighted_sfs[1:lvec]), nrow = 1))
+    # colnames(stats) <- c("theta", "Mutation_count_S", paste0("SFS_", 1:lvec))
+    stats <- data.frame(matrix(c(theta, sval), nrow = 1))
+    colnames(stats) <- c("theta", "Mutation_count_S")
     return(stats)
 }
 # =====================================================Target statistics
 set.seed(1)
 theta <- runif(1, 1, 20)
-parameters_ground_truth <- data.frame(
+parameters_target <- data.frame(
     theta = theta
 )
-statistics_target <- model(parameters = parameters_ground_truth, parallel = FALSE)[-c(1:ncol(parameters_ground_truth))]
+statistics_target <- model(parameters = parameters_target, parallel = FALSE)[-c(1:ncol(parameters_target))]
+list_target <- list()
+list_target$ground_truth_para <- parameters_target
+list_target$statistics_target <- statistics_target
+# save(list_target, file = "sfs_target_statistics.rda")
+# load("/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper/coala_npop=1000_nsim=10000/new_results/10000sim;npop=1000;abcrf&abc-rej;onlyS/sfs_target_statistics.rda")
+parameters_target <- list_target$ground_truth_para
+statistics_target <- list_target$statistics_target
 # ======================================Model for parameter perturbation
 #   Input:  data frame of parameters, each row is one set of parameters
 #   Output: data frame of parameters, after perturbation
@@ -118,10 +127,42 @@ parameters_labels <- data.frame(
     parameter = c("theta"),
     label = c(deparse(expression(theta)))
 )
+# ========================================================True posterior
+theta_single <- function(sample_size, a, b, s, theta) {
+    # uncomment the print statements to get a check … should get same value twice
+
+    # prior for theta is U(a,b)
+    # sample_size = number of sequences in a single sample
+    # s = observed number of segregating sites
+    # theta is value you want density of
+    n <- sample_size
+    ln <- sum(1 / 1:(n - 1))
+    cons <- (pgamma(a * ln, s + 1, 1, lower = FALSE) - pgamma(b * ln, s + 1, 1, lower = FALSE)) / ln # could use log(n) for ln
+    print(cons)
+    dens <- dpois(s, theta * ln) / cons
+    ## a check
+    integrand <- function(x, s, n) {
+        dpois(s, x * sum(1 / 1:(n - 1)))
+    } # could use log(n) here
+    val <- integrate(integrand, a, b, s, n)
+    print(val)
+    return(dens)
+}
+density <- c()
+test_theta <- sample(parameters_initial$theta, 1000)
+for (theta in test_theta) {
+    density <- c(density, theta_single(1000, 0, 20, statistics_target$Mutation_count_S, theta))
+}
+parameters_truth <- data.frame(
+    theta = test_theta,
+    density = density
+)
+save(parameters_truth, file = "true_posterior.rda")
+load("/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper/coala_npop=1000_nsim=10000/new_results/10000sim;npop=1000;abcrf&abc-rej;onlyS/true_posterior.rda")
 # ================================================================ABC-RF
 #---Run ABC-RF
 abcrf_results <- smcrf(
-    method = "smcrf-single-param",
+    method = "smcrf-single-param-test",
     statistics_target = statistics_target,
     parameters_initial = parameters_initial,
     model = model,
@@ -130,13 +171,12 @@ abcrf_results <- smcrf(
     nParticles = rep(10000, 1),
     parallel = TRUE
 )
-save(abcrf_results, file = "abcrf_results.rda")
-
-load("/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper/coala_npop=1000_nsim=10000/new_results/10000sim npop=1000;abcrf&abc-rej/abcrf_results.rda")
+# save(abcrf_results, file = "abcrf_results.rda")
+# load("/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper/coala_npop=1000_nsim=10000/new_results/10000sim;npop=1000;abcrf&abc-rej;onlyS/abcrf_results.rda")
 #---Plot posterior marginal distributions against other methods
 plots <- plot_compare_marginal(
     # plots = plots,
-    parameters_truth = parameters_ground_truth,
+    parameters_truth = parameters_truth,
     abc_results = abcrf_results,
     parameters_labels = parameters_labels,
     plot_statistics = TRUE,
@@ -171,23 +211,21 @@ dotchart(imp[ord], pch = 19, xlab = "Variable Importance", ylab = "", xlim = xli
 dev.off()
 # =========================================================ABC-Rejection
 #---Run ABC
-abc_rej_results <- abc_rejection(
-    statistics_target = statistics_target,
-    model = model,
-    parameters_labels = parameters_labels,
-    prior_distributions = list(c("unif", 0, 20)),
-    tolerance_quantile = 0.05,
-    nParticles = 10000, progress_bar = TRUE
-)
-
-
-save(abc_rej_results, file = "abcrej_results.rda")
+# abc_rej_results <- abc_rejection(
+#     statistics_target = statistics_target,
+#     model = model,
+#     parameters_labels = parameters_labels,
+#     prior_distributions = list(c("unif", 0, 20)),
+#     tolerance_quantile = 0.05,
+#     nParticles = 10000, progress_bar = TRUE
+# )
+# save(abc_rej_results, file = "abcrej_results.rda")
+load("/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper/coala_npop=1000_nsim=10000/new_results/10000sim;npop=1000;abcrf&abc-rej;onlyS/abcrej_results.rda")
 #---Plot marginal distributions compare
 plots_marginal <- plot_compare_marginal(
     plots = plots,
     abc_results = abc_rej_results,
     parameters_labels = parameters_labels,
-    parameters_truth = parameters_ground_truth,
     plot_statistics = TRUE,
     # xlimit = c(0, 20),
     plot_hist = TRUE,
@@ -210,7 +248,7 @@ plots_marginal <- plot_compare_marginal(
 # #---Plot marginal distributions
 # plot_smcrf_marginal(
 #     smcrf_results = smcrf_results,
-#     parameters_truth = parameters_ground_truth,
+#     parameters_truth = parameters_target,
 #     parameters_labels = parameters_labels,
 #     plot_statistics = TRUE,
 #     plot_hist = TRUE,
@@ -240,10 +278,10 @@ plots_marginal <- plot_compare_marginal(
 # dev.off()
 
 # library(coala)
-sfs_test <- as.matrix(c(112, 57, 24, 34, 16, 29, 8, 10, 15), nrow = 1)
-sfs_test
-new_sfs_test <- sapply(sfs_test, function(x) x / (which(sfs_test == x))^2)
-new_sfs_test
+# sfs_test <- as.matrix(c(112, 57, 24, 34, 16, 29, 8, 10, 15), nrow = 1)
+# sfs_test
+# new_sfs_test <- sapply(sfs_test, function(x) x / (which(sfs_test == x))^2)
+# new_sfs_test
 # test_model <- coal_model(10, 50) +
 #     feat_mutation(par_prior("theta", runif(1, 1, 5))) +
 #     sumstat_sfs()
