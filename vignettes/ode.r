@@ -193,82 +193,70 @@ parameters_labels <- data.frame(
 )
 # ========================================SMC-RF for multiple parameters
 #---Run SMC-RF for multiple parameters
-smcrf_results_multi_param <- smcrf(
-    method = "smcrf-multi-param",
+smcrf_results_multi_param_test <- smcrf(
+    method = "smcrf-multi-param-test",
     statistics_target = statistics_target,
     parameters_initial = parameters_initial,
     model = model,
     perturb = perturb,
     range = range,
-    nParticles = rep(2000, 5),
+    nParticles = rep(2000, 4),
     parallel = TRUE
 )
-save(smcrf_results_multi_param, file='smcrf_results_multi_param.rda')
+# smcrf_results_multi_param <- smcrf(
+#     method = "smcrf-multi-param",
+#     statistics_target = statistics_target,
+#     parameters_initial = parameters_initial,
+#     model = model,
+#     perturb = perturb,
+#     range = range,
+#     nParticles = rep(2000, 5),
+#     parallel = TRUE
+# )
+# save(smcrf_results_multi_param, file='smcrf_results_multi_param.rda')
+save(smcrf_results_multi_param_test, file='smcrf_results_multi_param_test.rda')
 load("smcrf_results_multi_param.rda")
 #---Plot marginal distributions
 plot_smcrf_marginal(
-    smcrf_results = smcrf_results_multi_param,
+    smcrf_results = smcrf_results_multi_param_test,
     parameters_truth = parameters_truth,
     parameters_labels = parameters_labels,
-)
-#---Plot joint distributions
-plot_smcrf_joint(
-    smcrf_results = smcrf_results_multi_param,
-    parameters_labels = parameters_labels
-)
-#---Plot posterior joint distributions against other methods
-plots_joint <- plot_compare_joint(
-    abc_results = smcrf_results_multi_param,
-    parameters_labels = parameters_labels
 )
 #---Plot posterior marginal distributions against other methods
 plots <- plot_compare_marginal(
     # plots = plots,
-    abc_results = smcrf_results_multi_param,
+    abc_results = smcrf_results_multi_param_test,
     parameters_labels = parameters_labels,
     parameters_truth = parameters_truth,
     plot_statistics = FALSE,
     plot_hist=TRUE,
-    xlimit=c(-10,10),
     plot_prior=TRUE
 )
-#
-# # ========================================DRF
+# ========================================DRF
 #---Run DRF
-drf_results <- smcrf(
-    method = "smcrf-multi-param",
+drf_results_test <- smcrf(
+    method = "smcrf-multi-param-test",
     statistics_target = statistics_target,
     parameters_initial = parameters_initial,
     model = model,
     perturb = perturb,
     range = range,
-    nParticles = rep(10000, 1),
+    nParticles = rep(8000, 1),
     parallel = TRUE
 )
-save(drf_results, file='drf_results.rda')
-load("drf_results.rda")
-#---Plot posterior joint distributions against other methods
-plots_joint <- plot_compare_joint(
-    plots = plots_joint,
-    abc_results = drf_results,
-    parameters_labels = parameters_labels
-)
+save(drf_results_test, file='drf_results_test.rda')
+# save(drf_results, file='drf_results.rda')
+load("drf_results_test.rda")
 #---Plot posterior marginal distributions against other methods
 plots <- plot_compare_marginal(
     plots = plots,
-    abc_results = drf_results,
+    abc_results = drf_results_test,
     parameters_labels = parameters_labels,
     parameters_truth = parameters_truth,
     plot_statistics = FALSE,
     plot_hist=TRUE,
-    xlimit=c(-10,10)
 )
 # ===============================================================ABC-SMC
-# parameters_test <- do.call(rbind, replicate(50, parameters_truth, simplify = FALSE))
-# statistics_test <- model(parameters = parameters_test,parallel=TRUE)[-c(1:ncol(parameters_test))]
-# distance_matrix <- as.matrix(dist(statistics_test, method = "euclidean"))^2
-# tolerance_min <- sum(distance_matrix) / (nrow(distance_matrix) * (ncol(distance_matrix) - 1))
-
 # #---Run ABC-SMC
 # abc_smc_results <- abc_smc(
 #     statistics_target = statistics_target,
@@ -281,16 +269,9 @@ plots <- plot_compare_marginal(
 #     # dist_weights = rep(1/ncol(statistics_target), ncol(statistics_target)),
 #     # n_cluster = 10,use_seed=TRUE
 # )
-save(abc_smc_results, file='abc_smc_results.rda')
+# save(abc_smc_results, file='abc_smc_results.rda')
 # Simulation count:  ~20min 55536
-##abc-smc, smcrf, drf
 load('abc_smc_results.rda')
-#---Plot posterior joint distributions against other methods
-plots_joint <- plot_compare_joint(
-    plots = plots_joint,
-    abc_results = abc_smc_results,
-    parameters_labels = parameters_labels,
-)
 #---Plot posterior marginal distributions against other methods
 plots <- plot_compare_marginal(
     plots = plots,
@@ -299,43 +280,4 @@ plots <- plot_compare_marginal(
     parameters_truth = parameters_truth,
     plot_statistics = FALSE,
     plot_hist=TRUE,
-    xlimit=c(-10,10)
 )
-
-
-
-
-
-
-
-
-
-# # # =========================================================ABC-rejection
-# # #---Run ABC-rejection
-# # abc_rej_results <- abc_rejection(
-# #     statistics_target = statistics_target,
-# #     model = model,
-# #     parameters_labels = parameters_labels,
-# #     prior_distributions = list(c("unif", -10, 10),c("unif", -10,10)), 
-# #     nParticles = 100000, tolerance_quantile = 0.01,                                                 
-# #     progress_bar = TRUE,
-# #     verbose=TRUE
-# # )
-# # #  1e+05 ~10h
-# # save(abc_rej_results, file='abc_rej_results.rda')
-# # #---Plot posterior marginal distributions against other methods
-# # plots <- plot_compare_marginal(
-# #     # plots = plots,
-# #     abc_results = abc_rej_results,
-# #     parameters_labels = parameters_labels,
-# #     parameters_truth = parameters_truth,
-# #     plot_statistics = FALSE,
-# #     plot_hist=TRUE
-# # )
-# # #---Plot posterior joint distributions against other methods
-# # plots_joint <- plot_compare_joint(
-# #     # plots = plots_joint,
-# #     abc_results = abc_rej_results,
-# #     parameters_labels = parameters_labels
-# # )
-
