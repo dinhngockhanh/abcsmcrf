@@ -143,6 +143,7 @@ plot_compare_marginal <- function(plots = NULL,
                                   sample_num = NULL,
                                   plot_statistics = FALSE,
                                   plot_hist = FALSE,
+                                  plot_hist_point = FALSE,
                                   alpha = 0.3,
                                   plot_prior = FALSE) {
     if (is.null(parameters_labels)) parameters_labels <- abc_results[["parameters_labels"]]
@@ -153,7 +154,7 @@ plot_compare_marginal <- function(plots = NULL,
         "Prior Distribution" = "gray",
         "True Posterior Distribution" = "black",
         "ABC-rejection" = "forestgreen",
-        "ABC-RF" = "royalblue2",
+        "ABC-RF" = "magenta4",
         "DRF" = "royalblue2",
         "MCMC" = "goldenrod2",
         "ABC-MCMC" = "goldenrod2",
@@ -194,7 +195,7 @@ plot_compare_marginal <- function(plots = NULL,
         for (parameter_id in parameters_labels$parameter) {
             if (any(grepl("density", colnames(parameters_truth)))) {
                 true_posterior_df <- data.frame(value = parameters_truth[[parameter_id]], density = parameters_truth[["density"]], legend = "True Posterior Distribution")
-                if (plot_hist) {
+                if (plot_hist || plot_hist_point) {
                     plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
                         geom_histogram(data = true_posterior_df, aes(x = value, weight = density, y = ..density.., fill = legend, color = legend), alpha = 0.5)
                 } else {
@@ -208,7 +209,7 @@ plot_compare_marginal <- function(plots = NULL,
                     plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
                         geom_vline(data = true_posterior_df, aes(xintercept = value), linetype = "solid", linewidth = 5)
                 } else {
-                    if (plot_hist) {
+                    if (plot_hist || plot_hist_point) {
                         plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
                             geom_histogram(data = true_posterior_df, aes(x = value, y = ..density.., fill = legend, color = legend), alpha = 0.5)
                     } else {
@@ -288,6 +289,10 @@ plot_compare_marginal <- function(plots = NULL,
         if (plot_hist) {
             plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
                 geom_histogram(data = posterior_df, aes(x = value, y = ..density.., fill = legend, color = legend), alpha = alpha)
+        } else if (plot_hist_point) {
+            plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
+                stat_bin(data = posterior_df, aes(x = value, y = ..density.., fill = legend, color = legend), geom = "point", bins = 30, position = "identity", size = 10) +
+                stat_bin(data = posterior_df, aes(x = value, y = ..density.., fill = legend, color = legend), geom = "line", bins = 30, position = "identity", size = 3, show.legend = FALSE)
         } else {
             plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
                 geom_density(data = posterior_df, aes(x = value, fill = legend, color = legend), alpha = alpha, linewidth = 2)
@@ -306,6 +311,10 @@ plot_compare_marginal <- function(plots = NULL,
             if (plot_hist) {
                 plots$statistics[[statistic_id]] <- plots$statistics[[statistic_id]] +
                     geom_histogram(data = posterior_df, aes(x = value, y = ..density.., fill = legend, color = legend), alpha = alpha)
+            } else if (plot_hist_point) {
+                plots$statistics[[statistic_id]] <- plots$statistics[[statistic_id]] +
+                    stat_bin(data = posterior_df, aes(x = value, y = ..density.., color = legend), geom = "point", bins = 30, position = "identity", size = 10) +
+                    stat_bin(data = posterior_df, aes(x = value, y = ..density.., color = legend), geom = "line", bins = 30, position = "identity", size = 3)
             } else {
                 plots$statistics[[statistic_id]] <- plots$statistics[[statistic_id]] +
                     geom_density(data = posterior_df, aes(x = value, fill = legend, color = legend), alpha = alpha, linewidth = 2)
@@ -502,7 +511,7 @@ plot_compare_joint <- function(plots = NULL,
 
     color_scheme <- c(
         "ABC-rejection" = "forestgreen",
-        "ABC-RF" = "cyan1",
+        "ABC-RF" = "magenta4",
         # "DRF" = "burlywood2",
         "DRF" = "cyan1",
         "MCMC" = "khaki",
@@ -671,7 +680,7 @@ plot_compare_qqplot <- function(plots = NULL,
     #---Set up color scheme for plotting
     color_scheme <- c(
         "ABC-rejection" = "forestgreen",
-        "ABC-RF" = "royalblue2",
+        "ABC-RF" = "magenta4",
         "DRF" = "royalblue2",
         "MCMC" = "goldenrod2",
         "ABC-MCMC" = "goldenrod2",
