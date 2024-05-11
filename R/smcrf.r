@@ -316,28 +316,26 @@ smcrf_single_param <- function(statistics_target,
             print(reference[invalid_rows, ])
             print("++++++")
             if (iteration == 1) {
-                parameters <- data.frame(parameters_initial[nrow(parameters) + 1:nrow(parameters) + length(invalid_rows), ])
+                parameters <- data.frame(parameters_initial[nrow(parameters) + 1:(nrow(parameters) + sum(invalid_rows)), ])
                 colnames(parameters) <- parameters_ids
                 reference[invalid_rows, ] <- model(parameters = parameters)
                 invalid_rows <- rowSums(is.na(reference)) == ncol(reference)
             } else {
                 #   ... For later iterations:
-                ifelse(iteration == (nIterations + 1), nrow <- nParticles[nIterations], nrow <- nParticles[iteration])
-                parameters_next <- data.frame(matrix(NA, nrow = length(invalid_rows), ncol = length(parameters_ids)))
+                # ifelse(iteration == (nIterations + 1), nrow <- nParticles[nIterations], nrow <- nParticles[iteration])
+                parameters_next <- data.frame(matrix(NA, nrow = sum(invalid_rows), ncol = length(parameters_ids)))
                 colnames(parameters_next) <- parameters_ids
+                parameters_tmp <- parameters
                 for (parameter_id in parameters_ids) {
-                    # print(sample(nrow(parameters[, parameter_id]), size = length(invalid_rows), prob = ABCRF_weights[, parameter_id], replace = T))
-                    parameters_tmp <- data.frame(parameters[sample(length(parameters[, parameter_id]), size = length(invalid_rows), prob = ABCRF_weights[, parameter_id], replace = T), parameter_id])
-                    # parameters_next <- data.frame(matrix(NA, nrow = length(invalid_rows), ncol = length(parameters_ids)))
+                    # print(sample(nrow(parameters[, parameter_id]), size = sum(invalid_rows), prob = ABCRF_weights[, parameter_id], replace = T))
+                    # parameters_tmp <- parameters[, parameter_id]
+                    # data.frame(parameters[sample(length(parameters[, parameter_id]), size = sum(invalid_rows), prob = ABCRF_weights[, parameter_id], replace = T), parameter_id])
+                    # parameters_next <- data.frame(matrix(NA, nrow = sum(invalid_rows), ncol = length(parameters_ids)))
                     # colnames(parameters_next) <- parameters_id
-                    invalid_indices <- 1:length(invalid_rows)
+                    invalid_indices <- 1:sum(invalid_rows)
                     while (length(invalid_indices) > 0) {
-                        print("###################################")
-                        print(reference[invalid_rows, ])
-                        print("###################################")
                         #   Sample parameters from previous posterior distribution
-                        parameter_replace <- data.frame(parameters_tmp[sample(nrow(parameters_tmp), size = length(invalid_indices), prob = ABCRF_weights[, parameter_id], replace = T), ])
-                        print(parameter_replace)
+                        parameter_replace <- data.frame(parameters_tmp[sample(nrow(parameters_tmp), size = length(invalid_indices), prob = ABCRF_weights[, parameter_id], replace = T), parameter_id])
                         colnames(parameter_replace) <- parameter_id
                         #   Perturb parameters
                         if (iteration < (nIterations + 1)) parameter_replace <- perturb(parameters = parameter_replace)
@@ -381,7 +379,8 @@ smcrf_single_param <- function(statistics_target,
             RFmodel <- regAbcrf(
                 formula = as.formula(paste0(parameter_id, " ~ .")),
                 data = mini_reference,
-                paral = parallel
+                paral = parallel,
+                ...
             )
             posterior_gamma_RF <- predict(
                 object = RFmodel,
@@ -482,16 +481,18 @@ smcrf_multi_param <- function(statistics_target,
             print(reference[invalid_rows, ])
             print("++++++")
             if (iteration == 1) {
-                parameters <- data.frame(parameters_initial[nrow(parameters) + 1:nrow(parameters) + length(invalid_rows), ])
+                parameters <- data.frame(parameters_initial[(nrow(parameters) + 1):(nrow(parameters) + sum(invalid_rows)), ])
                 colnames(parameters) <- parameters_ids
+                print("=======")
                 reference[invalid_rows, ] <- model(parameters = parameters)
                 invalid_rows <- rowSums(is.na(reference)) == ncol(reference)
             } else {
-                parameters_tmp <- data.frame(parameters[sample(nrow(parameters), size = length(invalid_rows), prob = DRF_weights[, 1], replace = T), ])
+                # parameters_tmp <- data.frame(parameters[sample(nrow(parameters), size = sum(invalid_rows), prob = DRF_weights[, 1], replace = T), ])
+                parameters_tmp <- parameters
                 #   ... For later iterations:
-                parameters_next <- data.frame(matrix(NA, nrow = length(invalid_rows), ncol = length(parameters_ids)))
+                parameters_next <- data.frame(matrix(NA, nrow = sum(invalid_rows), ncol = length(parameters_ids)))
                 colnames(parameters_next) <- parameters_ids
-                invalid_indices <- 1:length(invalid_rows)
+                invalid_indices <- 1:sum(invalid_rows)
                 while (length(invalid_indices) > 0) {
                     print("###################################")
                     print(reference[invalid_rows, ])
