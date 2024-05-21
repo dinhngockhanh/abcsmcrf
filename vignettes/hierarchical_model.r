@@ -3,7 +3,7 @@
 # R_libPaths <- ""
 # R_libPaths_extra <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
-R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/0305_test/hierarchical"
+R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/hierarchical/new_trial"
 R_libPaths <- ""
 R_libPaths_extra <- "/Users/xiangzijin/SMC-RF/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zhihan - Macbook
@@ -31,7 +31,7 @@ model <- function(parameters) {
     theta1 <- parameters$theta1
     theta2 <- parameters$theta2
     nSamples <- 10
-    nNoise <- 1
+    nNoise <- 50
     #   Make simulations
     y <- matrix(NA, length(theta1), nSamples)
     for (i in 1:length(theta1)) {
@@ -77,11 +77,11 @@ alpha <- 4
 beta <- 3
 theta2 <- 1 / rgamma(1, shape = alpha, rate = beta)
 theta1 <- rnorm(1, 0, sqrt(theta2))
-parameters_truth <- data.frame(
+parameters_target <- data.frame(
     theta1 = theta1,
     theta2 = theta2
 )
-statistics_target <- model(parameters = parameters_truth)[-c(1:ncol(parameters_truth))]
+statistics_target <- model(parameters = parameters_target)[-c(1:ncol(parameters_target))]
 # ===============================True marginal posteriors for parameters
 nSamples <- 10
 s_2 <- statistics_target[, "variance"] * (nSamples - 1)
@@ -98,7 +98,7 @@ parameters_truth <- data.frame(
 #   Input:  data frame of parameters, each row is one set of parameters
 #   Output: data frame of parameters, after perturbation
 perturb <- function(parameters) {
-    for (i in 1:ncol(parameters)) parameters[[i]] <- parameters[[i]] + runif(nrow(parameters), min = -0.5, max = 0.5)
+    for (i in 1:ncol(parameters)) parameters[[i]] <- parameters[[i]] + runif(nrow(parameters), min = -0.1, max = 0.1)
     return(parameters)
 }
 # ======================================Define ranges for the parameters
@@ -120,81 +120,82 @@ parameters_labels <- data.frame(
     parameter = c("theta1", "theta2"),
     label = c(deparse(expression(theta[1])), deparse(expression(theta[2])))
 )
-# ==========================================SMC-RF for single parameters
-#---Run SMC-RF for single parameters
-smcrf_results <- smcrf(
-    method = "smcrf-single-param",
-    statistics_target = statistics_target,
-    parameters_initial = parameters_initial,
-    model = model,
-    perturb = perturb,
-    range = range,
-    nParticles = rep(1000, 3),
-    parallel = TRUE
-)
-# #---Plot marginal distributions
-# plot_smcrf_marginal(
-#     smcrf_results = smcrf_results,
-#     parameters_truth = parameters_truth,
-#     parameters_labels = parameters_labels,
-#     plot_statistics = TRUE
+# ===================================================================DRF
+#---Run ABC-DRF
+# abcrf_results <- smcrf(
+#     method = "smcrf-multi-param",
+#     statistics_target = statistics_target,
+#     parameters_initial = parameters_initial,
+#     model = model,
+#     perturb = perturb,
+#     range = range,
+#     nParticles = rep(10000, 1),
+#     num.trees = 2500,
+#     parallel = TRUE
 # )
-# #---Plot joint distributions
-# plot_smcrf_joint(
-#     smcrf_results = smcrf_results,
-#     parameters_truth = parameters_truth,
-#     parameters_labels = parameters_labels,
-#     lims = data.frame(
-#         ID = c("theta1", "theta2"),
-#         min = c(-2, 0),
-#         max = c(3, 2)
-#     )
-# )
-#---Plot posterior marginal distributions against other methods
-plots <- plot_compare_marginal(
-    abc_results = smcrf_results,
-    parameters_truth = parameters_truth,
-    parameters_labels = parameters_labels,
-    plot_statistics = TRUE
+# save(abcrf_results, file = "drf.rda")
+drf_results <- load("drf.rda")
+#---Define limits for the parameters
+limits <- data.frame(
+    ID = c("theta1", "theta2"),
+    min = c(0, 0),
+    max = c(3, 3)
 )
-# ================================================================ABC-RF
-#---Run ABC-RF
-abcrf_results <- smcrf(
-    method = "smcrf-single-param",
-    statistics_target = statistics_target,
-    parameters_initial = parameters_initial,
-    model = model,
-    perturb = perturb,
-    range = range,
-    nParticles = c(3000),
-    parallel = TRUE
-)
-#---Plot posterior marginal distributions against other methods
-plots <- plot_compare_marginal(
-    plots = plots,
+#---Plot posterior joint distributions against other methods
+plots_joint <- plot_compare_joint(
     abc_results = abcrf_results,
     parameters_labels = parameters_labels,
-    plot_statistics = TRUE
+    parameters_truth = parameters_truth,
+    lims = limits
+)
+#---Plot marginal distributions compare
+plots_marginal <- plot_compare_marginal(
+    # plots = plots_marginal,
+    abc_results = abcrf_results,
+    parameters_truth = parameters_truth,
+    parameters_labels = parameters_labels,
+    plot_hist = TRUE
 )
 
-# =========================================ABC-REJ for single parameters
-# ========================================Initial guesses for parameters
-# ====================================(sampled from prior distributions)
-theta2 <- 1 / rgamma(3000, shape = alpha, rate = beta)
-theta1 <- rnorm(3000, 0, sqrt(theta2))
-parameters_initial <- data.frame(
-    theta1 = theta1,
-    theta2 = theta2
-)
-#---Run SMC-RF for single parameters
-abcrej_results <- abc_rejection(
+# ========================================SMC-RF for multiple parameters
+#---Run SMC-RF for multiple parameters
+smcrf_results_multi_param <- smcrf(
+    method = "smcrf-multi-param",
     statistics_target = statistics_target,
+    parameters_initial = parameters_initial,
     model = model,
-    parameters_initial = parameters_initial
+    perturb = perturb,
+    range = range,
+    num.trees = 2500,
+    nParticles = rep(5000, 2),
+    parallel = TRUE
 )
-#---Plot marginal distributions
-plot_abc_marginal(
-    abc_results = abcrej_results,
+save(smcrf_results_multi_param, file = "smc-drf.rda")
+load("smc-drf.rda")
+#---Plot joint distributions
+plot_smcrf_joint(
+    smcrf_results = smcrf_results_multi_param,
+    parameters_labels = parameters_labels,
+    lims = limits
+)
+#---Plot posterior joint distributions against other methods
+plots_joint <- plot_compare_joint(
+    plots = plots_joint,
+    abc_results = smcrf_results_multi_param,
+    parameters_labels = parameters_labels,
+    lims = limits
+)
+#---Plot marginal distributions compare
+plots_marginal <- plot_compare_marginal(
+    plots = plots_marginal,
+    abc_results = smcrf_results_multi_param,
+    parameters_labels = parameters_labels,
     parameters_truth = parameters_truth,
-    parameters_labels = parameters_labels
+    plot_hist = TRUE
+)
+plot_smcrf_marginal(
+    smcrf_results = smcrf_results_multi_param,
+    parameters_labels = parameters_labels,
+    parameters_truth = parameters_truth,
+    plot_hist = TRUE
 )

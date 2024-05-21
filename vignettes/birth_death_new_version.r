@@ -215,7 +215,7 @@ parameters_labels <- data.frame(
 #         tot <- 0
 #         for (l in 1:mn) {
 #             tot <- tot + dbinom(l, size = n, prob = 1 - alph) *
-dnbinom(m - l, size = l, prob = 1 - bet)
+# dnbinom(m - l, size = l, prob = 1 - bet)
 #         }
 #         totLL <- totLL - log(tot) # negative log-likelihood
 #     }

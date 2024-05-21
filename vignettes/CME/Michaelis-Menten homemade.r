@@ -3,7 +3,7 @@
 # R_libPaths <- ""
 # R_libPaths_extra <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/R"
 # # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ZIJIN - Macbook
-R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/CME/m-w/home_made/old_example"
+R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/CME/m-w/home_made/old_example/timepoints/1-10;10sim"
 R_libPaths <- ""
 R_libPaths_extra <- "/Users/xiangzijin/SMC-RF/R"
 # =======================================SET UP FOLDER PATHS & LIBRARIES
@@ -93,35 +93,51 @@ model <- function(parameters, parallel = TRUE) {
     }
     return(data)
 }
+# MW_model <- function(c1_input, c2_input, c3_input, parallel = FALSE) {
+#     time_points <- seq(1, 10, by = 1)
+#     nA <- 6.023e23
+#     vol <- 1e-15
+#     initial_state <- list(
+#         P = 0,
+#         E = round(2e-7 * nA * vol),
+#         S = round(5e-7 * nA * vol),
+#         ES = 0
+#     )
+#     parameters <- list(
+#         c1 = c1_input,
+#         c2 = (10^c2_input) / (nA * vol),
+#         c3 = (10^c3_input)
+#     )
+#     reaction_propensities <- function(state, parameters) {
+#         c(
+#             parameters$c1 * state$ES,
+#             parameters$c2 * state$E * state$S,
+#             parameters$c3 * state$ES
+#         )
+#     }
+#     reaction_stoichiometries <- list(
+#         list(P = 1, E = 1, S = 0, ES = -1),
+#         list(P = 0, E = -1, S = -1, ES = 1),
+#         list(P = 0, E = 1, S = 1, ES = -1)
+#     )
+#     time_begin <- Sys.time()
+#     tmp <- SSA(
+#         initial_state = initial_state,
+#         parameters = parameters,
+#         reaction_propensities = reaction_propensities,
+#         reaction_stoichiometries = reaction_stoichiometries,
+#         time_points = time_points
+#     )
+#     time_end <- Sys.time()
+#     print(time_end - time_begin)
+#     stats <- data.frame(matrix(c(c1_input, c2_input, c3_input, c(apply(tmp, 2, c))), nrow = 1))
+#     colnames(stats) <- c("c1", "c2", "c3", paste0("E_", 1:length(time_points)), paste0("S_", 1:length(time_points)), paste0("ES_", 1:length(time_points)), paste0("P_", 1:length(time_points)))
+#     return(stats)
+# }
+# ========================The one with average
 MW_model <- function(c1_input, c2_input, c3_input, parallel = FALSE) {
-    time_points <- seq(10, 70, by = 10)
-    # nA <- 6.023e23
-    # vol <- 1e-15
-    # species <- c("E", "S", "ES", "P")
-    # initial_state <- c(
-    #     E = round(2e-7 * nA * vol),
-    #     S = round(5e-7 * nA * vol),
-    #     ES = 0,
-    #     P = 0
-    # )
-    # parameters <- c(
-    #     c1 = (10^c1_input) / (nA * vol),
-    #     c2 = (10^c2_input),
-    #     c3 = c3_input
-    # )
-    # reaction_propensities <- c(
-    #     "c1 * E * S",
-    #     "c2 * ES",
-    #     "c3 * ES"
-    # )
-    # reaction_stoichiometries <- matrix(
-    #     c(
-    #         -1, -1, 1, 0,
-    #         1, 1, -1, 0,
-    #         1, 0, -1, 1
-    #     ),
-    #     nrow = 3, byrow = TRUE
-    # )
+    nRuns <- 10
+    time_points <- seq(1, 10, by = 1)
     nA <- 6.023e23
     vol <- 1e-15
     initial_state <- list(
@@ -135,15 +151,6 @@ MW_model <- function(c1_input, c2_input, c3_input, parallel = FALSE) {
         c2 = (10^c2_input) / (nA * vol),
         c3 = (10^c3_input)
     )
-    # species <- c("P", "E", "S", "ES")
-    # e <- 10
-    # s <- 100
-    # initial_state <- list(P = 0, E = e, S = s, ES = 0)
-    # parameters <- list(
-    #     c1 = (10^c1_input),
-    #     c2 = (10^c2_input),
-    #     c3 = (10^c3_input)
-    # )
     reaction_propensities <- function(state, parameters) {
         c(
             parameters$c1 * state$ES,
@@ -157,17 +164,22 @@ MW_model <- function(c1_input, c2_input, c3_input, parallel = FALSE) {
         list(P = 0, E = 1, S = 1, ES = -1)
     )
     time_begin <- Sys.time()
-    tmp <- SSA(
-        initial_state = initial_state,
-        parameters = parameters,
-        reaction_propensities = reaction_propensities,
-        reaction_stoichiometries = reaction_stoichiometries,
-        time_points = time_points
-    )
+    #------------
+    MMs <- matrix(0, nrow = nRuns, ncol = length(time_points) * 4)
+    for (i in 1:nRuns) {
+        tmp <- SSA(
+            initial_state = initial_state,
+            parameters = parameters,
+            reaction_propensities = reaction_propensities,
+            reaction_stoichiometries = reaction_stoichiometries,
+            time_points = time_points
+        )
+        MMs[i, ] <- c(apply(tmp, 2, c))
+    }
     time_end <- Sys.time()
     print(time_end - time_begin)
-    stats <- data.frame(matrix(c(c1_input, c2_input, c3_input, c(apply(tmp, 2, c))), nrow = 1))
-    colnames(stats) <- c("c1", "c2", "c3", paste0("E_", 1:length(time_points)), paste0("S_", 1:length(time_points)), paste0("ES_", 1:length(time_points)), paste0("P_", 1:length(time_points)))
+    stats <- data.frame(matrix(c(c1_input, c2_input, c3_input, c(apply(MMs, 2, mean)), c(apply(MMs, 2, var))), nrow = 1))
+    colnames(stats) <- c("c1", "c2", "c3", paste0("E_", 1:length(time_points), "_mean"), paste0("S_", 1:length(time_points), "_mean"), paste0("ES_", 1:length(time_points), "_mean"), paste0("P_", 1:length(time_points), "_mean"), paste0("E_", 1:length(time_points), "_var"), paste0("S_", 1:length(time_points), "_var"), paste0("ES_", 1:length(time_points), "_var"), paste0("P_", 1:length(time_points), "_var"))
     return(stats)
 }
 # =====================================================Target statistics
@@ -178,8 +190,22 @@ parameters_truth <- data.frame(
 )
 statistics_target <- model(parameters = parameters_truth, parallel = FALSE)[-c(1:ncol(parameters_truth))]
 statistics_target
-
-# print(statistics_target)
+# ===========================================Target statistics with c3=-5
+parameters_c3_small <- data.frame(
+    c1 = 0.1,
+    c2 = 6,
+    c3 = -5
+)
+statistics_c3_small <- model(parameters = parameters_c3_small, parallel = FALSE)[-c(1:ncol(parameters_c3_small))]
+statistics_c3_small
+# ===========================================Target statistics with c3=-5
+parameters_c3_large <- data.frame(
+    c1 = 0.1,
+    c2 = 6,
+    c3 = -3
+)
+statistics_c3_large <- model(parameters = parameters_c3_large, parallel = FALSE)[-c(1:ncol(parameters_c3_large))]
+statistics_c3_large
 # ======================================Model for parameter perturbation
 #   Input:  data frame of parameters, each row is one set of parameters
 #   Output: data frame of parameters, after perturbation
@@ -209,11 +235,10 @@ parameters_initial <- data.frame(
     c2 = c2,
     c3 = c3
 )
-# head(model(parameters_initial))
 # ====================================Labels for parameters in the plots
 parameters_labels <- data.frame(
     parameter = c("c1", "c2", "c3"),
-    label = c(deparse(expression(c[1])), deparse(expression(c[2])), deparse(expression(c[3])))
+    label = c("expression(log[10](c[1]))", "expression(log[10](c[2]))", "expression(log[10](c[3]))")
 )
 # ========================================DRF
 #---Run DRF
@@ -233,6 +258,7 @@ drf_results <- load("drf.rda")
 #---Plot marginal distributions compare
 plots_marginal <- plot_compare_marginal(
     # plots = plots_marginal,
+    xlimit = range,
     abc_results = abcrf_results,
     parameters_truth = parameters_truth,
     parameters_labels = parameters_labels,
@@ -256,6 +282,7 @@ load("smc-drf.rda")
 #---Plot marginal distributions compare
 plots_marginal <- plot_compare_marginal(
     plots = plots_marginal,
+    xlimit = range,
     abc_results = smcrf_results_multi_param,
     parameters_truth = parameters_truth,
     parameters_labels = parameters_labels,
@@ -319,7 +346,7 @@ plot_smcrf_marginal(
 
 
 
-
+# ============================Plot joint distributions compare c1 and c2
 # smcrf_results_multi_param
 # nIterations <- smcrf_results_multi_param[["nIterations"]]
 # posterior_df <- data.frame(
@@ -343,8 +370,8 @@ plot_smcrf_marginal(
 # dev.off()
 # return(plots)
 
-
-plot_boxplot <- function(drf_results, smcrf_results) {
+# =================================================TRAJECTORIES BOX PLOT
+plot_boxplot <- function(drf_results, smcrf_results, statistics_c3_small, statistics_c3_large) {
     library(ggplot2)
     library(reshape2) # Ensure reshape2 is loaded for melting data frames
     stats_id <- c("P", "E", "S", "ES")
@@ -375,6 +402,9 @@ plot_boxplot <- function(drf_results, smcrf_results) {
         "SMC-RF for single parameters",
         "SMC-RF for multiple parameters"
     )
+    # Factor levels for time
+    time_levels <- as.character(seq(1, 10, by = 1))
+
     for (stat_id in stats_id) {
         # Extract data for the current statistic ID
         posterior_data_smcrf <- smcrf_results[[paste0("Iteration_", nIterations + 1)]][["statistics"]][
@@ -387,21 +417,42 @@ plot_boxplot <- function(drf_results, smcrf_results) {
         ]
 
         posterior_data_drf_long <- melt(posterior_data_drf, variable.name = "Stat_type", value.name = "Value")
-        posterior_data_drf_long$time <- paste0(10 * as.integer(gsub("[^0-9]", "", posterior_data_drf_long$Stat_type)))
+        posterior_data_drf_long$time <- paste0(1 * as.integer(gsub("[^0-9]", "", posterior_data_drf_long$Stat_type)))
         posterior_data_drf_long$legend <- "DRF"
+        print(posterior_data_drf_long)
         posterior_data_smcrf_long <- melt(posterior_data_smcrf, variable.name = "Stat_type", value.name = "Value")
-        posterior_data_smcrf_long$time <- paste0(10 * as.integer(gsub("[^0-9]", "", posterior_data_smcrf_long$Stat_type)))
+        posterior_data_smcrf_long$time <- paste0(1 * as.integer(gsub("[^0-9]", "", posterior_data_smcrf_long$Stat_type)))
         posterior_data_smcrf_long$legend <- "SMC-RF for multiple parameters"
+        print(posterior_data_smcrf_long)
         total_posterior <- rbind(posterior_data_drf_long, posterior_data_smcrf_long)
         target <- smcrf_results[["statistics_target"]][, grepl(paste0("^", stat_id, "_"), colnames(smcrf_results[["statistics_target"]]))]
         target_long <- reshape2::melt(target, variable.name = "Stat_type", value.name = "Value")
-        target_long$time <- paste0(10 * as.integer(gsub("[^0-9]", "", target_long$Stat_type)))
-        # Create a ggplot object with boxplots
+        target_long$time <- paste0(1 * as.integer(gsub("[^0-9]", "", target_long$Stat_type)))
+        target_c3_small <- statistics_c3_small[, grepl(paste0("^", stat_id, "_"), colnames(statistics_c3_small))]
+        target_c3_small_long <- reshape2::melt(target_c3_small, variable.name = "Stat_type", value.name = "Value")
+        target_c3_small_long$time <- paste0(1 * as.integer(gsub("[^0-9]", "", target_c3_small_long$Stat_type)))
+        target_c3_large <- statistics_c3_large[, grepl(paste0("^", stat_id, "_"), colnames(statistics_c3_large))]
+        target_c3_large_long <- reshape2::melt(target_c3_large, variable.name = "Stat_type", value.name = "Value")
+        target_c3_large_long$time <- paste0(1 * as.integer(gsub("[^0-9]", "", target_c3_large_long$Stat_type)))
+
+        # Convert time to factor with explicit ordering
+        posterior_data_drf_long$time <- factor(posterior_data_drf_long$time, levels = time_levels)
+        posterior_data_smcrf_long$time <- factor(posterior_data_smcrf_long$time, levels = time_levels)
+        target_long$time <- factor(target_long$time, levels = time_levels)
+        target_c3_small_long$time <- factor(target_c3_small_long$time, levels = time_levels)
+        target_c3_large_long$time <- factor(target_c3_large_long$time, levels = time_levels)
+
+
+
         plots[[stat_id]] <- ggplot() +
-            geom_boxplot(data = total_posterior, aes(x = factor(time), y = Value, color = legend, fill = legend), alpha = 0.8) +
+            geom_boxplot(data = total_posterior, aes(x = time, y = Value, color = legend, fill = legend), alpha = 0.8) +
             geom_line(data = target_long, aes(x = time, y = Value, group = 1), color = "black", size = 1.5, show.legend = FALSE) +
             geom_point(data = target_long, aes(x = time, y = Value, group = 1), color = "black", size = 10, show.legend = FALSE) +
-            labs(x = "Time", y = stat_id, color = NULL) +
+            geom_line(data = target_c3_small_long, aes(x = time, y = Value, group = 1), color = "orange", size = 1.5, show.legend = FALSE) +
+            geom_point(data = target_c3_small_long, aes(x = time, y = Value, group = 1), color = "orange", size = 10, show.legend = FALSE) +
+            geom_line(data = target_c3_large_long, aes(x = time, y = Value, group = 1), color = "forestgreen", size = 1.5, show.legend = FALSE) +
+            geom_point(data = target_c3_large_long, aes(x = time, y = Value, group = 1), color = "forestgreen", size = 10, show.legend = FALSE) +
+            labs(x = "Time", y = stat_id) +
             scale_fill_manual(values = color_scheme, name = "") +
             scale_color_manual(values = color_scheme, name = "") +
             theme(
@@ -425,5 +476,7 @@ load("drf.rda")
 load("smc-drf.rda")
 plot_boxplot(
     drf_results = abcrf_results,
-    smcrf_results = smcrf_results_multi_param
+    smcrf_results = smcrf_results_multi_param,
+    statistics_c3_small = statistics_c3_small,
+    statistics_c3_large = statistics_c3_large
 )

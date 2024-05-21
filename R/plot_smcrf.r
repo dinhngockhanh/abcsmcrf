@@ -299,7 +299,7 @@ plot_compare_marginal <- function(plots = NULL,
         }
         if (!is.null(xlimit)) {
             plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
-                xlim(xlimit[1], xlimit[2])
+                xlim(xlimit$min[which(xlimit$parameter == parameter_id)], xlimit$max[which(xlimit$parameter == parameter_id)])
         }
     }
     if (plot_statistics) {
@@ -669,7 +669,6 @@ plot_compare_qqplot <- function(plots = NULL,
                                 parameters_truth = NULL,
                                 parameters_labels = NULL,
                                 statistics_labels = NULL,
-                                xlimit = NULL,
                                 sample_num = NULL,
                                 plot_statistics = FALSE,
                                 plot_hist = FALSE,

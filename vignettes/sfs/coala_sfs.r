@@ -182,7 +182,7 @@ plots <- plot_compare_marginal(
     abc_results = abcrf_results,
     parameters_labels = parameters_labels,
     plot_statistics = TRUE,
-    xlimit = c(0, 20),
+    xlimit = range,
     plot_hist = TRUE,
     plot_prior = TRUE
 )
@@ -230,7 +230,7 @@ plots_marginal <- plot_compare_marginal(
     abc_results = abc_rej_results,
     parameters_labels = parameters_labels,
     plot_statistics = TRUE,
-    # xlimit = c(0, 20),
+    # xlimit = range,
     plot_hist = TRUE,
     plot_prior = FALSE
 )
@@ -263,7 +263,7 @@ plots_marginal <- plot_compare_marginal(
 #     abc_results = smcrf_results,
 #     parameters_labels = parameters_labels,
 #     plot_statistics = TRUE,
-#     xlimit = c(0, 20),
+#     xlimit = range,
 #     plot_hist = TRUE,
 #     bin_counts = 55,
 #     plot_prior = TRUE

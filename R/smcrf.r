@@ -436,6 +436,7 @@ smcrf_multi_param <- function(statistics_target,
         #---Sample prior parameters for this round of iteration...
         if (iteration == 1) {
             #   ... For iteration 1: sample from initial parameters
+
             parameters <- data.frame(parameters_initial[1:nParticles[iteration], ])
             colnames(parameters) <- parameters_ids
         } else {
