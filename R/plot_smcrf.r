@@ -3,6 +3,7 @@ plot_smcrf_marginal <- function(smcrf_results,
                                 parameters_labels = NULL,
                                 statistics_labels = NULL,
                                 plot_statistics = FALSE,
+                                xlimit = NULL,
                                 alpha = 0.3,
                                 plot_hist = FALSE) {
     nIterations <- smcrf_results[["nIterations"]]
@@ -51,6 +52,10 @@ plot_smcrf_marginal <- function(smcrf_results,
                 p <- p + geom_histogram(data = posterior_df, aes(x = value, y = ..density.., fill = legend, color = legend), alpha = alpha)
             } else {
                 p <- p + geom_density(data = posterior_df, aes(x = value, fill = legend, color = legend), alpha = alpha, linewidth = 2)
+            }
+            if (!is.null(xlimit)) {
+                p <- p +
+                    xlim(xlimit$min[which(xlimit$parameter == parameter_id)], xlimit$max[which(xlimit$parameter == parameter_id)])
             }
         }
         #   Add label for parameter
@@ -535,15 +540,15 @@ plot_compare_joint <- function(plots = NULL,
     my_palette <- colorRampPalette(c("#170756ad", "#0b50a4", "#0beac8", "#ffff0f"))
 
     #---Function to apply limits to data (if provided)
-    apply_lims <- function(df) {
-        df <- df %>%
-            filter(
-                x >= lims$min[which(lims$ID == parameters_labels$parameter[1])],
-                x <= lims$max[which(lims$ID == parameters_labels$parameter[1])],
-                y >= lims$min[which(lims$ID == parameters_labels$parameter[2])],
-                y <= lims$max[which(lims$ID == parameters_labels$parameter[2])]
-            )
-    }
+    # apply_lims <- function(df) {
+    #     df <- df %>%
+    #         filter(
+    #             x >= lims$min[which(lims$ID == parameters_labels$parameter[1])],
+    #             x <= lims$max[which(lims$ID == parameters_labels$parameter[1])],
+    #             y >= lims$min[which(lims$ID == parameters_labels$parameter[2])],
+    #             y <= lims$max[which(lims$ID == parameters_labels$parameter[2])]
+    #         )
+    # }
     #---Begin plots
     if (is.null(plots)) {
         plots <- ggplot()
@@ -557,7 +562,7 @@ plot_compare_joint <- function(plots = NULL,
             x = parameters_truth[[parameters_labels$parameter[1]]],
             y = parameters_truth[[parameters_labels$parameter[2]]]
         )
-        if (!is.null(lims)) true_posterior_df <- apply_lims(true_posterior_df)
+        # if (!is.null(lims)) true_posterior_df <- apply_lims(true_posterior_df)
         plots <- plots + geom_density_2d_filled(data = true_posterior_df, aes(x = x, y = y), show.legend = FALSE)
     }
     #---Extract final posterior distributions
@@ -621,9 +626,10 @@ plot_compare_joint <- function(plots = NULL,
             legend = legend_label
         )
     }
-    if (!is.null(lims)) {
-        posterior_df <- apply_lims(posterior_df)
-    } #---Plot joint distribution
+    # if (!is.null(lims)) {
+    #     posterior_df <- apply_lims(posterior_df)
+    # }
+    #---Plot joint distribution
     if (method == "true-joint") {
         plots <- plots +
             geom_density_2d_filled(data = posterior_df, aes(x = x, y = y), show.legend = FALSE)
@@ -656,6 +662,11 @@ plot_compare_joint <- function(plots = NULL,
             legend.position = "top",
             legend.justification = c(0, 0.5)
         )
+    if (!is.null(lims)) {
+        plots <- plots +
+            xlim(c(para_limits$min[which(para_limits$parameter == parameters_labels$parameter[1])], para_limits$max[which(para_limits$parameter == parameters_labels$parameter[1])])) +
+            ylim(c(para_limits$min[which(para_limits$parameter == parameters_labels$parameter[2])], para_limits$max[which(para_limits$parameter == parameters_labels$parameter[2])]))
+    }
     #---Print joint distribution plot
     file_name <- paste0("comparison-joint-parameters=", parameters_labels$parameter[1], "-vs-", parameters_labels$parameter[2], ".png")
     png(file_name, res = 150, width = 30, height = 31, units = "in", pointsize = 12)
