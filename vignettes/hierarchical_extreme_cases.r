@@ -228,18 +228,18 @@ parameters_labels <- data.frame(
 )
 # ===================================================================DRF
 #---Run ABC-DRF
-drf_results <- smcrf(
-    method = "smcrf-multi-param",
-    statistics_target = statistics_target,
-    parameters_initial = parameters_initial,
-    model = model,
-    perturb = perturb,
-    range = range,
-    nParticles = rep(10000, 1),
-    num.trees = 2500,
-    parallel = TRUE
-)
-save(drf_results, file = "drf.rda")
+# drf_results <- smcrf(
+#     method = "smcrf-multi-param",
+#     statistics_target = statistics_target,
+#     parameters_initial = parameters_initial,
+#     model = model,
+#     perturb = perturb,
+#     range = range,
+#     nParticles = rep(10000, 1),
+#     num.trees = 2500,
+#     parallel = TRUE
+# )
+# save(drf_results, file = "drf.rda")
 load("drf.rda")
 #---Plot posterior joint distributions against other methods
 plots_joint <- plot_compare_joint(
@@ -261,25 +261,26 @@ plots_marginal <- plot_compare_marginal(
 
 # ========================================SMC-RF for multiple parameters
 #---Run SMC-RF for multiple parameters
-smcrf_results_multi_param <- smcrf(
-    method = "smcrf-multi-param",
-    statistics_target = statistics_target,
-    parameters_initial = parameters_initial,
-    model = model,
-    perturb = perturb,
-    range = range,
-    num.trees = 2500,
-    nParticles = rep(5000, 2),
-    parallel = TRUE
-)
-save(smcrf_results_multi_param, file = "smc-drf.rda")
+# smcrf_results_multi_param <- smcrf(
+#     method = "smcrf-multi-param",
+#     statistics_target = statistics_target,
+#     parameters_initial = parameters_initial,
+#     model = model,
+#     perturb = perturb,
+#     range = range,
+#     num.trees = 2500,
+#     nParticles = rep(5000, 2),
+#     parallel = TRUE
+# )
+# save(smcrf_results_multi_param, file = "smc-drf.rda")
 load("smc-drf.rda")
 # #---Plot joint distributions
-# plot_smcrf_joint(
-#     smcrf_results = smcrf_results_multi_param,
-#     # lims = limits,
-#     parameters_labels = parameters_labels
-# )
+plot_smcrf_joint(
+    smcrf_results = smcrf_results_multi_param,
+    parameters_truth = parameters_truth,
+    lims = para_limits,
+    parameters_labels = parameters_labels
+)
 #---Plot posterior joint distributions against other methods
 plots_joint <- plot_compare_joint(
     plots = plots_joint,
@@ -305,18 +306,18 @@ plot_smcrf_marginal(
 )
 # ========================================ABC-RF for single parameters
 #---Run SMC-RF for single parameters
-abcrf_results <- smcrf(
-    method = "smcrf-single-param",
-    statistics_target = statistics_target,
-    parameters_initial = parameters_initial,
-    model = model,
-    perturb = perturb,
-    range = range,
-    ntree = 2500,
-    nParticles = rep(10000, 1),
-    parallel = TRUE
-)
-save(abcrf_results, file = "abcrf.rda")
+# abcrf_results <- smcrf(
+#     method = "smcrf-single-param",
+#     statistics_target = statistics_target,
+#     parameters_initial = parameters_initial,
+#     model = model,
+#     perturb = perturb,
+#     range = range,
+#     ntree = 2500,
+#     nParticles = rep(10000, 1),
+#     parallel = TRUE
+# )
+# save(abcrf_results, file = "abcrf.rda")
 load("abcrf.rda")
 #---Plot marginal distributions compare
 plots_marginal <- plot_compare_marginal(

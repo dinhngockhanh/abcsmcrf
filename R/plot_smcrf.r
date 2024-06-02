@@ -424,15 +424,15 @@ plot_smcrf_joint <- function(smcrf_results,
     #---Set up legend order for plotting
     legend_order <- c("True Posterior Distribution", "Prior Distribution", paste0("Iter. ", 1:nIterations))
     #---Function to apply limits to data (if provided)
-    apply_lims <- function(df) {
-        df <- df %>%
-            filter(
-                x >= lims$min[which(lims$ID == parameters_labels$parameter[1])],
-                x <= lims$max[which(lims$ID == parameters_labels$parameter[1])],
-                y >= lims$min[which(lims$ID == parameters_labels$parameter[2])],
-                y <= lims$max[which(lims$ID == parameters_labels$parameter[2])]
-            )
-    }
+    # apply_lims <- function(df) {
+    #     df <- df %>%
+    #         filter(
+    #             x >= lims$min[which(lims$ID == parameters_labels$parameter[1])],
+    #             x <= lims$max[which(lims$ID == parameters_labels$parameter[1])],
+    #             y >= lims$min[which(lims$ID == parameters_labels$parameter[2])],
+    #             y <= lims$max[which(lims$ID == parameters_labels$parameter[2])]
+    #         )
+    # }
     #---Begin plot
     p <- ggplot()
     #---Plot True Posterior distribution (if provided)
@@ -441,7 +441,7 @@ plot_smcrf_joint <- function(smcrf_results,
             x = parameters_truth[[parameters_labels$parameter[1]]],
             y = parameters_truth[[parameters_labels$parameter[2]]]
         )
-        if (!is.null(lims)) true_posterior_df <- apply_lims(true_posterior_df)
+        # if (!is.null(lims)) true_posterior_df <- apply_lims(true_posterior_df)
         p <- p + geom_density_2d_filled(data = true_posterior_df, aes(x = x, y = y), show.legend = FALSE)
     }
     #---Plot prior distribution
@@ -450,7 +450,7 @@ plot_smcrf_joint <- function(smcrf_results,
         y = smcrf_results[["Iteration_1"]]$parameters[[parameters_labels$parameter[2]]],
         legend = "Prior Distribution"
     )
-    if (!is.null(lims)) prior_df <- apply_lims(prior_df)
+    # if (!is.null(lims)) prior_df <- apply_lims(prior_df)
     p <- p + geom_density_2d(data = prior_df, aes(x = x, y = y, color = legend), linewidth = 3, bins = nBins)
     #---Plot posterior distribution for each iteration
     for (iteration in 1:nIterations) {
@@ -459,7 +459,7 @@ plot_smcrf_joint <- function(smcrf_results,
             y = smcrf_results[[paste0("Iteration_", iteration + 1)]]$parameters[[parameters_labels$parameter[2]]],
             legend = paste0("Iter. ", iteration)
         )
-        if (!is.null(lims)) posterior_df <- apply_lims(posterior_df)
+        # if (!is.null(lims)) posterior_df <- apply_lims(posterior_df)
         p <- p + geom_density_2d(data = posterior_df, aes(x = x, y = y, color = legend), linewidth = 3, bins = nBins)
     }
     #---Add label for parameter
@@ -480,6 +480,11 @@ plot_smcrf_joint <- function(smcrf_results,
             legend.position = "top",
             legend.justification = c(0, 0.5)
         )
+    if (!is.null(lims)) {
+        p <- p +
+            xlim(c(para_limits$min[which(para_limits$parameter == parameters_labels$parameter[1])], para_limits$max[which(para_limits$parameter == parameters_labels$parameter[1])])) +
+            ylim(c(para_limits$min[which(para_limits$parameter == parameters_labels$parameter[2])], para_limits$max[which(para_limits$parameter == parameters_labels$parameter[2])]))
+    }
     #---Print joint distribution plot
     file_name <- paste0(smcrf_results[["method"]], "-joint-parameters=", parameters_labels$parameter[1], "-vs-", parameters_labels$parameter[2], ".png")
     png(file_name, res = 150, width = 30, height = 31, units = "in", pointsize = 12)
