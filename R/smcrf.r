@@ -309,7 +309,6 @@ smcrf_single_param <- function(statistics_target,
         # ################################################
         ################################################
         invalid_rows <- rowSums(is.na(reference)) == ncol(reference)
-
         while (any(invalid_rows)) {
             print("++++++")
             print(sum(invalid_rows))
@@ -374,10 +373,14 @@ smcrf_single_param <- function(statistics_target,
         #---Run ABCRF for each parameter
         cat("Performing Random Forest prediction...\n")
         ABCRF_weights <- data.frame(matrix(NA, nrow = nParticles[iteration], ncol = 0))
+        RFmodels <- list()
+        posterior_gamma_RFs <- list()
         for (parameter_id in parameters_ids) {
             mini_reference <- reference[, c(parameter_id, colnames(reference)[!colnames(reference) %in% parameters_ids])]
+            colnames(mini_reference)[1] <- "para"
+            f <- as.formula("para ~.")
             RFmodel <- regAbcrf(
-                formula = as.formula(paste0(parameter_id, " ~ .")),
+                formula = f,
                 data = mini_reference,
                 paral = parallel,
                 ...
@@ -390,6 +393,8 @@ smcrf_single_param <- function(statistics_target,
                 rf.weights = T
             )
             ABCRF_weights[, parameter_id] <- posterior_gamma_RF$weights
+            RFmodels[[parameter_id]] <- RFmodel
+            posterior_gamma_RFs[[parameter_id]] <- posterior_gamma_RF
         }
         cat("\n\n")
         #---Save SMC-RF results from this iteration
@@ -398,8 +403,8 @@ smcrf_single_param <- function(statistics_target,
         SMCRF_iteration$parameters <- parameters
         SMCRF_iteration$statistics <- statistics
         SMCRF_iteration$weights <- ABCRF_weights
-        SMCRF_iteration$rf_model <- RFmodel
-        SMCRF_iteration$rf_predict <- posterior_gamma_RF
+        SMCRF_iteration$rf_model <- RFmodels
+        SMCRF_iteration$rf_predict <- posterior_gamma_RFs
         SMCRF[[paste0("Iteration_", iteration)]] <- SMCRF_iteration
     }
     SMCRF[["method"]] <- "smcrf-single-param"

@@ -1,5 +1,5 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
-R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/0313_dlp"
+R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/dlp/0602-test"
 R_libPaths <- ""
 R_libPaths_extra <- "/Users/xiangzijin/SMC-RF/R"
 # =======================================SET UP FOLDER PATHS & LIBRARIES
@@ -24,7 +24,7 @@ N_data_sc <- 3
 #   Number of bulk samples in ground-truth data & ABC simulations
 N_data_bulk <- 4
 #   Bounds for ground-truth selection rates (1/r -> r)
-bound_ground_truth_arm_s <- 1.1
+bound_ground_truth_arm_s <- 1.15
 #   Bounds for prior distribution of log10(prob_CN_missegregation)
 bound_ABC_prob_CN_missegregation_left <- -5
 bound_ABC_prob_CN_missegregation_right <- -3
@@ -86,7 +86,7 @@ for (i in 1:length(arm_s)) {
     if (grepl("q$", arm_id[i])) {
         arm_s[i] <- 1
     } else if (grepl("p$", arm_id[i])) {
-        arm_s[i] <- runif(1, 1, 1.1)
+        arm_s[i] <- runif(1, 1, bound_ground_truth_arm_s)
         if (runif(1) < 0.5) arm_s[i] <- 1 / arm_s[i]
     }
 }
@@ -100,7 +100,6 @@ drivers <- list()
 model_variables <- BUILD_initial_population(model_variables = model_variables, cell_count = cell_count, CN_matrix = CN_matrix, drivers = drivers)
 #---Save model variables
 model_name <- "Fitting_whole_chroms"
-# model_name <- "Chromosome_missegregation"
 model_variables <- CHECK_model_variables(model_variables)
 # ======================================DEFINE LIST OF PARAMETERS TO FIT
 list_parameters <- data.frame(matrix(ncol = 6, nrow = 0))
@@ -188,6 +187,37 @@ simulator_full_program(
     ),
     R_libPaths = R_libPaths
 )
+# =====================================PRINT OUT GROUND-TRUTH PARAMETERS
+list_parameters_ground_truth <- list_parameters
+list_parameters_ground_truth$Value <- 0
+for (row in 1:nrow(list_parameters)) {
+    parameter_ID_input <- list_parameters$Variable[row]
+    #   Convert parameter operator if necessary
+    if (grepl(":", parameter_ID_input)) {
+        parameter_ID <- sub(".*:", "", parameter_ID_input)
+        parameter_operator <- sub(":.*", "", parameter_ID_input)
+    } else {
+        parameter_ID <- parameter_ID_input
+        parameter_operator <- ""
+    }
+    if (parameter_ID %in% model_variables$general_variables$Variable) {
+        parameter_value_input <- as.numeric(model_variables$general_variables$Value[which(model_variables$general_variables$Variable == parameter_ID)])
+    } else if (parameter_ID %in% model_variables$chromosome_arm_library$Arm_ID) {
+        parameter_value_input <- as.numeric(model_variables$chromosome_arm_library$s_rate[which(model_variables$chromosome_arm_library$Arm_ID == parameter_ID)])
+    }
+    print(parameter_value_input)
+    print(parameter_operator)
+    if (parameter_operator == "") {
+        parameter_value <- parameter_value_input
+    } else if (parameter_operator == "10^") {
+        parameter_value <- log10(parameter_value_input)
+    } else {
+        simpleError("Parameter operator not recognized")
+    }
+    #   Assign parameter value
+    list_parameters_ground_truth$Value[row] <- parameter_value
+}
+write.csv(list_parameters_ground_truth, "parameters_ground_truth.csv")
 # ============GET STATISTICS & CN PROFILES FROM GROUND-TRUTH SIMULATIONS
 #---Get single-cell statistics & CN profiles
 #   Get statistics & clonal CN profiles for each single-cell sample
@@ -311,29 +341,37 @@ statistics_target <- get_statistics(
 statistics_target <- data.frame(statistics_target)
 # ===============================================================Perturb
 perturb <- function(parameters) {
-    if (colnames(parameters) == "10^:prob_CN_missegregation") {
-        for (i in 1:ncol(parameters)) parameters[[i]] <- parameters[[i]] + runif(nrow(parameters), min = -0.5, max = 0.5)
-    } else if (colnames(parameters) == "10^:prob_CN_chrom_arm_missegregation") {
-        for (i in 1:ncol(parameters)) parameters[[i]] <- parameters[[i]] + runif(nrow(parameters), min = -0.5, max = 0.5)
+    if (any(grepl("10^:prob_CN_missegregation", colnames(parameters)))) {
+        parameters[["10^:prob_CN_missegregation"]] <- parameters[["10^:prob_CN_missegregation"]] + runif(nrow(parameters), min = -1e-2, max = 1e-2)
+    } else if (any(grepl("10^:prob_CN_chrom_arm_missegregation", colnames(parameters)))) {
+        parameters[["10^:prob_CN_chrom_arm_missegregation"]] <- parameters[["10^:prob_CN_chrom_arm_missegregation"]] + runif(nrow(parameters), min = -1e-2, max = 1e-2)
     } else {
-        for (i in 1:ncol(parameters)) parameters[[i]] <- parameters[[i]] + runif(nrow(parameters), min = -0.1, max = 0.1)
+        for (i in 1:ncol(parameters)) parameters[[i]] <- parameters[[i]] + runif(nrow(parameters), min = -1e-3, max = 1e-3)
     }
-    # for (i in 1:ncol(parameters)) parameters[[i]] <- parameters[[i]]
     return(parameters)
 }
 # ======================================Define ranges for the parameters
 range <- data.frame(
     parameter = list_parameters$Variable,
-    min = list_parameters$Lower_bound,
-    max = list_parameters$Upper_bound
+    min = as.numeric(list_parameters$Lower_bound),
+    max = as.numeric(list_parameters$Upper_bound)
 )
-range
+# ====================================Labels for parameters in the plots
+parameters_labels <- data.frame(
+    parameter = list_parameters$Variable,
+    title = list_parameters$Title
+)
+# ===============================True marginal posteriors for parameters
+parameters_truth <- data.frame(
+    matrix(c(list_parameters_ground_truth$Value), nrow = 1)
+)
+colnames(parameters_truth) <- list_parameters_ground_truth$Variable
 # ========================================Initial guesses for parameters
 # ====================================(sampled from prior distributions)
-sim_param <- matrix(0, nrow = 3, ncol = nrow(list_parameters))
+sim_param <- matrix(0, nrow = 10000, ncol = nrow(list_parameters))
 for (col in 1:ncol(sim_param)) {
     sim_param[, col] <- runif(
-        3,
+        10000,
         min = as.numeric(list_parameters$Lower_bound[col]),
         max = as.numeric(list_parameters$Upper_bound[col])
     )
@@ -341,22 +379,7 @@ for (col in 1:ncol(sim_param)) {
 sim_param <- data.frame(sim_param)
 colnames(sim_param) <- list_parameters$Variable
 parameters_initial <- sim_param
-
 # ==========================================SMC-RF for single parameters
-#---Run SMC-RF for single parameters
-# R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/0305_test/hierarchical"
-# R_libPaths <- ""
-# R_libPaths_extra <- "/Users/xiangzijin/SMC-RF/R"
-# =======================================SET UP FOLDER PATHS & LIBRARIES
-.libPaths(R_libPaths)
-library(readxl)
-library(CancerSimulator)
-library(parallel)
-library(pbapply)
-setwd(R_libPaths_extra)
-files_sources <- list.files(pattern = "*.r$")
-sapply(files_sources, source)
-setwd(R_workplace)
 smcrf_results_single_param <- smcrf(
     method = "smcrf-single-param",
     statistics_target = statistics_target,
@@ -367,122 +390,19 @@ smcrf_results_single_param <- smcrf(
     nParticles = rep(3, 3),
     parallel = TRUE
 )
-colnames(parameters_initial)
-
-#---Plot marginal distributions
+save(smcrf_results_single_param, file = "smc-rf.rda")
+load("smc-rf.rda")
+plots_marginal <- plot_compare_marginal(
+    abc_results = smcrf_results_single_param,
+    parameters_labels = parameters_labels,
+    xlimit = range,
+    parameters_truth = parameters_truth,
+    plot_hist = TRUE
+)
 plot_smcrf_marginal(
     smcrf_results = smcrf_results_single_param,
-    plot_statistics = TRUE
+    parameters_labels = parameters_labels,
+    xlimit = range,
+    parameters_truth = parameters_truth,
+    plot_hist = TRUE
 )
-
-# file_name <- "dlp_smcrf_results_single_param.rda"
-# save(smcrf_results_single_param,file=file_name)
-########################################################################
-############### Ground Truth data are stored in ########################
-# cn_data_sc = ground_truth_cn_data_sc
-# cn_data_bulk = ground_truth_cn_data_bulk
-########################################################################
-# sim_param <- matrix(0, nrow = 1, ncol = nrow(list_parameters))
-# for (col in 1:ncol(sim_param)) {
-#     sim_param[, col] <- runif(
-#         1,
-#         min = as.numeric(list_parameters$Lower_bound[col]),
-#         max = as.numeric(list_parameters$Upper_bound[col])
-#     )
-# }
-# sim_param <- data.frame(sim_param)
-# # colnames(sim_param) <- list_parameters$Variable
-# # colnames(sim_param) <- ""
-# simulation_parameters <- sim_param
-# # sim_param
-# # simulation_parameters
-# # simulation_parameters
-
-# R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/0305_test/hierarchical"
-# R_libPaths <- ""
-# R_libPaths_extra <- "/Users/xiangzijin/SMC-RF/R"
-# # =======================================SET UP FOLDER PATHS & LIBRARIES
-# .libPaths(R_libPaths)
-# library(readxl)
-# library(CancerSimulator)
-# library(parallel)
-# library(pbapply)
-# setwd(R_libPaths_extra)
-# files_sources <- list.files(pattern = "*.r$")
-# sapply(files_sources, source)
-# setwd(R_workplace)
-# sim_param <- matrix(0, nrow = 2, ncol = nrow(list_parameters))
-# for (col in 1:ncol(sim_param)) {
-#     sim_param[, col] <- runif(
-#         2,
-#         min = as.numeric(list_parameters$Lower_bound[col]),
-#         max = as.numeric(list_parameters$Upper_bound[col])
-#     )
-# }
-# sim_param <- data.frame(sim_param)
-# colnames(sim_param) <- list_parameters$Variable
-# simulation_parameters <- sim_param
-# test <- model_dlp(simulation_parameters)
-# test <- get_statistics_dlp(
-#     parameter_IDs = list_parameters$Variable,
-#     simulation_parameters = data.frame(simulation_parameters[1, ]),
-#     model_variables = model_variables,
-#     ground_truth_cn_data_sc = ground_truth_cn_data_sc,
-#     ground_truth_cn_data_bulk = ground_truth_cn_data_bulk
-# )
-# test
-# data.frame((simulation_parameters[1, ]))[1]
-# colnames(test)
-# colnames()
-
-# para <- data.frame(parameters_initial[1:rep(3, 2)[1], ])
-# ref <- model_dlp(para)
-# ref
-# colnames(para) <- list_parameters$Variable
-
-# test
-
-# # simulation_parameters
-
-# # testtt <- get_statistics_dlp(
-# #     list_parameters = list_parameters,
-# #     simulation_parameters = data.frame(t(simulation_parameters[1, ])),
-# #     model_variables = model_variables,
-# #     ground_truth_cn_data_sc = ground_truth_cn_data_sc,
-# #     ground_truth_cn_data_bulk = ground_truth_cn_data_bulk
-# # )
-
-# # testtt
-# # # # ---Print out ground-truth parameters
-# # # list_parameters_ground_truth <- list_parameters
-# # # list_parameters_ground_truth$Value <- 0
-# # # for (row in 1:nrow(list_parameters)) {
-# # #     parameter_ID_input <- list_parameters$Variable[row]
-# # #     #   Convert parameter operator if necessary
-# # #     if (grepl(":", parameter_ID_input)) {
-# # #         parameter_ID <- sub(".*:", "", parameter_ID_input)
-# # #         parameter_operator <- sub(":.*", "", parameter_ID_input)
-# # #     } else {
-# # #         parameter_ID <- parameter_ID_input
-# # #         parameter_operator <- ""
-# # #     }
-# # #     if (parameter_ID %in% model_variables$general_variables$Variable) {
-# # #         parameter_value_input <- as.numeric(model_variables$general_variables$Value[which(model_variables$general_variables$Variable == parameter_ID)])
-# # #     } else if (parameter_ID %in% model_variables$chromosome_arm_library$Arm_ID) {
-# # #         parameter_value_input <- as.numeric(model_variables$chromosome_arm_library$s_rate[which(model_variables$chromosome_arm_library$Arm_ID == parameter_ID)])
-# # #     }
-# # #     if (parameter_operator == "") {
-# # #         parameter_value <- parameter_value_input
-# # #     } else if (parameter_operator == "10^") {
-# # #         parameter_value <- log10(parameter_value_input)
-# # #     } else {
-# # #         simpleError("Parameter operator not recognized")
-# # #     }
-# # #     #   Assign parameter value
-# # #     list_parameters_ground_truth$Value[row] <- parameter_value
-# # # }
-# # # write.csv(list_parameters_ground_truth, "parameters_ground_truth.csv")
-
-
-# # # statssss <- model_dlp(1)
-# # # ncol(statssss)
