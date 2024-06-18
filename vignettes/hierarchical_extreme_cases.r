@@ -3,7 +3,7 @@
 # R_libPaths <- ""
 # R_libPaths_extra <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
-R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/hierarchical/new_extreme_cases/1.5;3"
+R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/hierarchical/new_extreme_cases/0.5;1"
 R_libPaths <- ""
 R_libPaths_extra <- "/Users/xiangzijin/SMC-RF/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zhihan - Macbook
@@ -158,8 +158,8 @@ model <- function(parameters) {
 }
 
 # =====================================================Target statistics
-alpha <- 1.5
-beta <- 3
+alpha <- 1
+beta <- 1
 theta2 <- 1 / rgamma(1, shape = alpha, rate = beta)
 theta1 <- rnorm(1, 0, sqrt(theta2))
 parameters_target <- data.frame(
@@ -208,11 +208,23 @@ range <- data.frame(
 #     max = c(10, 50)
 # )
 #--limits for 1.5;3
+# para_limits <- data.frame(
+#     parameter = c("theta1", "theta2"),
+#     min = c(-3, 0),
+#     max = c(10, 100)
+# )
+#--limits for 1;1
 para_limits <- data.frame(
     parameter = c("theta1", "theta2"),
-    min = c(-5, -5),
-    max = c(10, 30)
+    min = c(-3, 0),
+    max = c(10, 40)
 )
+# #--limits for 0.5;1
+# para_limits <- data.frame(
+#     parameter = c("theta1", "theta2"),
+#     min = c(-5, 0),
+#     max = c(10, 30)
+# )
 # ========================================Initial guesses for parameters
 # ====================================(sampled from prior distributions)
 theta2 <- 1 / rgamma(10000, shape = alpha, rate = beta)
@@ -333,6 +345,30 @@ plot_hierarchical_extreme(
     smcrf_results = smcrf_results_multi_param,
     drf_results = drf_results,
     abcrf_results = abcrf_results,
-    parameters_truth = parameters_truth,
-    limits = para_limits
+    limits = para_limits,
+    parameters_truth = parameters_truth
 )
+library(abcrf)
+for (para in colnames(parameters_initial)) {
+    #   Train the ABCrf model
+    RFmodel <- abcrf_results$Iteration_1$rf_model[[para]]
+    #   Plot the out-of-bag estimates (equivalent to cross-validation)
+    png(paste0("NORMAL_abcrf_", para, "_out_of_bag.png"))
+    plot(abcrf_results$Iteration_1$reference[, para],
+        RFmodel$model.rf$predictions,
+        xlab = "True value",
+        ylab = "Out-of-bag estimate"
+    ) + abline(a = 0, b = 1, col = "red")
+    dev.off()
+    #   Can the error be lowered by increasing the number of trees?
+    ref_table <- cbind(abcrf_results$Iteration_1$reference[, para], abcrf_results$Iteration_1$reference[-c(1:ncol(parameters_initial))])
+    colnames(ref_table)[1] <- "para"
+    oob_error <- err.regAbcrf(RFmodel, training = ref_table, paral = TRUE)
+    png(paste0("NORMAL_abcrf_", para, "_error_by_ntree.png"))
+    plot(oob_error[, "ntree"], oob_error[, "oob_mse"], type = "l", xlab = "Number of trees", ylab = "Out-of-bag MSE")
+    dev.off()
+    #   Variable Importance of each statistic in inferring theta
+    png(paste0("NORMAL_abcrf_", para, "_variable_importance.png"))
+    plot(x = RFmodel)
+    dev.off()
+}

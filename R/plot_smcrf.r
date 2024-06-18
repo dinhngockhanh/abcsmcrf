@@ -482,8 +482,8 @@ plot_smcrf_joint <- function(smcrf_results,
         )
     if (!is.null(lims)) {
         p <- p +
-            xlim(c(para_limits$min[which(para_limits$parameter == parameters_labels$parameter[1])], para_limits$max[which(para_limits$parameter == parameters_labels$parameter[1])])) +
-            ylim(c(para_limits$min[which(para_limits$parameter == parameters_labels$parameter[2])], para_limits$max[which(para_limits$parameter == parameters_labels$parameter[2])]))
+            xlim(c(lims$min[which(lims$parameter == parameters_labels$parameter[1])], lims$max[which(lims$parameter == parameters_labels$parameter[1])])) +
+            ylim(c(lims$min[which(lims$parameter == parameters_labels$parameter[2])], lims$max[which(lims$parameter == parameters_labels$parameter[2])]))
     }
     #---Print joint distribution plot
     file_name <- paste0(smcrf_results[["method"]], "-joint-parameters=", parameters_labels$parameter[1], "-vs-", parameters_labels$parameter[2], ".png")
@@ -669,8 +669,8 @@ plot_compare_joint <- function(plots = NULL,
         )
     if (!is.null(lims)) {
         plots <- plots +
-            xlim(c(para_limits$min[which(para_limits$parameter == parameters_labels$parameter[1])], para_limits$max[which(para_limits$parameter == parameters_labels$parameter[1])])) +
-            ylim(c(para_limits$min[which(para_limits$parameter == parameters_labels$parameter[2])], para_limits$max[which(para_limits$parameter == parameters_labels$parameter[2])]))
+            xlim(c(lims$min[which(lims$parameter == parameters_labels$parameter[1])], lims$max[which(lims$parameter == parameters_labels$parameter[1])])) +
+            ylim(c(lims$min[which(lims$parameter == parameters_labels$parameter[2])], lims$max[which(lims$parameter == parameters_labels$parameter[2])]))
     }
     #---Print joint distribution plot
     file_name <- paste0("comparison-joint-parameters=", parameters_labels$parameter[1], "-vs-", parameters_labels$parameter[2], ".png")
@@ -688,6 +688,7 @@ plot_compare_qqplot <- function(plots = NULL,
                                 sample_num = NULL,
                                 plot_statistics = FALSE,
                                 plot_hist = FALSE,
+                                lims = NULL,
                                 alpha = 0.3,
                                 plot_prior = FALSE) {
     if (is.null(parameters_labels)) parameters_labels <- abc_results[["parameters_labels"]]
@@ -815,6 +816,13 @@ plot_compare_qqplot <- function(plots = NULL,
                     legend.position = "top",
                     legend.justification = c(0, 0.5)
                 )
+        }
+    }
+    if (!is.null(lims)) {
+        for (parameter_id in parameters_labels$parameter) {
+            plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
+                xlim(c(lims$min[which(lims$parameter == parameter_id)], lims$max[which(lims$parameter == parameter_id)])) +
+                ylim(c(lims$min[which(lims$parameter == parameter_id)], lims$max[which(lims$parameter == parameter_id)]))
         }
     }
     #---Print marginal distribution plots

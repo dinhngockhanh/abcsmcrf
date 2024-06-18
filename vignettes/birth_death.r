@@ -143,11 +143,11 @@ statistics_target <- data.frame(matrix(c(
 # colnames(statistics_target) <- c(paste0("Z_", 1:25))
 
 # statistics_target <- model(parameters = parameters_target, parallel = FALSE)[-c(1:ncol(parameters_target))]
-colnames(statistics_target) <- c(paste0("Z_", 1:25))
-target <- c()
-target$parameters_target <- parameters_target
-target$statistics_target <- statistics_target
-save(target, file = "target_data.rda")
+# colnames(statistics_target) <- c(paste0("Z_", 1:25))
+# target <- c()
+# target$parameters_target <- parameters_target
+# target$statistics_target <- statistics_target
+# save(target, file = "target_data.rda")
 # load("/Users/xiangzijin/Documents/ABC_SMCRF/Birth_death/test_0411(try new model)/perturb=+-2;mtry=default;num.tree=1000;5000*4/test_on_targets/target_data.rda")
 # parameters_target <- target$parameters_target
 # statistics_target <- target$statistics_target
@@ -160,6 +160,18 @@ perturb <- function(parameters) {
 }
 # ======================================Define ranges for the parameters
 range <- data.frame(
+    parameter = c("lambda", "mu"),
+    min = c(0, 0),
+    max = c(20, 20)
+    # max = c(10, 10)
+)
+limits <- data.frame(
+    parameter = c("lambda", "mu"),
+    min = c(0, 0),
+    max = c(10, 10)
+    # max = c(10, 10)
+)
+limits_2 <- data.frame(
     parameter = c("lambda", "mu"),
     min = c(0, 0),
     max = c(20, 20)
@@ -215,7 +227,7 @@ parameters_labels <- data.frame(
 #         tot <- 0
 #         for (l in 1:mn) {
 #             tot <- tot + dbinom(l, size = n, prob = 1 - alph) *
-# dnbinom(m - l, size = l, prob = 1 - bet)
+#                 dnbinom(m - l, size = l, prob = 1 - bet)
 #         }
 #         totLL <- totLL - log(tot) # negative log-likelihood
 #     }
@@ -259,11 +271,11 @@ parameters_labels <- data.frame(
 # true_joint$method <- "true-joint"
 # true_joint$parameters_truth <- parameters_truth
 # save(true_joint, file = "likelihood_test.rda")
-# load("likelihood_test.rda")
+load("likelihood_test.rda")
 #-----------------------------------------------------------------------
 #---Load likelihood
 # df_nLL <- load("/Users/xiangzijin/Documents/ABC_SMCRF/Birth_death/test_0411(try new model)/perturb=+-2;mtry=default;num.tree=1000;5000*4/test/1010/likelihood_1010.rda")
-df_nLL <- load("/Users/xiangzijin/Documents/ABC_SMCRF/Birth_death/test_0411(try new model)/perturb=+-2;mtry=default;num.tree=1000;5000*4/final results for paper/likelihood.rda")
+# df_nLL <- load("/Users/xiangzijin/Documents/ABC_SMCRF/Birth_death/likelihood.rda")
 # df_nLL <- load("/Users/xiangzijin/Documents/ABC_SMCRF/Birth_death/test_0411(try new model)/perturb=+-2;mtry=default;num.tree=1000;5000*4/test_on_targets/likelihood_test.rda")
 parameters_truth <- true_joint$parameters_truth
 #---Plot posterior joint distributions against other methods
@@ -490,12 +502,12 @@ load("abc-rf.rda")
 #     # plot_hist = TRUE
 #     plot_hist_point = TRUE
 # )
-# plots_compare_qqplot <- plot_compare_qqplot(
-#     plots = plots_compare_qqplot,
-#     abc_results = abcrf_results,
-#     parameters_truth = parameters_truth,
-#     parameters_labels = parameters_labels
-# )
+plots_compare_qqplot <- plot_compare_qqplot(
+    plots = plots_compare_qqplot,
+    abc_results = abcrf_results,
+    parameters_truth = parameters_truth,
+    parameters_labels = parameters_labels
+)
 # ========================================SMC-RF for multiple parameters
 #---Run SMC-RF for multiple parameters
 # smcrf_results_multi_param <- smcrf(
@@ -523,6 +535,7 @@ load("abc-rf.rda")
 # )
 # save(smcrf_results_multi_param, file = "smc-drf.rda")
 load("smc-drf.rda")
+
 # smcdrf_results <- load("/Users/xiangzijin/Documents/ABC_SMCRF/Birth_death/test_0411(try new model)/perturb=+-2;mtry=default;num.tree=1000;5000*4/test/1010/smc-drf.rda")
 # smcdrf_results <- load("/Users/xiangzijin/Documents/ABC_SMCRF/Birth_death/test_0411(try new model)/perturb=+-2;mtry=default;num.tree=1000;5000*4/final results for paper/likelihood.rda/smc-drf.rda")
 #---Plot joint distributions
@@ -533,6 +546,7 @@ plot_smcrf_joint(
 #---Plot posterior joint distributions against other methods
 plots_joint <- plot_compare_joint(
     plots = plots_joint,
+    lims = limits,
     abc_results = smcrf_results_multi_param,
     parameters_labels = parameters_labels
 )
@@ -547,6 +561,7 @@ plots_marginal <- plot_compare_marginal(
 plots_compare_qqplot <- plot_compare_qqplot(
     plots = plots_compare_qqplot,
     abc_results = smcrf_results_multi_param,
+    lims = limits_2,
     parameters_truth = parameters_truth,
     parameters_labels = parameters_labels
 )
