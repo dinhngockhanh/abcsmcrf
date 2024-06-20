@@ -253,6 +253,7 @@ smcrf_single_param <- function(statistics_target,
                                nParticles,
                                parallel,
                                n_cores = NULL,
+                               save_model = TRUE,
                                ...) {
     library(abcrf)
     library(Hmisc)
@@ -273,9 +274,12 @@ smcrf_single_param <- function(statistics_target,
             #   ... For iteration 1: sample from initial parameters
             parameters <- data.frame(parameters_initial[1:nParticles[iteration], ])
             colnames(parameters) <- parameters_ids
+            parameters_unperturbed <- parameters
         } else {
             #   ... For later iterations:
             ifelse(iteration == (nIterations + 1), nrow <- nParticles[nIterations], nrow <- nParticles[iteration])
+            parameters_unperturbed <- data.frame(matrix(NA, nrow = nrow, ncol = length(parameters_ids)))
+            colnames(parameters_unperturbed) <- parameters_ids
             parameters_next <- data.frame(matrix(NA, nrow = nrow, ncol = length(parameters_ids)))
             colnames(parameters_next) <- parameters_ids
             for (parameter_id in parameters_ids) {
@@ -284,12 +288,13 @@ smcrf_single_param <- function(statistics_target,
                     #   Sample parameters from previous posterior distribution
                     parameter_replace <- data.frame(sample(parameters[, parameter_id], size = length(invalid_indices), prob = ABCRF_weights[, parameter_id], replace = TRUE))
                     colnames(parameter_replace) <- parameter_id
+                    if (length(invalid_indices) == nrow) parameters_unperturbed[[parameter_id]][invalid_indices] <- parameter_replace[[parameter_id]]
                     #   Perturb parameters
                     if (iteration < (nIterations + 1)) {
                         if (is.function(perturb)) {
                             parameter_replace <- perturb(parameters = parameter_replace)
                         } else if (perturb == "Beaumont") {
-                            if (length(invalid_indices) == nrow) wtd.var <- var(data.frame(sample(parameters[, parameter_id], size = 10000, prob = ABCRF_weights[, parameter_id], replace = TRUE)))
+                            wtd.var <- var(data.frame(sample(parameters[, parameter_id], size = 10000, prob = ABCRF_weights[, parameter_id], replace = TRUE)))
                             parameter_replace[[parameter_id]] <- rnorm(
                                 n = nrow(parameter_replace),
                                 mean = parameter_replace[[parameter_id]],
@@ -331,7 +336,6 @@ smcrf_single_param <- function(statistics_target,
                 invalid_rows <- rowSums(is.na(reference)) == ncol(reference)
             } else {
                 #   ... For later iterations:
-                # ifelse(iteration == (nIterations + 1), nrow <- nParticles[nIterations], nrow <- nParticles[iteration])
                 parameters_next <- data.frame(matrix(NA, nrow = sum(invalid_rows), ncol = length(parameters_ids)))
                 colnames(parameters_next) <- parameters_ids
                 parameters_tmp <- parameters
@@ -382,6 +386,7 @@ smcrf_single_param <- function(statistics_target,
             SMCRF_iteration <- list()
             SMCRF_iteration$reference <- reference
             SMCRF_iteration$parameters <- parameters
+            SMCRF_iteration$parameters_unperturbed <- parameters_unperturbed
             SMCRF_iteration$statistics <- statistics
             SMCRF[[paste0("Iteration_", iteration)]] <- SMCRF_iteration
             break
@@ -401,10 +406,6 @@ smcrf_single_param <- function(statistics_target,
                 paral = parallel,
                 ...
             )
-            print("RFmodel")
-            print(RFmodel)
-            print("mini_reference")
-            print(mini_reference)
             posterior_gamma_RF <- predict(
                 object = RFmodel,
                 obs = statistics_target,
@@ -413,18 +414,23 @@ smcrf_single_param <- function(statistics_target,
                 rf.weights = T
             )
             ABCRF_weights[, parameter_id] <- posterior_gamma_RF$weights
-            RFmodels[[parameter_id]] <- RFmodel
-            posterior_gamma_RFs[[parameter_id]] <- posterior_gamma_RF
+            if (save_model == TRUE) {
+                RFmodels[[parameter_id]] <- RFmodel
+                posterior_gamma_RFs[[parameter_id]] <- posterior_gamma_RF
+            }
         }
         cat("\n\n")
         #---Save SMC-RF results from this iteration
         SMCRF_iteration <- list()
         SMCRF_iteration$reference <- reference
         SMCRF_iteration$parameters <- parameters
+        SMCRF_iteration$parameters_unperturbed <- parameters_unperturbed
         SMCRF_iteration$statistics <- statistics
         SMCRF_iteration$weights <- ABCRF_weights
-        SMCRF_iteration$rf_model <- RFmodels
-        SMCRF_iteration$rf_predict <- posterior_gamma_RFs
+        if (save_model == TRUE) {
+            SMCRF_iteration$rf_model <- RFmodels
+            SMCRF_iteration$rf_predict <- posterior_gamma_RFs
+        }
         SMCRF[[paste0("Iteration_", iteration)]] <- SMCRF_iteration
     }
     SMCRF[["method"]] <- "smcrf-single-param"
@@ -446,6 +452,7 @@ smcrf_multi_param <- function(statistics_target,
                               parallel,
                               n_cores = NULL,
                               splitting.rule = "CART",
+                              save_model = TRUE,
                               ...) {
     library(drf)
     library(matrixStats)
@@ -466,9 +473,12 @@ smcrf_multi_param <- function(statistics_target,
             #   ... For iteration 1: sample from initial parameters
             parameters <- data.frame(parameters_initial[1:nParticles[iteration], ])
             colnames(parameters) <- parameters_ids
+            parameters_unperturbed <- parameters
         } else {
             #   ... For later iterations:
             ifelse(iteration == (nIterations + 1), nrow <- nParticles[nIterations], nrow <- nParticles[iteration])
+            parameters_unperturbed <- data.frame(matrix(NA, nrow = nrow, ncol = length(parameters_ids)))
+            colnames(parameters_unperturbed) <- parameters_ids
             parameters_next <- data.frame(matrix(NA, nrow = nrow, ncol = length(parameters_ids)))
             colnames(parameters_next) <- parameters_ids
             invalid_indices <- 1:nrow
@@ -476,6 +486,7 @@ smcrf_multi_param <- function(statistics_target,
                 #   Sample parameters from previous posterior distribution
                 parameter_replace <- data.frame(parameters[sample(nrow(parameters), size = length(invalid_indices), prob = DRF_weights[, 1], replace = T), ])
                 colnames(parameter_replace) <- parameters_ids
+                if (length(invalid_indices) == nrow) parameters_unperturbed <- parameter_replace
                 #   Perturb parameters
                 if (iteration < (nIterations + 1)) {
                     if (is.function(perturb)) {
@@ -581,6 +592,7 @@ smcrf_multi_param <- function(statistics_target,
             SMCDRF_iteration <- list()
             SMCDRF_iteration$reference <- reference
             SMCDRF_iteration$parameters <- parameters
+            SMCDRF_iteration$parameters_unperturbed <- parameters_unperturbed
             SMCDRF_iteration$statistics <- statistics
             SMCDRF[[paste0("Iteration_", iteration)]] <- SMCDRF_iteration
             break
@@ -599,10 +611,13 @@ smcrf_multi_param <- function(statistics_target,
         SMCDRF_iteration <- list()
         SMCDRF_iteration$reference <- reference
         SMCDRF_iteration$parameters <- parameters
+        SMCDRF_iteration$parameters_unperturbed <- parameters_unperturbed
         SMCDRF_iteration$statistics <- statistics
         SMCDRF_iteration$weights <- DRF_weights
-        SMCDRF_iteration$rf_model <- drfmodel
-        SMCDRF_iteration$rf_predict <- def_pred
+        if (save_model == TRUE) {
+            SMCDRF_iteration$rf_model <- drfmodel
+            SMCDRF_iteration$rf_predict <- def_pred
+        }
         SMCDRF[[paste0("Iteration_", iteration)]] <- SMCDRF_iteration
     }
     SMCDRF[["method"]] <- "smcrf-multi-param"

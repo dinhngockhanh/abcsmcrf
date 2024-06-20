@@ -3,7 +3,8 @@
 # R_libPaths <- ""
 # R_libPaths_extra <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/R"
 # # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ZIJIN - Macbook
-R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/CME/m-w/home_made/old_example/timepoints/1-10;10sim-rf"
+# R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/CME/m-w/home_made/old_example/timepoints/1-10;10sim-rf"
+R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/adaptive"
 R_libPaths <- ""
 R_libPaths_extra <- "/Users/xiangzijin/SMC-RF/R"
 # =======================================SET UP FOLDER PATHS & LIBRARIES
@@ -300,9 +301,11 @@ abcrf_results <- smcrf(
     statistics_target = statistics_target,
     parameters_initial = parameters_initial,
     model = model,
-    perturb = perturb,
+    # perturb = perturb,
+    perturb = "Beaumont",
     range = range,
     ntree = 2500,
+    save_model = FALSE,
     nParticles = rep(20000, 1),
     parallel = TRUE
 )
@@ -323,10 +326,12 @@ smcrf_results_single_param <- smcrf(
     statistics_target = statistics_target,
     parameters_initial = parameters_initial,
     model = model,
-    perturb = perturb,
+    # perturb = perturb,
+    perturb = "Beaumont",
     range = range,
     nParticles = rep(4000, 5),
     ntree = 2500,
+    save_model = FALSE,
     parallel = TRUE
 )
 save(smcrf_results_single_param, file = "smc-rf.rda")
