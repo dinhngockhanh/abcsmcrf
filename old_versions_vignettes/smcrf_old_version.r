@@ -282,19 +282,10 @@ smcrf_single_param <- function(statistics_target,
                 while (length(invalid_indices) > 0) {
                     #   Sample parameters from previous posterior distribution
                     parameter_replace <- data.frame(sample(parameters[, parameter_id], size = length(invalid_indices), prob = ABCRF_weights[, parameter_id], replace = TRUE))
+
                     colnames(parameter_replace) <- parameter_id
                     #   Perturb parameters
-                    if (iteration < (nIterations + 1)) {
-                        if (is.function(perturb)) {
-                            parameter_replace <- perturb(parameters = parameter_replace)
-                        } else if (perturb == "Beaumont") {
-                            parameter_replace[[parameter_id]] <- rnorm(
-                                n = nrow(parameter_replace),
-                                mean = parameter_replace[[parameter_id]],
-                                sd = sqrt(2 * var(parameters[, parameter_id]))
-                            )
-                        }
-                    }
+                    if (iteration < (nIterations + 1)) parameter_replace <- perturb(parameters = parameter_replace)
                     #   Check if parameters are within range, otherwise redo the failed parameters
                     parameters_next[[parameter_id]][invalid_indices] <- parameter_replace[[parameter_id]]
                     if (is.null(range)) {
@@ -309,7 +300,6 @@ smcrf_single_param <- function(statistics_target,
                 }
             }
             parameters <- parameters_next
-            # print(parameters)
         }
         #---Simulate statistics
         cat("Making model simulations...\n")
@@ -346,17 +336,8 @@ smcrf_single_param <- function(statistics_target,
                         #   Sample parameters from previous posterior distribution
                         parameter_replace <- data.frame(parameters_tmp[sample(nrow(parameters_tmp), size = length(invalid_indices), prob = ABCRF_weights[, parameter_id], replace = T), parameter_id])
                         colnames(parameter_replace) <- parameter_id
-
                         #   Perturb parameters
-                        if (is.function(perturb)) {
-                            if (iteration < (nIterations + 1)) parameter_replace <- perturb(parameters = parameter_replace)
-                        } else if (perturb == "Beaumont") {
-                            if (iteration < (nIterations + 1)) {
-                                parameter_replace <- rnorm(n = nrow(parameter_replace), mean = as.matrix(parameter_replace), 2 * cov)
-                                parameter_replace <- data.frame(parameter_replace)
-                                colnames(parameter_replace) <- parameter_id
-                            }
-                        }
+                        if (iteration < (nIterations + 1)) parameter_replace <- perturb(parameters = parameter_replace)
                         #   Check if parameters are within range, otherwise redo the failed parameters
                         parameters_next[[parameter_id]][invalid_indices] <- parameter_replace[[parameter_id]]
                         if (is.null(range)) {
@@ -474,20 +455,7 @@ smcrf_multi_param <- function(statistics_target,
                 parameter_replace <- data.frame(parameters[sample(nrow(parameters), size = length(invalid_indices), prob = DRF_weights[, 1], replace = T), ])
                 colnames(parameter_replace) <- parameters_ids
                 #   Perturb parameters
-                if (iteration < (nIterations + 1)) {
-                    if (is.function(perturb)) {
-                        parameter_replace <- perturb(parameters = parameter_replace)
-                    } else if (perturb == "Beaumont") {
-                        for (parameter_id in parameters_ids){
-                            parameter_replace[[parameter_id]] <- rnorm(
-                            n = nrow(parameter_replace),
-                            mean = parameter_replace[[parameter_id]],
-                            sd = sqrt(2 * var(parameters[, parameter_id]))
-                        )
-                        }
-                    }                    
-                }
-                # print('here')
+                if (iteration < (nIterations + 1)) parameter_replace <- perturb(parameters = parameter_replace)
                 #   Check if parameters are within range, otherwise redo the failed parameters
                 parameters_next[invalid_indices, ] <- parameter_replace
                 if (is.null(range)) {
