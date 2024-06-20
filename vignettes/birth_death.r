@@ -4,8 +4,8 @@
 # R_libPaths_extra <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
 # R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/Birth_death/test_0411(try new model)/perturb=+-2;mtry=default;num.tree=1000;5000*4/test_on_targets"
-# R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/Birth_death/test_0411(try new model)/perturb=+-2;mtry=default;num.tree=1000;5000*4/test/1010"
-R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/Birth_death/test_0411(try new model)/perturb=+-2;mtry=default;num.tree=1000;5000*4/test_on_targets/previous one/try_final_result"
+R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/adaptive/BD"
+# R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/Birth_death/test_0411(try new model)/perturb=+-2;mtry=default;num.tree=1000;5000*4/test_on_targets/previous one/try_final_result"
 R_libPaths <- ""
 R_libPaths_extra <- "/Users/xiangzijin/SMC-RF/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zhihan - Macbook
@@ -140,7 +140,7 @@ parameters_target <- data.frame(
 statistics_target <- data.frame(matrix(c(
     11, 13, 16, 17, 17, 21, 23, 23, 28, 32, 36, 48, 61, 68, 80, 96, 123, 135, 161, 173, 187, 197, 221, 253, 289
 ), nrow = 1))
-# colnames(statistics_target) <- c(paste0("Z_", 1:25))
+colnames(statistics_target) <- c(paste0("Z_", 1:25))
 
 # statistics_target <- model(parameters = parameters_target, parallel = FALSE)[-c(1:ncol(parameters_target))]
 # colnames(statistics_target) <- c(paste0("Z_", 1:25))
@@ -271,7 +271,7 @@ parameters_labels <- data.frame(
 # true_joint$method <- "true-joint"
 # true_joint$parameters_truth <- parameters_truth
 # save(true_joint, file = "likelihood_test.rda")
-load("likelihood_test.rda")
+load("/Users/xiangzijin/Documents/ABC_SMCRF/Birth_death/test_0411(try new model)/perturb=+-2;mtry=default;num.tree=1000;5000*4/test_on_targets/previous one/try_final_result/likelihood_test.rda")
 #-----------------------------------------------------------------------
 #---Load likelihood
 # df_nLL <- load("/Users/xiangzijin/Documents/ABC_SMCRF/Birth_death/test_0411(try new model)/perturb=+-2;mtry=default;num.tree=1000;5000*4/test/1010/likelihood_1010.rda")
@@ -437,18 +437,20 @@ plots_joint <- plot_compare_joint(
 )
 # ===================================================================DRF
 #---Run ABC-DRF
-# abcrf_results <- smcrf(
-#     method = "smcrf-multi-param",
-#     statistics_target = statistics_target,
-#     parameters_initial = parameters_initial,
-#     model = model,
-#     perturb = perturb,
-#     range = range,
-#     nParticles = rep(20000, 1),
-#     num.trees = 1000,
-#     parallel = TRUE
-# )
-# save(abcrf_results, file = "drf.rda")
+abcrf_results <- smcrf(
+    method = "smcrf-multi-param",
+    statistics_target = statistics_target,
+    parameters_initial = parameters_initial,
+    model = model,
+    # perturb = perturb,
+    perturb = "Beaumont",
+    range = range,
+    # nParticles = rep(400, 1),
+    nParticles = rep(20000, 1),
+    num.trees = 2500,
+    parallel = TRUE
+)
+save(abcrf_results, file = "drf.rda")
 load("drf.rda")
 # results <- load("/Users/xiangzijin/Documents/ABC_SMCRF/Birth_death/test_0411(try new model)/perturb=+-2;mtry=default;num.tree=1000;5000*4/drf.rda")
 # load("/Users/xiangzijin/Documents/ABC_SMCRF/Birth_death/test_0411(try new model)/perturb=+-2;mtry=default;num.tree=1000;5000*4/test/1010/drf.rda")
@@ -475,33 +477,35 @@ plots_marginal <- plot_compare_marginal(
 )
 # ===================================================================RF
 #---Run ABC-RF
-# abcrf_results <- smcrf(
-#     method = "smcrf-single-param",
-#     statistics_target = statistics_target,
-#     parameters_initial = parameters_initial,
-#     model = model,
-#     perturb = perturb,
-#     range = range,
-#     ntree = 2500,
-#     nParticles = rep(20000, 1),
-#     parallel = TRUE
-# )
-# save(abcrf_results, file = "abc-rf.rda")
+abcrf_results <- smcrf(
+    method = "smcrf-single-param",
+    statistics_target = statistics_target,
+    parameters_initial = parameters_initial,
+    model = model,
+    # perturb = perturb,
+    perturb = "Beaumont",
+    range = range,
+    ntree = 2500,
+    nParticles = rep(20000, 1),
+    # nParticles = rep(2000, 1),
+    parallel = TRUE
+)
+save(abcrf_results, file = "abc-rf.rda")
 load("abc-rf.rda")
 #---Plot posterior joint distributions against other methods
-# plots_joint <- plot_compare_joint(
-#     plots = plots_joint,
-#     abc_results = abcrf_results,
-#     parameters_labels = parameters_labels
-# )
-#---Plot marginal distributions compare
-# plots_marginal <- plot_compare_marginal(
-#     plots = plots_marginal,
-#     abc_results = abcrf_results,
-#     parameters_labels = parameters_labels,
-#     # plot_hist = TRUE
-#     plot_hist_point = TRUE
-# )
+plots_joint <- plot_compare_joint(
+    plots = plots_joint,
+    abc_results = abcrf_results,
+    parameters_labels = parameters_labels
+)
+# ---Plot marginal distributions compare
+plots_marginal <- plot_compare_marginal(
+    plots = plots_marginal,
+    abc_results = abcrf_results,
+    parameters_labels = parameters_labels,
+    plot_hist = TRUE
+    # plot_hist_point = TRUE
+)
 plots_compare_qqplot <- plot_compare_qqplot(
     plots = plots_compare_qqplot,
     abc_results = abcrf_results,
@@ -510,30 +514,20 @@ plots_compare_qqplot <- plot_compare_qqplot(
 )
 # ========================================SMC-RF for multiple parameters
 #---Run SMC-RF for multiple parameters
-# smcrf_results_multi_param <- smcrf(
-#     method = "smcrf-multi-param",
-#     statistics_target = statistics_target,
-#     parameters_initial = parameters_initial,
-#     model = model,
-#     perturb = perturb,
-#     range = range,
-#     nParticles = rep(5000, 4),
-#     num.trees = 2000,
-#     parallel = TRUE
-# )
-# save(smcrf_results_multi_param, file = "smc-drf.rda")
-# smcrf_results_multi_param <- smcrf(
-#     method = "smcrf-multi-param",
-#     statistics_target = statistics_target,
-#     parameters_initial = parameters_initial,
-#     model = model,
-#     perturb = perturb,
-#     range = range,
-#     nParticles = rep(4000, 5),
-#     num.trees = 1500,
-#     parallel = TRUE
-# )
-# save(smcrf_results_multi_param, file = "smc-drf.rda")
+smcrf_results_multi_param <- smcrf(
+    method = "smcrf-multi-param",
+    statistics_target = statistics_target,
+    parameters_initial = parameters_initial,
+    model = model,
+    # perturb = perturb,
+    perturb = "Beaumont",
+    range = range,
+    nParticles = rep(5000, 4),
+    # nParticles = rep(1000, 4),
+    num.trees = 2500,
+    parallel = TRUE
+)
+save(smcrf_results_multi_param, file = "smc-drf.rda")
 load("smc-drf.rda")
 
 # smcdrf_results <- load("/Users/xiangzijin/Documents/ABC_SMCRF/Birth_death/test_0411(try new model)/perturb=+-2;mtry=default;num.tree=1000;5000*4/test/1010/smc-drf.rda")
@@ -572,42 +566,44 @@ plot_smcrf_marginal(
 )
 # ========================================SMC-RF for single parameters
 #---Run SMC-RF for single parameters
-# smcrf_results_single_param <- smcrf(
-#     method = "smcrf-single-param",
-#     statistics_target = statistics_target,
-#     parameters_initial = parameters_initial,
-#     model = model,
-#     perturb = perturb,
-#     range = range,
-#     nParticles = rep(2000, 5),
-#     parallel = TRUE
-# )
-# save(smcrf_results_single_param, file = "smc-rf.rda")
-# #---Plot joint distributions
-# plot_smcrf_joint(
-#     smcrf_results = smcrf_results_single_param,
-#     parameters_labels = parameters_labels
-# )
-# #---Plot posterior joint distributions against other methods
-# plots_joint <- plot_compare_joint(
-#     plots = plots_joint,
-#     abc_results = smcrf_results_single_param,
-#     parameters_labels = parameters_labels
-# )
-# #---Plot marginal distributions compare
-# plots_marginal <- plot_compare_marginal(
-#     plots = plots_marginal,
-#     abc_results = smcrf_results_single_param,
-#     parameters_labels = parameters_labels,
-#     parameters_truth = parameters_truth,
-#     plot_hist = TRUE
-# )
-# plot_smcrf_marginal(
-#     smcrf_results = smcrf_results_single_param,
-#     parameters_labels = parameters_labels,
-#     parameters_truth = parameters_truth,
-#     plot_hist = TRUE
-# )
+smcrf_results_single_param <- smcrf(
+    method = "smcrf-single-param",
+    statistics_target = statistics_target,
+    parameters_initial = parameters_initial,
+    model = model,
+    perturb = perturb,
+    perturb = "Beaumont",
+    range = range,
+    # nParticles = rep(200, 5),
+    nParticles = rep(4000, 5),
+    parallel = TRUE
+)
+save(smcrf_results_single_param, file = "smc-rf.rda")
+#---Plot joint distributions
+plot_smcrf_joint(
+    smcrf_results = smcrf_results_single_param,
+    parameters_labels = parameters_labels
+)
+#---Plot posterior joint distributions against other methods
+plots_joint <- plot_compare_joint(
+    plots = plots_joint,
+    abc_results = smcrf_results_single_param,
+    parameters_labels = parameters_labels
+)
+#---Plot marginal distributions compare
+plots_marginal <- plot_compare_marginal(
+    plots = plots_marginal,
+    abc_results = smcrf_results_single_param,
+    parameters_labels = parameters_labels,
+    parameters_truth = parameters_truth,
+    plot_hist = TRUE
+)
+plot_smcrf_marginal(
+    smcrf_results = smcrf_results_single_param,
+    parameters_labels = parameters_labels,
+    parameters_truth = parameters_truth,
+    plot_hist = TRUE
+)
 # ========================================QQ-plots
 # truth_lambda <- parameters_truth$lambda
 # truth_mu <- parameters_truth$mu

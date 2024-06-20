@@ -3,7 +3,7 @@
 # R_libPaths <- ""
 # R_libPaths_extra <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
-R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/hierarchical/new_trial"
+R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/adaptive"
 R_libPaths <- ""
 R_libPaths_extra <- "/Users/xiangzijin/SMC-RF/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zhihan - Macbook
@@ -134,28 +134,28 @@ parameters_labels <- data.frame(
 #     parallel = TRUE
 # )
 # save(abcrf_results, file = "drf.rda")
-drf_results <- load("drf.rda")
+# drf_results <- load("drf.rda")
 #---Define limits for the parameters
 limits <- data.frame(
-    ID = c("theta1", "theta2"),
+    parameter = c("theta1", "theta2"),
     min = c(0, 0),
     max = c(3, 3)
 )
 #---Plot posterior joint distributions against other methods
-plots_joint <- plot_compare_joint(
-    abc_results = abcrf_results,
-    parameters_labels = parameters_labels,
-    parameters_truth = parameters_truth,
-    lims = limits
-)
-#---Plot marginal distributions compare
-plots_marginal <- plot_compare_marginal(
-    # plots = plots_marginal,
-    abc_results = abcrf_results,
-    parameters_truth = parameters_truth,
-    parameters_labels = parameters_labels,
-    plot_hist = TRUE
-)
+# plots_joint <- plot_compare_joint(
+#     abc_results = abcrf_results,
+#     parameters_labels = parameters_labels,
+#     parameters_truth = parameters_truth,
+#     lims = limits
+# )
+# #---Plot marginal distributions compare
+# plots_marginal <- plot_compare_marginal(
+#     # plots = plots_marginal,
+#     abc_results = abcrf_results,
+#     parameters_truth = parameters_truth,
+#     parameters_labels = parameters_labels,
+#     plot_hist = TRUE
+# )
 
 # ========================================SMC-RF for multiple parameters
 #---Run SMC-RF for multiple parameters
@@ -165,9 +165,10 @@ smcrf_results_multi_param <- smcrf(
     parameters_initial = parameters_initial,
     model = model,
     perturb = perturb,
+    # perturb = "Beaumont",
     range = range,
-    num.trees = 2500,
-    nParticles = rep(5000, 2),
+    # num.trees = 2500,
+    nParticles = rep(500, 5),
     parallel = TRUE
 )
 save(smcrf_results_multi_param, file = "smc-drf.rda")
@@ -180,14 +181,14 @@ plot_smcrf_joint(
 )
 #---Plot posterior joint distributions against other methods
 plots_joint <- plot_compare_joint(
-    plots = plots_joint,
+    # plots = plots_joint,
     abc_results = smcrf_results_multi_param,
     parameters_labels = parameters_labels,
     lims = limits
 )
 #---Plot marginal distributions compare
 plots_marginal <- plot_compare_marginal(
-    plots = plots_marginal,
+    # plots = plots_marginal,
     abc_results = smcrf_results_multi_param,
     parameters_labels = parameters_labels,
     parameters_truth = parameters_truth,
@@ -195,6 +196,37 @@ plots_marginal <- plot_compare_marginal(
 )
 plot_smcrf_marginal(
     smcrf_results = smcrf_results_multi_param,
+    parameters_labels = parameters_labels,
+    parameters_truth = parameters_truth,
+    plot_hist = TRUE
+)
+
+# ========================================SMC-RF for multiple parameters
+#---Run SMC-RF for multiple parameters
+smcrf_results_single_param <- smcrf(
+    method = "smcrf-single-param",
+    statistics_target = statistics_target,
+    parameters_initial = parameters_initial,
+    model = model,
+    perturb = perturb,
+    # perturb = "Beaumont",
+    range = range,
+    # num.trees = 2500,
+    nParticles = rep(1000, 5),
+    parallel = TRUE
+)
+save(smcrf_results_single_param, file = "smc-rf.rda")
+load("smc-rf.rda")
+#---Plot marginal distributions compare
+plots_marginal <- plot_compare_marginal(
+    plots = plots_marginal,
+    abc_results = smcrf_results_single_param,
+    parameters_labels = parameters_labels,
+    parameters_truth = parameters_truth,
+    plot_hist = TRUE
+)
+plot_smcrf_marginal(
+    smcrf_results = smcrf_results_single_param,
     parameters_labels = parameters_labels,
     parameters_truth = parameters_truth,
     plot_hist = TRUE
