@@ -1,7 +1,7 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zhihan - Macbook
-R_workplace <- "/Users/lexie/Documents/DNA/SMC-RF/vignettes/LV model"
+R_workplace <- "/Users/lexie/Documents/DNA/ode"
 R_libPaths <- ""
-R_libPaths_extra <- "/Users/lexie/Documents/DNA/SMC-RF/R"
+R_libPaths_extra <- "/Users/lexie/Documents/DNA/abc-smc-rf/R"
 # R_libPaths_extra <- "/Users/lexie/Documents/DNA/EasyABC-master/R"
 # =======================================SET UP FOLDER PATHS & LIBRARIES
 .libPaths(R_libPaths)
@@ -18,47 +18,10 @@ setwd(R_workplace)
 
 # ======================================LV
 library(GillespieSSA)
-# a<-1
-# b<-1
-# parms <- c(a=1,b=1)
-# x0 <- c(X=1,Y=0.5)
-# a <- c("a*X","X*Y","b*X*Y","Y")
-# nu <- matrix(c(+1,-1,0,0,0,0,+1,-1), nrow = 2, byrow = TRUE)
-# method <- ssa.etl()
-# out <- ssa(x0,a,nu,parms,tf=15,method=method,
-#             verbose = TRUE,consoleInterval=1,
-#             censusInterval=1,
-#             # maxWallTime = 30,
-#             simName="Lotka predator-prey model")
-# status <- out$stats$terminationStatus
-# title <- paste0('ssa_', out$args$method$name, 's.png')
-# png(title, res = 150, width = 30, height = 15, units = "in",)
-# ssa.plot(out)
-# dev.off()
 
 nSSA<-0
 nParam<-0
 nSimulations<-0
-
-
-library(deSolve)
-LVmatrix <- function (Time, State, parms) {
-    with(as.list(c(State, parms)), {
-        dx = x*(alpha - beta*y)
-        dy = -y*(gamma - delta*x)
-        return(list(c(dx, dy)))
-    })
-}
-parms <- c(alpha = 4, beta = 1, gamma = 1, delta = -1)
-State <- c(x = 1, y = 0.5)
-Time <- seq(0, 15, by = 0.01)
-out <- ode(func = LVmatrix, y = State, parms = parms, times = Time)
-matplot(out[,-1], type = "l", xlab = "time", ylab = "population")
-legend("topright", c("y", "x"), lty = c(1,2), col = c(1,2), box.lwd = 0)
-ylim(c(0,4))
-# points(index,X, pch=19, col="red")
-# points(index,Y, pch=19, col="#2c4081")
-
 
 
 # =====================================Model for the predator–prey process
@@ -80,19 +43,15 @@ model <- function(parameters, parallel = FALSE) {
         library(data.table)
         cl <- makePSOCKcluster(detectCores() - 1)
         clusterExport(cl, varlist = c("LV_model"))
-        # print('parallel')
         stats <- pblapply(
             cl = cl, X = 1:nrow(parameters),
             FUN = function(i) LV_model(parameters$a[i], parameters$b[i])
         )
         stopCluster(cl)
-        # print(stats)
         stats <- rbindlist(stats)
         class(stats) <- "data.frame"
     } else {
         stats <- c()
-        # print('=====')
-        # print(parameters)
         for (i in 1:nrow(parameters)) {
             stats <- rbind(stats, LV_model(parameters$a[i], parameters$b[i]))
         }
@@ -108,7 +67,6 @@ model <- function(parameters, parallel = FALSE) {
             paste0("noise_", c(1:nNoise))
         )
     }
-    # print(data)
     return(data)
 }
 LV_model <- function(a,b,parallel=FALSE) {
@@ -130,8 +88,6 @@ LV_model <- function(a,b,parallel=FALSE) {
     Ysim <- numeric(length = 8)
     X <- NA
     Y <- NA
-    # print('=====================')
-    # print(parms) 
     for (i in 1:nRuns){
         out <- as.data.frame(ode(func = LVmatrix, y = State, parms = parms, times = Time)) 
         tsim <- c(1.1, 2.4, 3.9, 5.6, 7.5, 9.6, 11.9, 14.4)
@@ -151,7 +107,6 @@ LV_model <- function(a,b,parallel=FALSE) {
     }
     stats <- data.frame(matrix(c(a, b, Xsim, Ysim), nrow = 1))
     colnames(stats) <- c("a", "b", paste0("X_", 1:8), paste0("Y_", 1:8))
-    # print(stats)
     return(stats)
 }
 # =====================================================Target statistics
@@ -193,39 +148,29 @@ parameters_labels <- data.frame(
 )
 # ========================================SMC-RF for multiple parameters
 #---Run SMC-RF for multiple parameters
-smcrf_results_multi_param_test <- smcrf(
-    method = "smcrf-multi-param-test",
+smcrf_results_multi_param <- smcrf(
+    method = "smcrf-multi-param",
     statistics_target = statistics_target,
     parameters_initial = parameters_initial,
     model = model,
     perturb = perturb,
     range = range,
-    nParticles = rep(2000, 4),
+    nParticles = rep(5000, 4),
     parallel = TRUE
 )
-# smcrf_results_multi_param <- smcrf(
-#     method = "smcrf-multi-param",
-#     statistics_target = statistics_target,
-#     parameters_initial = parameters_initial,
-#     model = model,
-#     perturb = perturb,
-#     range = range,
-#     nParticles = rep(2000, 5),
-#     parallel = TRUE
-# )
-# save(smcrf_results_multi_param, file='smcrf_results_multi_param.rda')
-save(smcrf_results_multi_param_test, file='smcrf_results_multi_param_test.rda')
-load("smcrf_results_multi_param.rda")
-#---Plot marginal distributions
+save(smcrf_results_multi_param, file='smcrf_results_multi_param.rda')
+# # load("smcrf_results_multi_param.rda")
+# #---Plot marginal distributions
 plot_smcrf_marginal(
-    smcrf_results = smcrf_results_multi_param_test,
+    smcrf_results = smcrf_results_multi_param,
     parameters_truth = parameters_truth,
     parameters_labels = parameters_labels,
+    plot_hist=TRUE,
 )
-#---Plot posterior marginal distributions against other methods
+# #---Plot posterior marginal distributions against other methods
 plots <- plot_compare_marginal(
     # plots = plots,
-    abc_results = smcrf_results_multi_param_test,
+    abc_results = smcrf_results_multi_param,
     parameters_labels = parameters_labels,
     parameters_truth = parameters_truth,
     plot_statistics = FALSE,
@@ -234,43 +179,42 @@ plots <- plot_compare_marginal(
 )
 # ========================================DRF
 #---Run DRF
-drf_results_test <- smcrf(
-    method = "smcrf-multi-param-test",
+drf_results <- smcrf(
+    method = "smcrf-multi-param",
     statistics_target = statistics_target,
     parameters_initial = parameters_initial,
     model = model,
     perturb = perturb,
     range = range,
-    nParticles = rep(8000, 1),
+    nParticles = rep(20000, 1),
     parallel = TRUE
 )
-save(drf_results_test, file='drf_results_test.rda')
-# save(drf_results, file='drf_results.rda')
-load("drf_results_test.rda")
-#---Plot posterior marginal distributions against other methods
+save(drf_results, file='drf_results.rda')
+# load("drf_results.rda")
+# #---Plot posterior marginal distributions against other methods
 plots <- plot_compare_marginal(
     plots = plots,
-    abc_results = drf_results_test,
+    abc_results = drf_results,
     parameters_labels = parameters_labels,
     parameters_truth = parameters_truth,
     plot_statistics = FALSE,
     plot_hist=TRUE,
 )
 # ===============================================================ABC-SMC
-# #---Run ABC-SMC
-# abc_smc_results <- abc_smc(
-#     statistics_target = statistics_target,
-#     model = model,
-#     parameters_labels = parameters_labels,
-#     prior_distributions = list(c("unif", -10, 10),c("unif", -10,10)), 
-#     nParticles = 1000, method = "Beaumont", 
-#     tolerance = c(30.0, 16.0, 6.0, 5.0, 4.3),
-#     progress_bar = TRUE,
-#     # dist_weights = rep(1/ncol(statistics_target), ncol(statistics_target)),
-#     # n_cluster = 10,use_seed=TRUE
-# )
+# ---Run ABC-SMC
+abc_smc_results <- abc_smc(
+    statistics_target = statistics_target,
+    model = model,
+    parameters_labels = parameters_labels,
+    prior_distributions = list(c("unif", -10, 10),c("unif", -10,10)), 
+    nParticles = 1000, method = "Beaumont", 
+    tolerance = c(30.0, 16.0, 6.0, 5.0, 4.3),
+    progress_bar = TRUE,
+    # dist_weights = rep(1/ncol(statistics_target), ncol(statistics_target)),
+    # n_cluster = 10,use_seed=TRUE
+)
 # save(abc_smc_results, file='abc_smc_results.rda')
-# Simulation count:  ~20min 55536
+# # Simulation count:  ~20min 55536
 load('abc_smc_results.rda')
 #---Plot posterior marginal distributions against other methods
 plots <- plot_compare_marginal(
@@ -281,3 +225,44 @@ plots <- plot_compare_marginal(
     plot_statistics = FALSE,
     plot_hist=TRUE,
 )
+
+
+# # ========================================SMC-RF-adaptive for multiple parameters
+# #---Run SMC-RF for multiple parameters
+# smcrf_results_multi_param_adaptive <- smcrf(
+#     method = "smcrf-multi-param",
+#     statistics_target = statistics_target,
+#     parameters_initial = parameters_initial,
+#     model = model,
+#     perturb = "Beaumont",
+#     range = range,
+#     nParticles = rep(5000, 3),
+#     parallel = TRUE
+# )
+# save(smcrf_results_multi_param_adaptive, file='smcrf_results_multi_param_adaptive')
+# # load("smcrf_results_multi_param_adaptive")
+# #---Plot marginal distributions
+# plot_smcrf_marginal(
+#     smcrf_results = smcrf_results_multi_param_adaptive,
+#     parameters_truth = parameters_truth,
+#     parameters_labels = parameters_labels,
+#     plot_hist=TRUE,
+# )
+
+
+for (iteration in 1:4) print(mean(smcrf_results_multi_param[[paste0("Iteration_", iteration + 1)]]$parameters_unperturbed[['a']]))
+for (iteration in 1:4) print(mean(smcrf_results_multi_param[[paste0("Iteration_", iteration + 1)]]$parameters_unperturbed[['b']]))
+
+print(mean(drf_results[["Iteration_2"]]$parameters_unperturbed[['a']]))
+print(mean(drf_results[["Iteration_2"]]$parameters_unperturbed[['b']]))
+print(mean(abc_smc_results[["Iteration_2"]]$parameters[['a']]))
+print(mean(abc_smc_results[["Iteration_2"]]$parameters[['b']]))
+
+
+for (iteration in 1:4) print(var(smcrf_results_multi_param[[paste0("Iteration_", iteration + 1)]]$parameters_unperturbed[['a']]))
+for (iteration in 1:4) print(var(smcrf_results_multi_param[[paste0("Iteration_", iteration + 1)]]$parameters_unperturbed[['b']]))
+
+print(var(drf_results[["Iteration_2"]]$parameters_unperturbed[['a']]))
+print(var(drf_results[["Iteration_2"]]$parameters_unperturbed[['b']]))
+print(var(abc_smc_results[["Iteration_2"]]$parameters[['a']]))
+print(var(abc_smc_results[["Iteration_2"]]$parameters[['b']]))

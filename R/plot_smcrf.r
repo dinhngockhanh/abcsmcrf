@@ -275,18 +275,18 @@ plot_compare_marginal <- function(plots = NULL,
         if (plot_statistics) statistics_values <- abc_results[[paste0("Iteration_", nIterations + 1)]]$statistics
     } else if (method == "abc-rejection") {
         legend_label <- "ABC-REJ"
-        # parameters_values <- abc_results[["Iteration_2"]]$parameters
-        parameters_values <- abc_results[["Iteration_2"]]$parameters_unperturbed
+        parameters_values <- abc_results[["Iteration_2"]]$parameters
+        # parameters_values <- abc_results[["Iteration_2"]]$parameters_unperturbed
         if (plot_statistics) statistics_values <- abc_results[["Iteration_2"]]$statistics
     } else if (method == "abc-smc") {
         legend_label <- "ABC-SMC"
-        # parameters_values <- abc_results[["Iteration_2"]]$parameters
-        parameters_values <- abc_results[["Iteration_2"]]$parameters_unperturbed
+        parameters_values <- abc_results[["Iteration_2"]]$parameters
+        # parameters_values <- abc_results[["Iteration_2"]]$parameters_unperturbed
         if (plot_statistics) statistics_values <- abc_results[["Iteration_2"]]$statistics
     } else if (method == "abc-mcmc") {
         legend_label <- "ABC-MCMC"
-        # parameters_values <- abc_results[["Iteration_2"]]$parameters
-        parameters_values <- abc_results[["Iteration_2"]]$parameters_unperturbed
+        parameters_values <- abc_results[["Iteration_2"]]$parameters
+        # parameters_values <- abc_results[["Iteration_2"]]$parameters_unperturbed
         if (plot_statistics) statistics_values <- abc_results[["Iteration_2"]]$statistics
     } else if (method == "mcmc") {
         legend_label <- "MCMC"
