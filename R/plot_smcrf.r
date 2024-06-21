@@ -160,27 +160,27 @@ plot_compare_marginal <- function(plots = NULL,
     color_scheme <- c(
         "Prior Distribution" = "gray",
         "True Posterior Distribution" = "black",
-        "ABC-rejection" = "forestgreen",
+        "ABC-REJ" = "forestgreen",
         "ABC-RF" = "magenta4",
-        "DRF" = "royalblue2",
+        "ABC-DRF" = "royalblue2",
         "MCMC" = "goldenrod2",
         "ABC-MCMC" = "goldenrod2",
         "ABC-SMC" = "goldenrod2",
-        "SMC-RF for single parameters" = "salmon",
-        "SMC-RF for multiple parameters" = "salmon"
+        "ABC-SMC-RF" = "salmon",
+        "ABC-SMC-DRF" = "salmon"
     )
     #---Set up legend order for plotting
     legend_order <- c(
         "Prior Distribution",
         "True Posterior Distribution",
-        "ABC-rejection",
+        "ABC-REJ",
         "ABC-MCMC",
         "ABC-SMC",
         "ABC-RF",
-        "DRF",
+        "ABC-DRF",
         "MCMC",
-        "SMC-RF for single parameters",
-        "SMC-RF for multiple parameters"
+        "ABC-SMC-RF",
+        "ABC-SMC-DRF"
     )
     #---Begin plots
     if (is.null(plots)) {
@@ -254,7 +254,7 @@ plot_compare_marginal <- function(plots = NULL,
         if (nIterations == 1) {
             legend_label <- "ABC-RF"
         } else {
-            legend_label <- "SMC-RF for single parameters"
+            legend_label <- "ABC-SMC-RF"
         }
         # parameters_values <- abc_results[[paste0("Iteration_", nIterations + 1)]]$parameters
         parameters_values <- abc_results[[paste0("Iteration_", nIterations + 1)]]$parameters_unperturbed
@@ -266,15 +266,15 @@ plot_compare_marginal <- function(plots = NULL,
     } else if (method == "smcrf-multi-param") {
         nIterations <- abc_results[["nIterations"]]
         if (nIterations == 1) {
-            legend_label <- "DRF"
+            legend_label <- "ABC-DRF"
         } else {
-            legend_label <- "SMC-RF for multiple parameters"
+            legend_label <- "ABC-SMC-DRF"
         }
         # parameters_values <- abc_results[[paste0("Iteration_", nIterations + 1)]]$parameters
         parameters_values <- abc_results[[paste0("Iteration_", nIterations + 1)]]$parameters_unperturbed
         if (plot_statistics) statistics_values <- abc_results[[paste0("Iteration_", nIterations + 1)]]$statistics
     } else if (method == "abc-rejection") {
-        legend_label <- "ABC-rejection"
+        legend_label <- "ABC-REJ"
         # parameters_values <- abc_results[["Iteration_2"]]$parameters
         parameters_values <- abc_results[["Iteration_2"]]$parameters_unperturbed
         if (plot_statistics) statistics_values <- abc_results[["Iteration_2"]]$statistics
@@ -527,38 +527,38 @@ plot_compare_joint <- function(plots = NULL,
     # color_scheme <- c(
     #     "Prior Distribution" = "gray",
     #     "True Posterior Distribution" = "black",
-    #     "ABC-rejection" = "forestgreen",
+    #     "ABC-REJ" = "forestgreen",
     #     "ABC-RF" = "royalblue2",
-    #     "DRF" = "royalblue2",
+    #     "ABC-DRF" = "royalblue2",
     #     "MCMC" = "goldenrod2",
     #     "ABC-MCMC" = "goldenrod2",
     #     "ABC-SMC" = "magenta4",
-    #     "SMC-RF for single parameters" = "salmon",
-    #     "SMC-RF for multiple parameters" = "salmon"
+    #     "ABC-SMC-RF" = "salmon",
+    #     "ABC-SMC-DRF" = "salmon"
     # )
 
     color_scheme <- c(
-        "ABC-rejection" = "forestgreen",
+        "ABC-REJ" = "forestgreen",
         "ABC-RF" = "magenta4",
-        # "DRF" = "burlywood2",
-        "DRF" = "cyan1",
+        # "ABC-DRF" = "burlywood2",
+        "ABC-DRF" = "cyan1",
         "MCMC" = "khaki",
         "ABC-MCMC" = "khaki",
         "ABC-SMC" = "goldenrod2",
-        "SMC-RF for single parameters" = "firebrick1",
-        # "SMC-RF for multiple parameters" = "plum1"
-        "SMC-RF for multiple parameters" = "firebrick1"
+        "ABC-SMC-RF" = "firebrick1",
+        # "ABC-SMC-DRF" = "plum1"
+        "ABC-SMC-DRF" = "firebrick1"
     )
     #---Set up legend order for plotting
     legend_order <- c(
-        "ABC-rejection",
+        "ABC-REJ",
         "MCMC",
         "ABC-MCMC",
         "ABC-SMC",
         "ABC-RF",
-        "DRF",
-        "SMC-RF for single parameters",
-        "SMC-RF for multiple parameters"
+        "ABC-DRF",
+        "ABC-SMC-RF",
+        "ABC-SMC-DRF"
     )
     my_palette <- colorRampPalette(c("#170756ad", "#0b50a4", "#0beac8", "#ffff0f"))
 
@@ -594,7 +594,7 @@ plot_compare_joint <- function(plots = NULL,
         if (nIterations == 1) {
             legend_label <- "ABC-RF"
         } else {
-            legend_label <- "SMC-RF for single parameters"
+            legend_label <- "ABC-SMC-RF"
         }
         # posterior_df <- data.frame(
         #     x = abc_results[[paste0("Iteration_", nIterations + 1)]]$parameters[[parameters_labels$parameter[1]]],
@@ -609,9 +609,9 @@ plot_compare_joint <- function(plots = NULL,
     } else if (method == "smcrf-multi-param") {
         nIterations <- abc_results[["nIterations"]]
         if (nIterations == 1) {
-            legend_label <- "DRF"
+            legend_label <- "ABC-DRF"
         } else {
-            legend_label <- "SMC-RF for multiple parameters"
+            legend_label <- "ABC-SMC-DRF"
         }
         # posterior_df <- data.frame(
         #     x = abc_results[[paste0("Iteration_", nIterations + 1)]]$parameters[[parameters_labels$parameter[1]]],
@@ -624,7 +624,7 @@ plot_compare_joint <- function(plots = NULL,
             legend = legend_label
         )
     } else if (method == "abc-rejection") {
-        legend_label <- "ABC-rejection"
+        legend_label <- "ABC-REJ"
         # posterior_df <- data.frame(
         #     x = abc_results[["Iteration_2"]]$parameters[[parameters_labels$parameter[1]]],
         #     y = abc_results[["Iteration_2"]]$parameters[[parameters_labels$parameter[2]]],
@@ -738,25 +738,25 @@ plot_compare_qqplot <- function(plots = NULL,
     method <- abc_results[["method"]]
     #---Set up color scheme for plotting
     color_scheme <- c(
-        "ABC-rejection" = "forestgreen",
+        "ABC-REJ" = "forestgreen",
         "ABC-RF" = "magenta4",
-        "DRF" = "royalblue2",
+        "ABC-DRF" = "royalblue2",
         "MCMC" = "goldenrod2",
         "ABC-MCMC" = "goldenrod2",
         "ABC-SMC" = "goldenrod2",
-        "SMC-RF for single parameters" = "salmon",
-        "SMC-RF for multiple parameters" = "salmon"
+        "ABC-SMC-RF" = "salmon",
+        "ABC-SMC-DRF" = "salmon"
     )
     #---Set up legend order for plotting
     legend_order <- c(
-        "ABC-rejection",
+        "ABC-REJ",
         "ABC-MCMC",
         "ABC-SMC",
         "ABC-RF",
-        "DRF",
+        "ABC-DRF",
         "MCMC",
-        "SMC-RF for single parameters",
-        "SMC-RF for multiple parameters"
+        "ABC-SMC-RF",
+        "ABC-SMC-DRF"
     )
     #---Begin plots
     if (is.null(plots)) {
@@ -774,7 +774,7 @@ plot_compare_qqplot <- function(plots = NULL,
         if (nIterations == 1) {
             legend_label <- "ABC-RF"
         } else {
-            legend_label <- "SMC-RF for single parameters"
+            legend_label <- "ABC-SMC-RF"
         }
         # parameters_values <- abc_results[[paste0("Iteration_", nIterations + 1)]]$parameters
         parameters_values <- abc_results[[paste0("Iteration_", nIterations + 1)]]$parameters_unperturbed
@@ -785,14 +785,14 @@ plot_compare_qqplot <- function(plots = NULL,
     } else if (method == "smcrf-multi-param") {
         nIterations <- abc_results[["nIterations"]]
         if (nIterations == 1) {
-            legend_label <- "DRF"
+            legend_label <- "ABC-DRF"
         } else {
-            legend_label <- "SMC-RF for multiple parameters"
+            legend_label <- "ABC-SMC-DRF"
         }
         # parameters_values <- abc_results[[paste0("Iteration_", nIterations + 1)]]$parameters
         parameters_values <- abc_results[[paste0("Iteration_", nIterations + 1)]]$parameters_unperturbed
     } else if (method == "abc-rejection") {
-        legend_label <- "ABC-rejection"
+        legend_label <- "ABC-REJ"
         # parameters_values <- abc_results[["Iteration_2"]]$parameters
         parameters_values <- abc_results[["Iteration_2"]]$parameters_unperturbed
     } else if (method == "abc-smc") {
