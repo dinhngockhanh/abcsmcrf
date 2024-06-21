@@ -13,7 +13,7 @@ plot_smcrf_marginal <- function(smcrf_results,
     color_scheme <- c(
         "True Posterior Distribution" = "black", "Data statistic" = "black",
         "Prior Distribution" = "gray",
-        setNames(rev(rainbow(nIterations)), paste0("Iter. ", 1:nIterations))
+        setNames(hcl.colors(nIterations, palette = "Earth"), paste0("Iter. ", 1:nIterations))
     )
     #---Set up legend order for plotting
     legend_order <- c("True Posterior Distribution", "Data statistic", "Prior Distribution", paste0("Iter. ", 1:nIterations))
