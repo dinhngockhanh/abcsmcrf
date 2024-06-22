@@ -3,8 +3,8 @@
 # R_libPaths <- ""
 # R_libPaths_extra <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/R"
 # # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ZIJIN - Macbook
-# R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/CME/m-w/home_made/old_example/timepoints/1-10;10sim-rf"
-R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/adaptive"
+R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/CME/m-w/home_made/old_example/timepoints/1-10"
+# R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/adaptive"
 R_libPaths <- ""
 R_libPaths_extra <- "/Users/xiangzijin/SMC-RF/R"
 # =======================================SET UP FOLDER PATHS & LIBRARIES
@@ -255,16 +255,16 @@ parameters_labels <- data.frame(
 #     parallel = TRUE
 # )
 # save(abcrf_results, file = "drf.rda")
-# drf_results <- load("drf.rda")
-# #---Plot marginal distributions compare
-# plots_marginal <- plot_compare_marginal(
-#     # plots = plots_marginal,
-#     xlimit = range,
-#     abc_results = abcrf_results,
-#     parameters_truth = parameters_truth,
-#     parameters_labels = parameters_labels,
-#     plot_hist = TRUE
-# )
+drf_results <- load("drf.rda")
+#---Plot marginal distributions compare
+plots_marginal <- plot_compare_marginal(
+    # plots = plots_marginal,
+    xlimit = range,
+    abc_results = abcrf_results,
+    parameters_truth = parameters_truth,
+    parameters_labels = parameters_labels,
+    plot_hist = TRUE
+)
 # # ========================================SMC-RF for multiple parameters
 # #---Run SMC-RF for multiple parameters
 # smcrf_results_multi_param <- smcrf(
@@ -279,77 +279,77 @@ parameters_labels <- data.frame(
 #     parallel = TRUE
 # )
 # save(smcrf_results_multi_param, file = "smc-drf.rda")
-# load("smc-drf.rda")
+load("smc-drf.rda")
 # #---Plot marginal distributions compare
-# plots_marginal <- plot_compare_marginal(
-#     plots = plots_marginal,
-#     xlimit = range,
-#     abc_results = smcrf_results_multi_param,
-#     parameters_truth = parameters_truth,
-#     parameters_labels = parameters_labels,
-#     plot_hist = TRUE
-# )
-# plot_smcrf_marginal(
-#     smcrf_results = smcrf_results_multi_param,
-#     parameters_labels = parameters_labels,
-#     plot_hist = TRUE
-# )
-# ===================================================================RF
-#---Run ABC-RF
-abcrf_results <- smcrf(
-    method = "smcrf-single-param",
-    statistics_target = statistics_target,
-    parameters_initial = parameters_initial,
-    model = model,
-    # perturb = perturb,
-    perturb = "Beaumont",
-    range = range,
-    ntree = 2500,
-    save_model = FALSE,
-    nParticles = rep(20000, 1),
-    parallel = TRUE
-)
-save(abcrf_results, file = "abc-rf.rda")
-load("abc-rf.rda")
-plots_marginal <- plot_compare_marginal(
-    # plots = plots_marginal,
-    xlimit = range,
-    abc_results = abcrf_results,
-    parameters_truth = parameters_truth,
-    parameters_labels = parameters_labels,
-    plot_hist = TRUE
-)
-# ========================================SMC-RF for single parameters
-#---Run SMC-RF for single parameters
-smcrf_results_single_param <- smcrf(
-    method = "smcrf-single-param",
-    statistics_target = statistics_target,
-    parameters_initial = parameters_initial,
-    model = model,
-    # perturb = perturb,
-    perturb = "Beaumont",
-    range = range,
-    nParticles = rep(4000, 5),
-    ntree = 2500,
-    save_model = FALSE,
-    parallel = TRUE
-)
-save(smcrf_results_single_param, file = "smc-rf.rda")
-load("smc-rf.rda")
-#---Plot marginal distributions compare
 plots_marginal <- plot_compare_marginal(
     plots = plots_marginal,
     xlimit = range,
-    abc_results = smcrf_results_single_param,
+    abc_results = smcrf_results_multi_param,
     parameters_truth = parameters_truth,
     parameters_labels = parameters_labels,
     plot_hist = TRUE
 )
 plot_smcrf_marginal(
-    smcrf_results = smcrf_results_single_param,
+    smcrf_results = smcrf_results_multi_param,
     parameters_labels = parameters_labels,
     plot_hist = TRUE
 )
+# # ===================================================================RF
+# #---Run ABC-RF
+# abcrf_results <- smcrf(
+#     method = "smcrf-single-param",
+#     statistics_target = statistics_target,
+#     parameters_initial = parameters_initial,
+#     model = model,
+#     # perturb = perturb,
+#     perturb = "Beaumont",
+#     range = range,
+#     ntree = 2500,
+#     save_model = FALSE,
+#     nParticles = rep(20000, 1),
+#     parallel = TRUE
+# )
+# save(abcrf_results, file = "abc-rf.rda")
+# load("abc-rf.rda")
+# plots_marginal <- plot_compare_marginal(
+#     # plots = plots_marginal,
+#     xlimit = range,
+#     abc_results = abcrf_results,
+#     parameters_truth = parameters_truth,
+#     parameters_labels = parameters_labels,
+#     plot_hist = TRUE
+# )
+# # ========================================SMC-RF for single parameters
+# #---Run SMC-RF for single parameters
+# smcrf_results_single_param <- smcrf(
+#     method = "smcrf-single-param",
+#     statistics_target = statistics_target,
+#     parameters_initial = parameters_initial,
+#     model = model,
+#     # perturb = perturb,
+#     perturb = "Beaumont",
+#     range = range,
+#     nParticles = rep(4000, 5),
+#     ntree = 2500,
+#     save_model = FALSE,
+#     parallel = TRUE
+# )
+# save(smcrf_results_single_param, file = "smc-rf.rda")
+# load("smc-rf.rda")
+# #---Plot marginal distributions compare
+# plots_marginal <- plot_compare_marginal(
+#     plots = plots_marginal,
+#     xlimit = range,
+#     abc_results = smcrf_results_single_param,
+#     parameters_truth = parameters_truth,
+#     parameters_labels = parameters_labels,
+#     plot_hist = TRUE
+# )
+# plot_smcrf_marginal(
+#     smcrf_results = smcrf_results_single_param,
+#     parameters_labels = parameters_labels,
+#     plot_hist = TRUE
+# )
 # ============================Plot joint distributions compare c1 and c2
 # smcrf_results_multi_param
 # nIterations <- smcrf_results_multi_param[["nIterations"]]
@@ -375,7 +375,7 @@ plot_smcrf_marginal(
 # return(plots)
 
 # =================================================TRAJECTORIES BOX PLOT
-plot_boxplot <- function(drf_results, smcrf_results, statistics_c3_small, statistics_c3_large) {
+plot_boxplot <- function(drf_results, smcrf_results) {
     library(ggplot2)
     library(reshape2) # Ensure reshape2 is loaded for melting data frames
     stats_id <- c("P", "E", "S", "ES")
@@ -386,12 +386,12 @@ plot_boxplot <- function(drf_results, smcrf_results, statistics_c3_small, statis
         "True Posterior Distribution" = "black",
         "ABC-rejection" = "forestgreen",
         "ABC-RF" = "magenta4",
-        "DRF" = "royalblue2",
+        "ABC-DRF" = "royalblue2",
         "MCMC" = "goldenrod2",
         "ABC-MCMC" = "goldenrod2",
         "ABC-SMC" = "goldenrod2",
-        "SMC-RF for single parameters" = "salmon",
-        "SMC-RF for multiple parameters" = "salmon"
+        "ABC-SMC-RF" = "salmon",
+        "ABC-SMC-DRF" = "salmon"
     )
     #---Set up legend order for plotting
     legend_order <- c(
@@ -401,10 +401,10 @@ plot_boxplot <- function(drf_results, smcrf_results, statistics_c3_small, statis
         "ABC-MCMC",
         "ABC-SMC",
         "ABC-RF",
-        "DRF",
+        "ABC-DRF",
         "MCMC",
-        "SMC-RF for single parameters",
-        "SMC-RF for multiple parameters"
+        "ABC-SMC-RF",
+        "ABC-SMC-DRF"
     )
     # Factor levels for time
     time_levels <- as.character(seq(1, 10, by = 1))
@@ -421,36 +421,22 @@ plot_boxplot <- function(drf_results, smcrf_results, statistics_c3_small, statis
         ]
         posterior_data_drf_long <- melt(posterior_data_drf, variable.name = "Stat_type", value.name = "Value")
         posterior_data_drf_long$time <- paste0(1 * as.integer(gsub("[^0-9]", "", posterior_data_drf_long$Stat_type)))
-        posterior_data_drf_long$legend <- "DRF"
-        print(posterior_data_drf_long)
+        posterior_data_drf_long$legend <- "ABC-DRF"
         posterior_data_smcrf_long <- melt(posterior_data_smcrf, variable.name = "Stat_type", value.name = "Value")
         posterior_data_smcrf_long$time <- paste0(1 * as.integer(gsub("[^0-9]", "", posterior_data_smcrf_long$Stat_type)))
-        posterior_data_smcrf_long$legend <- "SMC-RF for multiple parameters"
-        print(posterior_data_smcrf_long)
+        posterior_data_smcrf_long$legend <- "ABC-SMC-DRF"
         total_posterior <- rbind(posterior_data_drf_long, posterior_data_smcrf_long)
         target <- smcrf_results[["statistics_target"]][, grepl(paste0("^", stat_id, "_"), colnames(smcrf_results[["statistics_target"]]))]
         target_long <- reshape2::melt(target, variable.name = "Stat_type", value.name = "Value")
         target_long$time <- paste0(1 * as.integer(gsub("[^0-9]", "", target_long$Stat_type)))
-        target_c3_small <- statistics_c3_small[, grepl(paste0("^", stat_id, "_"), colnames(statistics_c3_small))]
-        target_c3_small_long <- reshape2::melt(target_c3_small, variable.name = "Stat_type", value.name = "Value")
-        target_c3_small_long$time <- paste0(1 * as.integer(gsub("[^0-9]", "", target_c3_small_long$Stat_type)))
-        target_c3_large <- statistics_c3_large[, grepl(paste0("^", stat_id, "_"), colnames(statistics_c3_large))]
-        target_c3_large_long <- reshape2::melt(target_c3_large, variable.name = "Stat_type", value.name = "Value")
-        target_c3_large_long$time <- paste0(1 * as.integer(gsub("[^0-9]", "", target_c3_large_long$Stat_type)))
         # Convert time to factor with explicit ordering
         posterior_data_drf_long$time <- factor(posterior_data_drf_long$time, levels = time_levels)
         posterior_data_smcrf_long$time <- factor(posterior_data_smcrf_long$time, levels = time_levels)
         target_long$time <- factor(target_long$time, levels = time_levels)
-        target_c3_small_long$time <- factor(target_c3_small_long$time, levels = time_levels)
-        target_c3_large_long$time <- factor(target_c3_large_long$time, levels = time_levels)
         plots[[stat_id]] <- ggplot() +
             geom_boxplot(data = total_posterior, aes(x = time, y = Value, color = legend, fill = legend), alpha = 0.8) +
             geom_line(data = target_long, aes(x = time, y = Value, group = 1), color = "black", size = 1.5, show.legend = FALSE) +
             geom_point(data = target_long, aes(x = time, y = Value, group = 1), color = "black", size = 10, show.legend = FALSE) +
-            # geom_line(data = target_c3_small_long, aes(x = time, y = Value, group = 1), color = "orange", size = 1.5, show.legend = FALSE) +
-            # geom_point(data = target_c3_small_long, aes(x = time, y = Value, group = 1), color = "orange", size = 10, show.legend = FALSE) +
-            # geom_line(data = target_c3_large_long, aes(x = time, y = Value, group = 1), color = "forestgreen", size = 1.5, show.legend = FALSE) +
-            # geom_point(data = target_c3_large_long, aes(x = time, y = Value, group = 1), color = "forestgreen", size = 10, show.legend = FALSE) +
             labs(x = "Time", y = stat_id) +
             scale_fill_manual(values = color_scheme, name = "") +
             scale_color_manual(values = color_scheme, name = "") +
@@ -469,146 +455,9 @@ plot_boxplot <- function(drf_results, smcrf_results, statistics_c3_small, statis
         print(plots[[stat_id]])
         dev.off()
     }
-    # # ==============================The one for average from 10 sims
-    # for (stat_id in stats_id) {
-    #     # Extract data for the current statistic ID
-    #     posterior_data_smcrf <- smcrf_results[[paste0("Iteration_", nIterations + 1)]][["statistics"]][
-    #         1:1000,
-    #         grepl(paste0("^", stat_id, "_", "[0-9]+", "_mean"), colnames(smcrf_results[[paste0("Iteration_", nIterations + 1)]][["statistics"]]))
-    #     ]
-    #     posterior_data_drf <- drf_results[[paste0("Iteration_", 1 + 1)]][["statistics"]][
-    #         1:1000,
-    #         grepl(paste0("^", stat_id, "_", "[0-9]+", "_mean"), colnames(drf_results[[paste0("Iteration_", 1 + 1)]][["statistics"]]))
-    #     ]
-
-    #     posterior_data_drf_long <- melt(posterior_data_drf, variable.name = "Stat_type", value.name = "Value")
-    #     posterior_data_drf_long$time <- paste0(1 * as.integer(gsub("[^0-9]", "", posterior_data_drf_long$Stat_type)))
-    #     posterior_data_drf_long$legend <- "DRF"
-    #     print(posterior_data_drf_long)
-    #     posterior_data_smcrf_long <- melt(posterior_data_smcrf, variable.name = "Stat_type", value.name = "Value")
-    #     posterior_data_smcrf_long$time <- paste0(1 * as.integer(gsub("[^0-9]", "", posterior_data_smcrf_long$Stat_type)))
-    #     posterior_data_smcrf_long$legend <- "SMC-RF for multiple parameters"
-    #     print(posterior_data_smcrf_long)
-    #     total_posterior <- rbind(posterior_data_drf_long, posterior_data_smcrf_long)
-    #     target <- smcrf_results[["statistics_target"]][, grepl(paste0("^", stat_id, "_", "[0-9]+", "_mean"), colnames(smcrf_results[["statistics_target"]]))]
-    #     target_long <- reshape2::melt(target, variable.name = "Stat_type", value.name = "Value")
-    #     target_long$time <- paste0(1 * as.integer(gsub("[^0-9]", "", target_long$Stat_type)))
-    #     target_c3_small <- statistics_c3_small[, grepl(paste0("^", stat_id, "_", "[0-9]+", "_mean"), colnames(statistics_c3_small))]
-    #     target_c3_small_long <- reshape2::melt(target_c3_small, variable.name = "Stat_type", value.name = "Value")
-    #     target_c3_small_long$time <- paste0(1 * as.integer(gsub("[^0-9]", "", target_c3_small_long$Stat_type)))
-    #     target_c3_large <- statistics_c3_large[, grepl(paste0("^", stat_id, "_", "[0-9]+", "_mean"), colnames(statistics_c3_large))]
-    #     target_c3_large_long <- reshape2::melt(target_c3_large, variable.name = "Stat_type", value.name = "Value")
-    #     target_c3_large_long$time <- paste0(1 * as.integer(gsub("[^0-9]", "", target_c3_large_long$Stat_type)))
-
-    #     # Convert time to factor with explicit ordering
-    #     posterior_data_drf_long$time <- factor(posterior_data_drf_long$time, levels = time_levels)
-    #     posterior_data_smcrf_long$time <- factor(posterior_data_smcrf_long$time, levels = time_levels)
-    #     target_long$time <- factor(target_long$time, levels = time_levels)
-    #     target_c3_small_long$time <- factor(target_c3_small_long$time, levels = time_levels)
-    #     target_c3_large_long$time <- factor(target_c3_large_long$time, levels = time_levels)
-
-
-
-    #     plots[[stat_id]] <- ggplot() +
-    #         geom_boxplot(data = total_posterior, aes(x = time, y = Value, color = legend, fill = legend), alpha = 0.8) +
-    #         geom_line(data = target_long, aes(x = time, y = Value, group = 1), color = "black", size = 1.5, show.legend = FALSE) +
-    #         geom_point(data = target_long, aes(x = time, y = Value, group = 1), color = "black", size = 10, show.legend = FALSE) +
-    #         geom_line(data = target_c3_small_long, aes(x = time, y = Value, group = 1), color = "orange", size = 1.5, show.legend = FALSE) +
-    #         geom_point(data = target_c3_small_long, aes(x = time, y = Value, group = 1), color = "orange", size = 10, show.legend = FALSE) +
-    #         geom_line(data = target_c3_large_long, aes(x = time, y = Value, group = 1), color = "forestgreen", size = 1.5, show.legend = FALSE) +
-    #         geom_point(data = target_c3_large_long, aes(x = time, y = Value, group = 1), color = "forestgreen", size = 10, show.legend = FALSE) +
-    #         labs(x = "Time", y = stat_id) +
-    #         scale_fill_manual(values = color_scheme, name = "") +
-    #         scale_color_manual(values = color_scheme, name = "") +
-    #         theme(
-    #             text = element_text(size = 50),
-    #             panel.background = element_rect(fill = "white", colour = "white"),
-    #             panel.grid.major = element_line(colour = "white"),
-    #             panel.grid.minor = element_line(colour = "white"),
-    #             plot.margin = unit(c(1, 1, 1, 1), "cm"),
-    #             legend.position = "top",
-    #             legend.justification = c(0, 0.5)
-    #         )
-
-    #     # Output to PNG file
-    #     file_name <- paste0("boxplot-statistics=", stat_id, ".png")
-    #     png(file_name, res = 150, width = 3000, height = 1500, units = "px")
-    #     print(plots[[stat_id]])
-    #     dev.off()
-    # }
-    # ==============================The one for variance from 10 sims
-    # for (stat_id in stats_id) {
-    #     # Extract data for the current statistic ID
-    #     posterior_data_smcrf <- smcrf_results[[paste0("Iteration_", nIterations + 1)]][["statistics"]][
-    #         1:1000,
-    #         grepl(paste0("^", stat_id, "_", "[0-9]+", "_var"), colnames(smcrf_results[[paste0("Iteration_", nIterations + 1)]][["statistics"]]))
-    #     ]
-    #     posterior_data_drf <- drf_results[[paste0("Iteration_", 1 + 1)]][["statistics"]][
-    #         1:1000,
-    #         grepl(paste0("^", stat_id, "_", "[0-9]+", "_var"), colnames(drf_results[[paste0("Iteration_", 1 + 1)]][["statistics"]]))
-    #     ]
-
-    #     posterior_data_drf_long <- melt(posterior_data_drf, variable.name = "Stat_type", value.name = "Value")
-    #     posterior_data_drf_long$time <- paste0(1 * as.integer(gsub("[^0-9]", "", posterior_data_drf_long$Stat_type)))
-    #     posterior_data_drf_long$legend <- "DRF"
-    #     print(posterior_data_drf_long)
-    #     posterior_data_smcrf_long <- melt(posterior_data_smcrf, variable.name = "Stat_type", value.name = "Value")
-    #     posterior_data_smcrf_long$time <- paste0(1 * as.integer(gsub("[^0-9]", "", posterior_data_smcrf_long$Stat_type)))
-    #     posterior_data_smcrf_long$legend <- "SMC-RF for multiple parameters"
-    #     print(posterior_data_smcrf_long)
-    #     total_posterior <- rbind(posterior_data_drf_long, posterior_data_smcrf_long)
-    #     target <- smcrf_results[["statistics_target"]][, grepl(paste0("^", stat_id, "_", "[0-9]+", "_var"), colnames(smcrf_results[["statistics_target"]]))]
-    #     target_long <- reshape2::melt(target, variable.name = "Stat_type", value.name = "Value")
-    #     target_long$time <- paste0(1 * as.integer(gsub("[^0-9]", "", target_long$Stat_type)))
-    #     target_c3_small <- statistics_c3_small[, grepl(paste0("^", stat_id, "_", "[0-9]+", "_var"), colnames(statistics_c3_small))]
-    #     target_c3_small_long <- reshape2::melt(target_c3_small, variable.name = "Stat_type", value.name = "Value")
-    #     target_c3_small_long$time <- paste0(1 * as.integer(gsub("[^0-9]", "", target_c3_small_long$Stat_type)))
-    #     target_c3_large <- statistics_c3_large[, grepl(paste0("^", stat_id, "_", "[0-9]+", "_var"), colnames(statistics_c3_large))]
-    #     target_c3_large_long <- reshape2::melt(target_c3_large, variable.name = "Stat_type", value.name = "Value")
-    #     target_c3_large_long$time <- paste0(1 * as.integer(gsub("[^0-9]", "", target_c3_large_long$Stat_type)))
-
-    #     # Convert time to factor with explicit ordering
-    #     posterior_data_drf_long$time <- factor(posterior_data_drf_long$time, levels = time_levels)
-    #     posterior_data_smcrf_long$time <- factor(posterior_data_smcrf_long$time, levels = time_levels)
-    #     target_long$time <- factor(target_long$time, levels = time_levels)
-    #     target_c3_small_long$time <- factor(target_c3_small_long$time, levels = time_levels)
-    #     target_c3_large_long$time <- factor(target_c3_large_long$time, levels = time_levels)
-
-
-
-    #     plots[[stat_id]] <- ggplot() +
-    #         geom_boxplot(data = total_posterior, aes(x = time, y = Value, color = legend, fill = legend), alpha = 0.8) +
-    #         geom_line(data = target_long, aes(x = time, y = Value, group = 1), color = "black", size = 1.5, show.legend = FALSE) +
-    #         geom_point(data = target_long, aes(x = time, y = Value, group = 1), color = "black", size = 10, show.legend = FALSE) +
-    #         geom_line(data = target_c3_small_long, aes(x = time, y = Value, group = 1), color = "orange", size = 1.5, show.legend = FALSE) +
-    #         geom_point(data = target_c3_small_long, aes(x = time, y = Value, group = 1), color = "orange", size = 10, show.legend = FALSE) +
-    #         geom_line(data = target_c3_large_long, aes(x = time, y = Value, group = 1), color = "forestgreen", size = 1.5, show.legend = FALSE) +
-    #         geom_point(data = target_c3_large_long, aes(x = time, y = Value, group = 1), color = "forestgreen", size = 10, show.legend = FALSE) +
-    #         labs(x = "Time", y = stat_id) +
-    #         scale_fill_manual(values = color_scheme, name = "") +
-    #         scale_color_manual(values = color_scheme, name = "") +
-    #         theme(
-    #             text = element_text(size = 50),
-    #             panel.background = element_rect(fill = "white", colour = "white"),
-    #             panel.grid.major = element_line(colour = "white"),
-    #             panel.grid.minor = element_line(colour = "white"),
-    #             plot.margin = unit(c(1, 1, 1, 1), "cm"),
-    #             legend.position = "top",
-    #             legend.justification = c(0, 0.5)
-    #         )
-
-    #     # Output to PNG file
-    #     file_name <- paste0("boxplot-statistics=", stat_id, ".png")
-    #     png(file_name, res = 150, width = 3000, height = 1500, units = "px")
-    #     print(plots[[stat_id]])
-    #     dev.off()
-    # }
 }
-load("abc-rf.rda")
-load("smc-rf.rda")
+load("smc-drf.rda")
 plot_boxplot(
     drf_results = abcrf_results,
-    smcrf_results = smcrf_results_single_param,
-    statistics_c3_small = statistics_c3_small,
-    statistics_c3_large = statistics_c3_large
+    smcrf_results = smcrf_results_multi_param
 )

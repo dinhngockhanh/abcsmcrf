@@ -4,8 +4,8 @@
 # R_libPaths_extra <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
 # R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/Birth_death/test_0411(try new model)/perturb=+-2;mtry=default;num.tree=1000;5000*4/test_on_targets"
-R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/adaptive"
-# R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/Birth_death/test_0411(try new model)/perturb=+-2;mtry=default;num.tree=1000;5000*4/test_on_targets/previous one/try_final_result"
+# R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/adaptive"
+R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/Birth_death/test_0411(try new model)/perturb=+-2;mtry=default;num.tree=1000;5000*4/test_on_targets/previous one/try_final_result"
 R_libPaths <- ""
 R_libPaths_extra <- "/Users/xiangzijin/SMC-RF/R"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zhihan - Macbook
@@ -437,22 +437,22 @@ plots_joint <- plot_compare_joint(
 )
 # ===================================================================DRF
 #---Run ABC-DRF
-abcrf_results <- smcrf(
-    method = "smcrf-multi-param",
-    statistics_target = statistics_target,
-    parameters_initial = parameters_initial,
-    model = model,
-    perturb = perturb,
-    # perturb = "Beaumont",
-    range = range,
-    # nParticles = rep(400, 1),
-    nParticles = rep(20000, 1),
-    # nParticles = rep(4000, 1),
-    num.trees = 2500,
-    save_model = FALSE,
-    parallel = TRUE
-)
-save(abcrf_results, file = "drf.rda")
+# abcrf_results <- smcrf(
+#     method = "smcrf-multi-param",
+#     statistics_target = statistics_target,
+#     parameters_initial = parameters_initial,
+#     model = model,
+#     perturb = perturb,
+#     # perturb = "Beaumont",
+#     range = range,
+#     # nParticles = rep(400, 1),
+#     nParticles = rep(20000, 1),
+#     # nParticles = rep(4000, 1),
+#     num.trees = 2500,
+#     save_model = FALSE,
+#     parallel = TRUE
+# )
+# save(abcrf_results, file = "drf.rda")
 load("drf.rda")
 # results <- load("/Users/xiangzijin/Documents/ABC_SMCRF/Birth_death/test_0411(try new model)/perturb=+-2;mtry=default;num.tree=1000;5000*4/drf.rda")
 # load("/Users/xiangzijin/Documents/ABC_SMCRF/Birth_death/test_0411(try new model)/perturb=+-2;mtry=default;num.tree=1000;5000*4/test/1010/drf.rda")
@@ -479,21 +479,21 @@ plots_marginal <- plot_compare_marginal(
 )
 # ===================================================================RF
 #---Run ABC-RF
-abcrf_results <- smcrf(
-    method = "smcrf-single-param",
-    statistics_target = statistics_target,
-    parameters_initial = parameters_initial,
-    model = model,
-    perturb = perturb,
-    # perturb = "Beaumont",
-    range = range,
-    ntree = 2500,
-    nParticles = rep(20000, 1),
-    save_model = FALSE,
-    # nParticles = rep(4000, 1),
-    parallel = TRUE
-)
-save(abcrf_results, file = "abc-rf.rda")
+# abcrf_results <- smcrf(
+#     method = "smcrf-single-param",
+#     statistics_target = statistics_target,
+#     parameters_initial = parameters_initial,
+#     model = model,
+#     perturb = perturb,
+#     # perturb = "Beaumont",
+#     range = range,
+#     ntree = 2500,
+#     nParticles = rep(20000, 1),
+#     save_model = FALSE,
+#     # nParticles = rep(4000, 1),
+#     parallel = TRUE
+# )
+# save(abcrf_results, file = "abc-rf.rda")
 load("abc-rf.rda")
 #---Plot posterior joint distributions against other methods
 # plots_joint <- plot_compare_joint(
@@ -517,21 +517,21 @@ plots_compare_qqplot <- plot_compare_qqplot(
 )
 # ========================================SMC-RF for multiple parameters
 #---Run SMC-RF for multiple parameters
-smcrf_results_multi_param <- smcrf(
-    method = "smcrf-multi-param",
-    statistics_target = statistics_target,
-    parameters_initial = parameters_initial,
-    model = model,
-    perturb = perturb,
-    # perturb = "Beaumont",
-    range = range,
-    nParticles = rep(5000, 4),
-    # nParticles = rep(1000, 4),
-    save_model = FALSE,
-    num.trees = 2500,
-    parallel = TRUE
-)
-save(smcrf_results_multi_param, file = "smc-drf.rda")
+# smcrf_results_multi_param <- smcrf(
+#     method = "smcrf-multi-param",
+#     statistics_target = statistics_target,
+#     parameters_initial = parameters_initial,
+#     model = model,
+#     perturb = perturb,
+#     # perturb = "Beaumont",
+#     range = range,
+#     nParticles = rep(5000, 4),
+#     # nParticles = rep(1000, 4),
+#     save_model = FALSE,
+#     num.trees = 2500,
+#     parallel = TRUE
+# )
+# save(smcrf_results_multi_param, file = "smc-drf.rda")
 load("smc-drf.rda")
 
 # smcdrf_results <- load("/Users/xiangzijin/Documents/ABC_SMCRF/Birth_death/test_0411(try new model)/perturb=+-2;mtry=default;num.tree=1000;5000*4/test/1010/smc-drf.rda")

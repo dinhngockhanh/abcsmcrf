@@ -1,6 +1,6 @@
 # # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
-# R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper/coala_npop=1000_nsim=10000/new_results/10000sim;npop=1000;abcrf&abc-rej;onlyS"
-R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper/coala_npop=1000_nsim=10000/new_results/10000sim npop=1000;abcrf&abc-rej"
+R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper/coala_npop=1000_nsim=10000/new_results/10000sim;npop=1000;abcrf&abc-rej;onlyS"
+# R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper/coala_npop=1000_nsim=10000/new_results/10000sim npop=1000;abcrf&abc-rej"
 # R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper/coala_npop=1000_nsim=10000/new_results/10000sim;npop=1000;abcrf;onlySFS"
 R_libPaths <- ""
 R_libPaths_extra <- "/Users/xiangzijin/SMC-RF/R"
@@ -103,7 +103,7 @@ list_target <- list()
 list_target$ground_truth_para <- parameters_target
 list_target$statistics_target <- statistics_target
 # save(list_target, file = "sfs_target_statistics.rda")
-# load("/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper/coala_npop=1000_nsim=10000/new_results/10000sim;npop=1000;abcrf&abc-rej;onlyS/sfs_target_statistics.rda")
+load("/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper/coala_npop=1000_nsim=10000/new_results/10000sim;npop=1000;abcrf&abc-rej;onlyS/sfs_target_statistics.rda")
 parameters_target <- list_target$ground_truth_para
 statistics_target <- list_target$statistics_target
 # ======================================Model for parameter perturbation
@@ -162,7 +162,7 @@ parameters_labels <- data.frame(
 #     density = density
 # )
 # save(parameters_truth, file = "true_posterior.rda")
-# load("/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper/coala_npop=1000_nsim=10000/new_results/10000sim;npop=1000;abcrf&abc-rej;onlyS/true_posterior.rda")
+load("/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper/coala_npop=1000_nsim=10000/new_results/10000sim;npop=1000;abcrf&abc-rej;onlyS/true_posterior.rda")
 # # ================================================================ABC-RF
 # #---Run ABC-RF
 # abcrf_results <- smcrf(
@@ -176,19 +176,19 @@ parameters_labels <- data.frame(
 #     parallel = TRUE
 # )
 # save(abcrf_results, file = "abcrf_results.rda")
-# load("/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper/coala_npop=1000_nsim=10000/new_results/10000sim;npop=1000;abcrf&abc-rej;onlyS/abcrf_results.rda")
-load("/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper/coala_npop=1000_nsim=10000/new_results/10000sim npop=1000;abcrf&abc-rej/abcrf_results.rda")
+load("/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper/coala_npop=1000_nsim=10000/new_results/10000sim;npop=1000;abcrf&abc-rej;onlyS/abcrf_results.rda")
+# load("/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper/coala_npop=1000_nsim=10000/new_results/10000sim npop=1000;abcrf&abc-rej/abcrf_results.rda")
 #---Plot posterior marginal distributions against other methods
-# plots <- plot_compare_marginal(
-#     # plots = plots,
-#     parameters_truth = parameters_truth,
-#     abc_results = abcrf_results,
-#     parameters_labels = parameters_labels,
-#     plot_statistics = TRUE,
-#     xlimit = range,
-#     plot_hist = TRUE,
-#     plot_prior = TRUE
-# )
+plots <- plot_compare_marginal(
+    # plots = plots,
+    parameters_truth = parameters_truth,
+    abc_results = abcrf_results,
+    parameters_labels = parameters_labels,
+    plot_statistics = TRUE,
+    xlimit = range,
+    plot_hist = TRUE,
+    plot_prior = TRUE
+)
 # # ========================================
 # #   Plot the out-of-bag estimates (equivalent to cross-validation)
 # png(paste0("NEUTRAL_abcrf_theta_out_of_bag.png"))
@@ -205,16 +205,16 @@ load("/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper/coala_npop=1000_n
 # plot(oob_error[, "ntree"], oob_error[, "oob_mse"], type = "l", xlab = "Number of trees", ylab = "Out-of-bag MSE")
 # dev.off()
 # #   Variance Importance of each statistic in inferring gamma
-png(paste0("NEUTRAL_abcrf_theta_variable_importance_ver.png"), width = 3000, height = 6000, res = 150, pointsize = 80)
-# png(paste0("NEUTRAL_abcrf_theta_variable_importance_ver.png"), width = 30, height = 45, units = "in", res = 150)
-n.var <- min(30, length(abcrf_results$Iteration_1$rf_model$model.rf$variable.importance))
-imp <- abcrf_results$Iteration_1$rf_model$model.rf$variable.importance
-names(imp) <- c("Mutation_count_C", colnames(statistics_target))
-ord <- rev(order(imp, decreasing = TRUE)[1:n.var])
-xmin <- 0
-xlim <- c(xmin, max(imp) + 1)
-dotchart(imp[ord], pch = 19, xlab = "Variable Importance", ylab = "", xlim = xlim, main = NULL, bg = "white", cex = 0.5)
-dev.off()
+# png(paste0("NEUTRAL_abcrf_theta_variable_importance_ver.png"), width = 3000, height = 6000, res = 150, pointsize = 80)
+# # png(paste0("NEUTRAL_abcrf_theta_variable_importance_ver.png"), width = 30, height = 45, units = "in", res = 150)
+# n.var <- min(30, length(abcrf_results$Iteration_1$rf_model$model.rf$variable.importance))
+# imp <- abcrf_results$Iteration_1$rf_model$model.rf$variable.importance
+# names(imp) <- c("Mutation_count_C", colnames(statistics_target))
+# ord <- rev(order(imp, decreasing = TRUE)[1:n.var])
+# xmin <- 0
+# xlim <- c(xmin, max(imp) + 1)
+# dotchart(imp[ord], pch = 19, xlab = "Variable Importance", ylab = "", xlim = xlim, main = NULL, bg = "white", cex = 0.5)
+# dev.off()
 # =========================================================ABC-Rejection
 #---Run ABC
 # abc_rej_results <- abc_rejection(
@@ -226,18 +226,18 @@ dev.off()
 #     nParticles = 10000, progress_bar = TRUE
 # )
 # save(abc_rej_results, file = "abcrej_results.rda")
-# load("/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper/coala_npop=1000_nsim=10000/new_results/10000sim;npop=1000;abcrf&abc-rej;onlyS/abcrej_results.rda")
+load("/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper/coala_npop=1000_nsim=10000/new_results/10000sim;npop=1000;abcrf&abc-rej;onlyS/abcrej_results.rda")
 # load("/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper/coala_npop=1000_nsim=10000/new_results/10000sim npop=1000;abcrf&abc-rej/abcrej_results.rda")
 # #---Plot marginal distributions compare
-# plots_marginal <- plot_compare_marginal(
-#     plots = plots,
-#     abc_results = abc_rej_results,
-#     parameters_labels = parameters_labels,
-#     plot_statistics = TRUE,
-#     # xlimit = range,
-#     plot_hist = TRUE,
-#     plot_prior = FALSE
-# )
+plots_marginal <- plot_compare_marginal(
+    plots = plots,
+    abc_results = abc_rej_results,
+    parameters_labels = parameters_labels,
+    plot_statistics = TRUE,
+    # xlimit = range,
+    plot_hist = TRUE,
+    plot_prior = FALSE
+)
 
 
 # # ==========================================SMC-RF for single parameters
