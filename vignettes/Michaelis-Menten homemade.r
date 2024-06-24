@@ -3,8 +3,8 @@
 # R_libPaths <- ""
 # R_libPaths_extra <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/R"
 # # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ZIJIN - Macbook
-R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/CME/m-w/home_made/old_example/timepoints/1-10"
-# R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/adaptive"
+# R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/CME/m-w/home_made/old_example/timepoints/1-10"
+R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/abc_continue_iterations/mm"
 R_libPaths <- ""
 R_libPaths_extra <- "/Users/xiangzijin/SMC-RF/R"
 # =======================================SET UP FOLDER PATHS & LIBRARIES
@@ -241,20 +241,20 @@ parameters_labels <- data.frame(
     parameter = c("c1", "c2", "c3"),
     label = c("expression(c[1])", "expression(c[2])", "expression(c[3])")
 )
-# # ========================================DRF
-# #---Run DRF
-# abcrf_results <- smcrf(
-#     method = "smcrf-multi-param",
-#     statistics_target = statistics_target,
-#     parameters_initial = parameters_initial,
-#     model = model,
-#     perturb = perturb,
-#     range = range,
-#     nParticles = rep(20000, 1),
-#     num.trees = 2500,
-#     parallel = TRUE
-# )
-# save(abcrf_results, file = "drf.rda")
+# ========================================DRF
+#---Run DRF
+abcrf_results <- smcrf(
+    method = "smcrf-multi-param",
+    statistics_target = statistics_target,
+    parameters_initial = parameters_initial,
+    model = model,
+    perturb = perturb,
+    range = range,
+    nParticles = rep(20000, 1),
+    num.trees = 2500,
+    parallel = TRUE
+)
+save(abcrf_results, file = "drf.rda")
 drf_results <- load("drf.rda")
 #---Plot marginal distributions compare
 plots_marginal <- plot_compare_marginal(
@@ -265,21 +265,33 @@ plots_marginal <- plot_compare_marginal(
     parameters_labels = parameters_labels,
     plot_hist = TRUE
 )
-# # ========================================SMC-RF for multiple parameters
-# #---Run SMC-RF for multiple parameters
-# smcrf_results_multi_param <- smcrf(
-#     method = "smcrf-multi-param",
-#     statistics_target = statistics_target,
-#     parameters_initial = parameters_initial,
-#     model = model,
-#     perturb = perturb,
-#     range = range,
-#     nParticles = rep(4000, 5),
-#     num.trees = 2500,
-#     parallel = TRUE
-# )
-# save(smcrf_results_multi_param, file = "smc-drf.rda")
+# ========================================SMC-RF for multiple parameters
+#---Run SMC-RF for multiple parameters
+smcrf_results_multi_param <- smcrf(
+    method = "smcrf-multi-param",
+    statistics_target = statistics_target,
+    parameters_initial = parameters_initial,
+    model = model,
+    perturb = perturb,
+    range = range,
+    nParticles = rep(4000, 2),
+    num.trees = 2500,
+    parallel = TRUE
+)
+save(smcrf_results_multi_param, file = "smc-drf.rda")
 load("smc-drf.rda")
+smcrf_results_multi_param <- smcrf(
+    method = "smcrf-multi-param",
+    smcrf_existed_results = smcrf_results_multi_param,
+    model = model,
+    perturb = perturb,
+    range = range,
+    nParticles = rep(4000, 3),
+    num.trees = 2500,
+    parallel = TRUE
+)
+save(smcrf_results_multi_param, file = "new-smc-drf.rda")
+load("new-smc-drf.rda")
 # #---Plot marginal distributions compare
 plots_marginal <- plot_compare_marginal(
     plots = plots_marginal,
@@ -456,7 +468,7 @@ plot_boxplot <- function(drf_results, smcrf_results) {
         dev.off()
     }
 }
-load("smc-drf.rda")
+load("new-smc-drf.rda")
 plot_boxplot(
     drf_results = abcrf_results,
     smcrf_results = smcrf_results_multi_param
