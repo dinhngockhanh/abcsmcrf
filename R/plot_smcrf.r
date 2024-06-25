@@ -36,7 +36,6 @@ plot_smcrf_marginal <- function(smcrf_results,
             }
         }
         #   Plot prior distribution
-        # prior_df <- data.frame(value = smcrf_results[["Iteration_1"]]$parameters[[parameter_id]], legend = "Prior Distribution")
         prior_df <- data.frame(value = smcrf_results[["Iteration_1"]]$parameters_unperturbed[[parameter_id]], legend = "Prior Distribution")
         if (plot_hist) {
             p <- p + geom_histogram(data = prior_df, aes(x = value, y = ..density.., fill = legend, color = legend), alpha = alpha)
@@ -46,7 +45,6 @@ plot_smcrf_marginal <- function(smcrf_results,
         #   Plot posterior distribution for each iteration
         for (iteration in 1:nIterations) {
             posterior_df <- data.frame(
-                # value = smcrf_results[[paste0("Iteration_", iteration + 1)]]$parameters[[parameter_id]],
                 value = smcrf_results[[paste0("Iteration_", iteration + 1)]]$parameters_unperturbed[[parameter_id]],
                 legend = paste0("Iter. ", iteration)
             )
@@ -256,10 +254,8 @@ plot_compare_marginal <- function(plots = NULL,
         } else {
             legend_label <- "ABC-SMC-RF"
         }
-        # parameters_values <- abc_results[[paste0("Iteration_", nIterations + 1)]]$parameters
         parameters_values <- abc_results[[paste0("Iteration_", nIterations + 1)]]$parameters_unperturbed
         if (!is.null(sample_num)) {
-            # parameters_values <- abc_results[[paste0("Iteration_", nIterations + 1)]]$parameters[1:sample_num, , drop = FALSE]
             parameters_values <- abc_results[[paste0("Iteration_", nIterations + 1)]]$parameters_unperturbed[1:sample_num, , drop = FALSE]
         }
         if (plot_statistics) statistics_values <- abc_results[[paste0("Iteration_", nIterations + 1)]]$statistics
@@ -270,23 +266,19 @@ plot_compare_marginal <- function(plots = NULL,
         } else {
             legend_label <- "ABC-SMC-DRF"
         }
-        # parameters_values <- abc_results[[paste0("Iteration_", nIterations + 1)]]$parameters
         parameters_values <- abc_results[[paste0("Iteration_", nIterations + 1)]]$parameters_unperturbed
         if (plot_statistics) statistics_values <- abc_results[[paste0("Iteration_", nIterations + 1)]]$statistics
     } else if (method == "abc-rejection") {
         legend_label <- "ABC-REJ"
         parameters_values <- abc_results[["Iteration_2"]]$parameters
-        # parameters_values <- abc_results[["Iteration_2"]]$parameters_unperturbed
         if (plot_statistics) statistics_values <- abc_results[["Iteration_2"]]$statistics
     } else if (method == "abc-smc") {
         legend_label <- "ABC-SMC"
         parameters_values <- abc_results[["Iteration_2"]]$parameters
-        # parameters_values <- abc_results[["Iteration_2"]]$parameters_unperturbed
         if (plot_statistics) statistics_values <- abc_results[["Iteration_2"]]$statistics
     } else if (method == "abc-mcmc") {
         legend_label <- "ABC-MCMC"
         parameters_values <- abc_results[["Iteration_2"]]$parameters
-        # parameters_values <- abc_results[["Iteration_2"]]$parameters_unperturbed
         if (plot_statistics) statistics_values <- abc_results[["Iteration_2"]]$statistics
     } else if (method == "mcmc") {
         legend_label <- "MCMC"
@@ -431,16 +423,6 @@ plot_smcrf_joint <- function(smcrf_results,
     )
     #---Set up legend order for plotting
     legend_order <- c("True Posterior Distribution", "Prior Distribution", paste0("Iter. ", 1:nIterations))
-    #---Function to apply limits to data (if provided)
-    # apply_lims <- function(df) {
-    #     df <- df %>%
-    #         filter(
-    #             x >= lims$min[which(lims$ID == parameters_labels$parameter[1])],
-    #             x <= lims$max[which(lims$ID == parameters_labels$parameter[1])],
-    #             y >= lims$min[which(lims$ID == parameters_labels$parameter[2])],
-    #             y <= lims$max[which(lims$ID == parameters_labels$parameter[2])]
-    #         )
-    # }
     #---Begin plot
     p <- ggplot()
     #---Plot True Posterior distribution (if provided)
@@ -453,11 +435,6 @@ plot_smcrf_joint <- function(smcrf_results,
         p <- p + geom_density_2d_filled(data = true_posterior_df, aes(x = x, y = y), show.legend = FALSE)
     }
     #---Plot prior distribution
-    # prior_df <- data.frame(
-    #     x = smcrf_results[["Iteration_1"]]$parameters[[parameters_labels$parameter[1]]],
-    #     y = smcrf_results[["Iteration_1"]]$parameters[[parameters_labels$parameter[2]]],
-    #     legend = "Prior Distribution"
-    # )
     prior_df <- data.frame(
         x = smcrf_results[["Iteration_1"]]$parameters_unperturbed[[parameters_labels$parameter[1]]],
         y = smcrf_results[["Iteration_1"]]$parameters_unperturbed[[parameters_labels$parameter[2]]],
@@ -467,17 +444,11 @@ plot_smcrf_joint <- function(smcrf_results,
     p <- p + geom_density_2d(data = prior_df, aes(x = x, y = y, color = legend), linewidth = 3, bins = nBins)
     #---Plot posterior distribution for each iteration
     for (iteration in 1:nIterations) {
-        # posterior_df <- data.frame(
-        #     x = smcrf_results[[paste0("Iteration_", iteration + 1)]]$parameters[[parameters_labels$parameter[1]]],
-        #     y = smcrf_results[[paste0("Iteration_", iteration + 1)]]$parameters[[parameters_labels$parameter[2]]],
-        #     legend = paste0("Iter. ", iteration)
-        # )
         posterior_df <- data.frame(
             x = smcrf_results[[paste0("Iteration_", iteration + 1)]]$parameters_unperturbed[[parameters_labels$parameter[1]]],
             y = smcrf_results[[paste0("Iteration_", iteration + 1)]]$parameters_unperturbed[[parameters_labels$parameter[2]]],
             legend = paste0("Iter. ", iteration)
         )
-        # if (!is.null(lims)) posterior_df <- apply_lims(posterior_df)
         p <- p + geom_density_2d(data = posterior_df, aes(x = x, y = y, color = legend), linewidth = 3, bins = nBins)
     }
     #---Add label for parameter
@@ -498,6 +469,7 @@ plot_smcrf_joint <- function(smcrf_results,
             legend.position = "top",
             legend.justification = c(0, 0.5)
         )
+    #---Plot within the limits if provided
     if (!is.null(lims)) {
         p <- p +
             xlim(c(lims$min[which(lims$parameter == parameters_labels$parameter[1])], lims$max[which(lims$parameter == parameters_labels$parameter[1])])) +
@@ -524,29 +496,14 @@ plot_compare_joint <- function(plots = NULL,
     if (is.null(parameters_labels)) parameters_labels <- abc_results[["parameters_labels"]]
     if (nrow(parameters_labels) != 2) stop("ERROR: plot_compare_joint only works for two parameters. Please check parameters_labels.")
     #---Set up color scheme for plotting
-    # color_scheme <- c(
-    #     "Prior Distribution" = "gray",
-    #     "True Posterior Distribution" = "black",
-    #     "ABC-REJ" = "forestgreen",
-    #     "ABC-RF" = "royalblue2",
-    #     "ABC-DRF" = "royalblue2",
-    #     "MCMC" = "goldenrod2",
-    #     "ABC-MCMC" = "goldenrod2",
-    #     "ABC-SMC" = "magenta4",
-    #     "ABC-SMC-RF" = "salmon",
-    #     "ABC-SMC-DRF" = "salmon"
-    # )
-
     color_scheme <- c(
         "ABC-REJ" = "forestgreen",
         "ABC-RF" = "magenta4",
-        # "ABC-DRF" = "burlywood2",
         "ABC-DRF" = "cyan1",
         "MCMC" = "khaki",
         "ABC-MCMC" = "khaki",
         "ABC-SMC" = "goldenrod2",
         "ABC-SMC-RF" = "firebrick1",
-        # "ABC-SMC-DRF" = "plum1"
         "ABC-SMC-DRF" = "firebrick1"
     )
     #---Set up legend order for plotting
@@ -560,18 +517,6 @@ plot_compare_joint <- function(plots = NULL,
         "ABC-SMC-RF",
         "ABC-SMC-DRF"
     )
-    my_palette <- colorRampPalette(c("#170756ad", "#0b50a4", "#0beac8", "#ffff0f"))
-
-    #---Function to apply limits to data (if provided)
-    # apply_lims <- function(df) {
-    #     df <- df %>%
-    #         filter(
-    #             x >= lims$min[which(lims$ID == parameters_labels$parameter[1])],
-    #             x <= lims$max[which(lims$ID == parameters_labels$parameter[1])],
-    #             y >= lims$min[which(lims$ID == parameters_labels$parameter[2])],
-    #             y <= lims$max[which(lims$ID == parameters_labels$parameter[2])]
-    #         )
-    # }
     #---Begin plots
     if (is.null(plots)) {
         plots <- ggplot()
@@ -585,7 +530,6 @@ plot_compare_joint <- function(plots = NULL,
             x = parameters_truth[[parameters_labels$parameter[1]]],
             y = parameters_truth[[parameters_labels$parameter[2]]]
         )
-        # if (!is.null(lims)) true_posterior_df <- apply_lims(true_posterior_df)
         plots <- plots + geom_density_2d_filled(data = true_posterior_df, aes(x = x, y = y), show.legend = FALSE)
     }
     #---Extract final posterior distributions
@@ -596,11 +540,6 @@ plot_compare_joint <- function(plots = NULL,
         } else {
             legend_label <- "ABC-SMC-RF"
         }
-        # posterior_df <- data.frame(
-        #     x = abc_results[[paste0("Iteration_", nIterations + 1)]]$parameters[[parameters_labels$parameter[1]]],
-        #     y = abc_results[[paste0("Iteration_", nIterations + 1)]]$parameters[[parameters_labels$parameter[2]]],
-        #     legend = legend_label
-        # )
         posterior_df <- data.frame(
             x = abc_results[[paste0("Iteration_", nIterations + 1)]]$parameters_unperturbed[[parameters_labels$parameter[1]]],
             y = abc_results[[paste0("Iteration_", nIterations + 1)]]$parameters_unperturbed[[parameters_labels$parameter[2]]],
@@ -613,11 +552,6 @@ plot_compare_joint <- function(plots = NULL,
         } else {
             legend_label <- "ABC-SMC-DRF"
         }
-        # posterior_df <- data.frame(
-        #     x = abc_results[[paste0("Iteration_", nIterations + 1)]]$parameters[[parameters_labels$parameter[1]]],
-        #     y = abc_results[[paste0("Iteration_", nIterations + 1)]]$parameters[[parameters_labels$parameter[2]]],
-        #     legend = legend_label
-        # )
         posterior_df <- data.frame(
             x = abc_results[[paste0("Iteration_", nIterations + 1)]]$parameters_unperturbed[[parameters_labels$parameter[1]]],
             y = abc_results[[paste0("Iteration_", nIterations + 1)]]$parameters_unperturbed[[parameters_labels$parameter[2]]],
@@ -625,11 +559,6 @@ plot_compare_joint <- function(plots = NULL,
         )
     } else if (method == "abc-rejection") {
         legend_label <- "ABC-REJ"
-        # posterior_df <- data.frame(
-        #     x = abc_results[["Iteration_2"]]$parameters[[parameters_labels$parameter[1]]],
-        #     y = abc_results[["Iteration_2"]]$parameters[[parameters_labels$parameter[2]]],
-        #     legend = legend_label
-        # )
         posterior_df <- data.frame(
             x = abc_results[["Iteration_2"]]$parameters_unperturbed[[parameters_labels$parameter[1]]],
             y = abc_results[["Iteration_2"]]$parameters_unperturbed[[parameters_labels$parameter[2]]],
@@ -637,11 +566,6 @@ plot_compare_joint <- function(plots = NULL,
         )
     } else if (method == "abc-smc") {
         legend_label <- "ABC-SMC"
-        # posterior_df <- data.frame(
-        #     x = abc_results[["Iteration_2"]]$parameters[[parameters_labels$parameter[1]]],
-        #     y = abc_results[["Iteration_2"]]$parameters[[parameters_labels$parameter[2]]],
-        #     legend = legend_label
-        # )
         posterior_df <- data.frame(
             x = abc_results[["Iteration_2"]]$parameters_unperturbed[[parameters_labels$parameter[1]]],
             y = abc_results[["Iteration_2"]]$parameters_unperturbed[[parameters_labels$parameter[2]]],
@@ -649,11 +573,6 @@ plot_compare_joint <- function(plots = NULL,
         )
     } else if (method == "abc-mcmc") {
         legend_label <- "ABC-MCMC"
-        # posterior_df <- data.frame(
-        #     x = abc_results[["Iteration_2"]]$parameters[[parameters_labels$parameter[1]]],
-        #     y = abc_results[["Iteration_2"]]$parameters[[parameters_labels$parameter[2]]],
-        #     legend = legend_label
-        # )
         posterior_df <- data.frame(
             x = abc_results[["Iteration_2"]]$parameters_unperturbed[[parameters_labels$parameter[1]]],
             y = abc_results[["Iteration_2"]]$parameters_unperturbed[[parameters_labels$parameter[2]]],
@@ -674,19 +593,11 @@ plot_compare_joint <- function(plots = NULL,
             legend = legend_label
         )
     }
-    # if (!is.null(lims)) {
-    #     posterior_df <- apply_lims(posterior_df)
-    # }
     #---Plot joint distribution
     if (method == "true-joint") {
         plots <- plots +
             geom_density_2d_filled(data = posterior_df, aes(x = x, y = y), show.legend = FALSE)
-    }
-    # else if (method == "mcmc") {
-    #     plots <- plots +
-    #         geom_density_2d_filled(data = posterior_df, aes(x = x, y = y), show.legend = FALSE)
-    # }
-    else {
+    } else {
         plots <- plots +
             geom_density_2d(data = posterior_df, aes(x = x, y = y, color = legend), linewidth = 3, bins = 3)
     }
@@ -710,6 +621,7 @@ plot_compare_joint <- function(plots = NULL,
             legend.position = "top",
             legend.justification = c(0, 0.5)
         )
+    #---Plot within the limits if provided
     if (!is.null(lims)) {
         plots <- plots +
             xlim(c(lims$min[which(lims$parameter == parameters_labels$parameter[1])], lims$max[which(lims$parameter == parameters_labels$parameter[1])])) +
@@ -776,10 +688,8 @@ plot_compare_qqplot <- function(plots = NULL,
         } else {
             legend_label <- "ABC-SMC-RF"
         }
-        # parameters_values <- abc_results[[paste0("Iteration_", nIterations + 1)]]$parameters
         parameters_values <- abc_results[[paste0("Iteration_", nIterations + 1)]]$parameters_unperturbed
         if (!is.null(sample_num)) {
-            # parameters_values <- abc_results[[paste0("Iteration_", nIterations + 1)]]$parameters[1:sample_num, , drop = FALSE]
             parameters_values <- abc_results[[paste0("Iteration_", nIterations + 1)]]$parameters_unperturbed[1:sample_num, , drop = FALSE]
         }
     } else if (method == "smcrf-multi-param") {
@@ -789,19 +699,15 @@ plot_compare_qqplot <- function(plots = NULL,
         } else {
             legend_label <- "ABC-SMC-DRF"
         }
-        # parameters_values <- abc_results[[paste0("Iteration_", nIterations + 1)]]$parameters
         parameters_values <- abc_results[[paste0("Iteration_", nIterations + 1)]]$parameters_unperturbed
     } else if (method == "abc-rejection") {
         legend_label <- "ABC-REJ"
-        # parameters_values <- abc_results[["Iteration_2"]]$parameters
         parameters_values <- abc_results[["Iteration_2"]]$parameters_unperturbed
     } else if (method == "abc-smc") {
         legend_label <- "ABC-SMC"
-        # parameters_values <- abc_results[["Iteration_2"]]$parameters
         parameters_values <- abc_results[["Iteration_2"]]$parameters_unperturbed
     } else if (method == "abc-mcmc") {
         legend_label <- "ABC-MCMC"
-        # parameters_values <- abc_results[["Iteration_2"]]$parameters
         parameters_values <- abc_results[["Iteration_2"]]$parameters_unperturbed
     } else if (method == "mcmc") {
         legend_label <- "MCMC"
@@ -852,10 +758,8 @@ plot_compare_qqplot <- function(plots = NULL,
     if (new_plot) {
         for (parameter_id in parameters_labels$parameter) {
             plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
-                # scale_fill_manual(values = color_scheme, name = "", breaks = legend_order) +
                 scale_color_manual(values = color_scheme, name = "", breaks = legend_order) +
                 guides(color = guide_legend(override.aes = list(size = 10))) +
-                # guides(fill = guide_legend(nrow = 1, keywidth = 2.5, keyheight = 1)) +
                 theme(
                     text = element_text(size = 50),
                     panel.background = element_rect(fill = "white", colour = "white"),

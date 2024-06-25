@@ -135,54 +135,71 @@ MW_model <- function(c1_input, c2_input, c3_input, parallel = FALSE) {
     colnames(stats) <- c("c1", "c2", "c3", paste0("E_", 1:length(time_points)), paste0("S_", 1:length(time_points)), paste0("ES_", 1:length(time_points)), paste0("P_", 1:length(time_points)))
     return(stats)
 }
-# ========================The one with average
-# MW_model <- function(c1_input, c2_input, c3_input, parallel = FALSE) {
-#     nRuns <- 10
-#     time_points <- seq(1, 10, by = 1)
-#     nA <- 6.023e23
-#     vol <- 1e-15
-#     initial_state <- list(
-#         P = 0,
-#         E = round(2e-7 * nA * vol),
-#         S = round(5e-7 * nA * vol),
-#         ES = 0
-#     )
-#     parameters <- list(
-#         c1 = c1_input,
-#         c2 = (10^c2_input) / (nA * vol),
-#         c3 = (10^c3_input)
-#     )
-#     reaction_propensities <- function(state, parameters) {
-#         c(
-#             parameters$c1 * state$ES,
-#             parameters$c2 * state$E * state$S,
-#             parameters$c3 * state$ES
-#         )
-#     }
-#     reaction_stoichiometries <- list(
-#         list(P = 1, E = 1, S = 0, ES = -1),
-#         list(P = 0, E = -1, S = -1, ES = 1),
-#         list(P = 0, E = 1, S = 1, ES = -1)
-#     )
-#     time_begin <- Sys.time()
-#     #------------
-#     MMs <- matrix(0, nrow = nRuns, ncol = length(time_points) * 4)
-#     for (i in 1:nRuns) {
-#         tmp <- SSA(
-#             initial_state = initial_state,
-#             parameters = parameters,
-#             reaction_propensities = reaction_propensities,
-#             reaction_stoichiometries = reaction_stoichiometries,
-#             time_points = time_points
-#         )
-#         MMs[i, ] <- c(apply(tmp, 2, c))
-#     }
-#     time_end <- Sys.time()
-#     print(time_end - time_begin)
-#     stats <- data.frame(matrix(c(c1_input, c2_input, c3_input, c(apply(MMs, 2, mean)), c(apply(MMs, 2, var))), nrow = 1))
-#     colnames(stats) <- c("c1", "c2", "c3", paste0("E_", 1:length(time_points), "_mean"), paste0("S_", 1:length(time_points), "_mean"), paste0("ES_", 1:length(time_points), "_mean"), paste0("P_", 1:length(time_points), "_mean"), paste0("E_", 1:length(time_points), "_var"), paste0("S_", 1:length(time_points), "_var"), paste0("ES_", 1:length(time_points), "_var"), paste0("P_", 1:length(time_points), "_var"))
-#     return(stats)
-# }
+# =====================================Function to plot the traj boxplot
+plot_boxplot <- function(drf_results, smcrf_results) {
+    library(ggplot2)
+    library(reshape2)
+    stats_id <- c("P", "E", "S", "ES")
+    nIterations <- smcrf_results[["nIterations"]]
+    plots <- list()
+    color_scheme <- c(
+        "ABC-DRF" = "royalblue2",
+        "ABC-SMC-DRF" = "salmon"
+    )
+    #---Set up legend order for plotting
+    legend_order <- c(
+        "ABC-DRF",
+        "ABC-SMC-DRF"
+    )
+    # Factor levels for time
+    time_levels <- as.character(seq(1, 10, by = 1))
+    for (stat_id in stats_id) {
+        # Extract data for the current statistic ID
+        posterior_data_smcrf <- smcrf_results[[paste0("Iteration_", nIterations + 1)]][["statistics"]][
+            1:1000,
+            grepl(paste0("^", stat_id, "_"), colnames(smcrf_results[[paste0("Iteration_", nIterations + 1)]][["statistics"]]))
+        ]
+        posterior_data_drf <- drf_results[[paste0("Iteration_", 1 + 1)]][["statistics"]][
+            1:1000,
+            grepl(paste0("^", stat_id, "_"), colnames(drf_results[[paste0("Iteration_", 1 + 1)]][["statistics"]]))
+        ]
+        posterior_data_drf_long <- melt(posterior_data_drf, variable.name = "Stat_type", value.name = "Value")
+        posterior_data_drf_long$time <- paste0(1 * as.integer(gsub("[^0-9]", "", posterior_data_drf_long$Stat_type)))
+        posterior_data_drf_long$legend <- "ABC-DRF"
+        posterior_data_smcrf_long <- melt(posterior_data_smcrf, variable.name = "Stat_type", value.name = "Value")
+        posterior_data_smcrf_long$time <- paste0(1 * as.integer(gsub("[^0-9]", "", posterior_data_smcrf_long$Stat_type)))
+        posterior_data_smcrf_long$legend <- "ABC-SMC-DRF"
+        total_posterior <- rbind(posterior_data_drf_long, posterior_data_smcrf_long)
+        target <- smcrf_results[["statistics_target"]][, grepl(paste0("^", stat_id, "_"), colnames(smcrf_results[["statistics_target"]]))]
+        target_long <- reshape2::melt(target, variable.name = "Stat_type", value.name = "Value")
+        target_long$time <- paste0(1 * as.integer(gsub("[^0-9]", "", target_long$Stat_type)))
+        # Convert time to factor with explicit ordering
+        posterior_data_drf_long$time <- factor(posterior_data_drf_long$time, levels = time_levels)
+        posterior_data_smcrf_long$time <- factor(posterior_data_smcrf_long$time, levels = time_levels)
+        target_long$time <- factor(target_long$time, levels = time_levels)
+        plots[[stat_id]] <- ggplot() +
+            geom_boxplot(data = total_posterior, aes(x = time, y = Value, color = legend, fill = legend), alpha = 0.8) +
+            geom_line(data = target_long, aes(x = time, y = Value, group = 1), color = "black", size = 1.5, show.legend = FALSE) +
+            geom_point(data = target_long, aes(x = time, y = Value, group = 1), color = "black", size = 10, show.legend = FALSE) +
+            labs(x = "Time", y = stat_id) +
+            scale_fill_manual(values = color_scheme, name = "") +
+            scale_color_manual(values = color_scheme, name = "") +
+            theme(
+                text = element_text(size = 50),
+                panel.background = element_rect(fill = "white", colour = "white"),
+                panel.grid.major = element_line(colour = "white"),
+                panel.grid.minor = element_line(colour = "white"),
+                plot.margin = unit(c(1, 1, 1, 1), "cm"),
+                legend.position = "top",
+                legend.justification = c(0, 0.5)
+            )
+        # Output to PNG file
+        file_name <- paste0("boxplot-statistics=", stat_id, ".png")
+        png(file_name, res = 150, width = 3000, height = 1500, units = "px")
+        print(plots[[stat_id]])
+        dev.off()
+    }
+}
 # =====================================================Target statistics
 parameters_truth <- data.frame(
     c1 = 0.1,
@@ -243,7 +260,7 @@ parameters_labels <- data.frame(
 )
 # ========================================DRF
 #---Run DRF
-abcrf_results <- smcrf(
+drf_results <- smcrf(
     method = "smcrf-multi-param",
     statistics_target = statistics_target,
     parameters_initial = parameters_initial,
@@ -254,13 +271,10 @@ abcrf_results <- smcrf(
     num.trees = 2500,
     parallel = TRUE
 )
-save(abcrf_results, file = "drf.rda")
-drf_results <- load("drf.rda")
 #---Plot marginal distributions compare
 plots_marginal <- plot_compare_marginal(
-    # plots = plots_marginal,
     xlimit = range,
-    abc_results = abcrf_results,
+    abc_results = drf_results,
     parameters_truth = parameters_truth,
     parameters_labels = parameters_labels,
     plot_hist = TRUE
@@ -274,25 +288,11 @@ smcrf_results_multi_param <- smcrf(
     model = model,
     perturb = perturb,
     range = range,
-    nParticles = rep(4000, 2),
+    nParticles = rep(4000, 5),
     num.trees = 2500,
     parallel = TRUE
 )
-save(smcrf_results_multi_param, file = "smc-drf.rda")
-load("smc-drf.rda")
-smcrf_results_multi_param <- smcrf(
-    method = "smcrf-multi-param",
-    smcrf_existed_results = smcrf_results_multi_param,
-    model = model,
-    perturb = perturb,
-    range = range,
-    nParticles = rep(4000, 3),
-    num.trees = 2500,
-    parallel = TRUE
-)
-save(smcrf_results_multi_param, file = "new-smc-drf.rda")
-load("new-smc-drf.rda")
-# #---Plot marginal distributions compare
+#---Plot marginal distributions compare
 plots_marginal <- plot_compare_marginal(
     plots = plots_marginal,
     xlimit = range,
@@ -306,170 +306,49 @@ plot_smcrf_marginal(
     parameters_labels = parameters_labels,
     plot_hist = TRUE
 )
-# # ===================================================================RF
-# #---Run ABC-RF
-# abcrf_results <- smcrf(
-#     method = "smcrf-single-param",
-#     statistics_target = statistics_target,
-#     parameters_initial = parameters_initial,
-#     model = model,
-#     # perturb = perturb,
-#     perturb = "Beaumont",
-#     range = range,
-#     ntree = 2500,
-#     save_model = FALSE,
-#     nParticles = rep(20000, 1),
-#     parallel = TRUE
-# )
-# save(abcrf_results, file = "abc-rf.rda")
-# load("abc-rf.rda")
-# plots_marginal <- plot_compare_marginal(
-#     # plots = plots_marginal,
-#     xlimit = range,
-#     abc_results = abcrf_results,
-#     parameters_truth = parameters_truth,
-#     parameters_labels = parameters_labels,
-#     plot_hist = TRUE
-# )
-# # ========================================SMC-RF for single parameters
-# #---Run SMC-RF for single parameters
-# smcrf_results_single_param <- smcrf(
-#     method = "smcrf-single-param",
-#     statistics_target = statistics_target,
-#     parameters_initial = parameters_initial,
-#     model = model,
-#     # perturb = perturb,
-#     perturb = "Beaumont",
-#     range = range,
-#     nParticles = rep(4000, 5),
-#     ntree = 2500,
-#     save_model = FALSE,
-#     parallel = TRUE
-# )
-# save(smcrf_results_single_param, file = "smc-rf.rda")
-# load("smc-rf.rda")
-# #---Plot marginal distributions compare
-# plots_marginal <- plot_compare_marginal(
-#     plots = plots_marginal,
-#     xlimit = range,
-#     abc_results = smcrf_results_single_param,
-#     parameters_truth = parameters_truth,
-#     parameters_labels = parameters_labels,
-#     plot_hist = TRUE
-# )
-# plot_smcrf_marginal(
-#     smcrf_results = smcrf_results_single_param,
-#     parameters_labels = parameters_labels,
-#     plot_hist = TRUE
-# )
-# ============================Plot joint distributions compare c1 and c2
-# smcrf_results_multi_param
-# nIterations <- smcrf_results_multi_param[["nIterations"]]
-# posterior_df <- data.frame(
-#     x = smcrf_results_multi_param[[paste0("Iteration_", nIterations + 1)]]$parameters[[parameters_labels$parameter[1]]],
-#     y = smcrf_results_multi_param[[paste0("Iteration_", nIterations + 1)]]$parameters[[parameters_labels$parameter[2]]]
-# )
-# plots <- ggplot() + geom_density_2d_filled(data = posterior_df, aes(x = x, y = y), show.legend = FALSE)
-# plots <- plots +
-#     theme(
-#         text = element_text(size = 50),
-#         panel.background = element_rect(fill = "white", colour = "white"),
-#         panel.grid.major = element_line(colour = "white"),
-#         panel.grid.minor = element_line(colour = "white"),
-#         legend.position = "top",
-#         legend.justification = c(0, 0.5)
-#     )
-# #---Print joint distribution plot
-# file_name <- paste0("Joint-parameters=", parameters_labels$parameter[1], "-vs-", parameters_labels$parameter[2], ".png")
-# png(file_name, res = 150, width = 30, height = 31, units = "in", pointsize = 12)
-# print(plots)
-# dev.off()
-# return(plots)
-
-# =================================================TRAJECTORIES BOX PLOT
-plot_boxplot <- function(drf_results, smcrf_results) {
-    library(ggplot2)
-    library(reshape2) # Ensure reshape2 is loaded for melting data frames
-    stats_id <- c("P", "E", "S", "ES")
-    nIterations <- smcrf_results[["nIterations"]]
-    plots <- list()
-    color_scheme <- c(
-        "Prior Distribution" = "gray",
-        "True Posterior Distribution" = "black",
-        "ABC-rejection" = "forestgreen",
-        "ABC-RF" = "magenta4",
-        "ABC-DRF" = "royalblue2",
-        "MCMC" = "goldenrod2",
-        "ABC-MCMC" = "goldenrod2",
-        "ABC-SMC" = "goldenrod2",
-        "ABC-SMC-RF" = "salmon",
-        "ABC-SMC-DRF" = "salmon"
-    )
-    #---Set up legend order for plotting
-    legend_order <- c(
-        "Prior Distribution",
-        "True Posterior Distribution",
-        "ABC-rejection",
-        "ABC-MCMC",
-        "ABC-SMC",
-        "ABC-RF",
-        "ABC-DRF",
-        "MCMC",
-        "ABC-SMC-RF",
-        "ABC-SMC-DRF"
-    )
-    # Factor levels for time
-    time_levels <- as.character(seq(1, 10, by = 1))
-
-    for (stat_id in stats_id) {
-        # Extract data for the current statistic ID
-        posterior_data_smcrf <- smcrf_results[[paste0("Iteration_", nIterations + 1)]][["statistics"]][
-            1:1000,
-            grepl(paste0("^", stat_id, "_"), colnames(smcrf_results[[paste0("Iteration_", nIterations + 1)]][["statistics"]]))
-        ]
-        posterior_data_drf <- drf_results[[paste0("Iteration_", 1 + 1)]][["statistics"]][
-            1:1000,
-            grepl(paste0("^", stat_id, "_"), colnames(drf_results[[paste0("Iteration_", 1 + 1)]][["statistics"]]))
-        ]
-        posterior_data_drf_long <- melt(posterior_data_drf, variable.name = "Stat_type", value.name = "Value")
-        posterior_data_drf_long$time <- paste0(1 * as.integer(gsub("[^0-9]", "", posterior_data_drf_long$Stat_type)))
-        posterior_data_drf_long$legend <- "ABC-DRF"
-        posterior_data_smcrf_long <- melt(posterior_data_smcrf, variable.name = "Stat_type", value.name = "Value")
-        posterior_data_smcrf_long$time <- paste0(1 * as.integer(gsub("[^0-9]", "", posterior_data_smcrf_long$Stat_type)))
-        posterior_data_smcrf_long$legend <- "ABC-SMC-DRF"
-        total_posterior <- rbind(posterior_data_drf_long, posterior_data_smcrf_long)
-        target <- smcrf_results[["statistics_target"]][, grepl(paste0("^", stat_id, "_"), colnames(smcrf_results[["statistics_target"]]))]
-        target_long <- reshape2::melt(target, variable.name = "Stat_type", value.name = "Value")
-        target_long$time <- paste0(1 * as.integer(gsub("[^0-9]", "", target_long$Stat_type)))
-        # Convert time to factor with explicit ordering
-        posterior_data_drf_long$time <- factor(posterior_data_drf_long$time, levels = time_levels)
-        posterior_data_smcrf_long$time <- factor(posterior_data_smcrf_long$time, levels = time_levels)
-        target_long$time <- factor(target_long$time, levels = time_levels)
-        plots[[stat_id]] <- ggplot() +
-            geom_boxplot(data = total_posterior, aes(x = time, y = Value, color = legend, fill = legend), alpha = 0.8) +
-            geom_line(data = target_long, aes(x = time, y = Value, group = 1), color = "black", size = 1.5, show.legend = FALSE) +
-            geom_point(data = target_long, aes(x = time, y = Value, group = 1), color = "black", size = 10, show.legend = FALSE) +
-            labs(x = "Time", y = stat_id) +
-            scale_fill_manual(values = color_scheme, name = "") +
-            scale_color_manual(values = color_scheme, name = "") +
-            theme(
-                text = element_text(size = 50),
-                panel.background = element_rect(fill = "white", colour = "white"),
-                panel.grid.major = element_line(colour = "white"),
-                panel.grid.minor = element_line(colour = "white"),
-                plot.margin = unit(c(1, 1, 1, 1), "cm"),
-                legend.position = "top",
-                legend.justification = c(0, 0.5)
-            )
-        # Output to PNG file
-        file_name <- paste0("boxplot-statistics=", stat_id, ".png")
-        png(file_name, res = 150, width = 3000, height = 1500, units = "px")
-        print(plots[[stat_id]])
-        dev.off()
-    }
-}
-load("new-smc-drf.rda")
+#---Plot box plot showing the trajectory
 plot_boxplot(
-    drf_results = abcrf_results,
+    drf_results = drf_results,
     smcrf_results = smcrf_results_multi_param
 )
+# ===============================================MORRIS SENSITIVITY TEST
+# ==========================================Model for Morris sensitivity
+library(sensitivity)
+morris_model <- function(parameters, parallel = TRUE) {
+    parameters <- data.frame(parameters)
+    colnames(parameters) <- c("c1", "c2", "c3")
+    data <- t(as.matrix(model(parameters, parallel = TRUE)[-c(1:3)]))
+    return(data)
+}
+x <- morrisMultOut(
+    model = morris_model, factors = 3, r = 1000,
+    design = list(type = "oat", levels = 5, grid.jump = 3), binf = c(0, 5, -5), bsup = c(1, 7, -3), scale = FALSE
+)
+#---Function to plot the morris output
+plot_morris <- function(morris_output) {
+    sensitivity_df <- data.frame(
+        mu_star = apply(morris_output$ee, 2, function(morris_output) mean(abs(morris_output))),
+        sigma = apply(morris_output$ee, 2, sd),
+        label = c("c[1]", "c[2]", "c[3]")
+    )
+    plot_output <- ggplot() +
+        geom_point(data = sensitivity_df, aes(x = mu_star, y = sigma), size = 10) +
+        geom_text(data = sensitivity_df, aes(x = mu_star, y = sigma, label = label), vjust = 1, hjust = -0.5, parse = TRUE, size = 20) +
+        xlim(0, 0.02) +
+        ylim(0, 0.02) +
+        theme(
+            text = element_text(size = 50),
+            panel.background = element_rect(fill = "white", colour = "white"),
+            panel.grid.major = element_line(colour = "white"),
+            panel.grid.minor = element_line(colour = "white"),
+            legend.key.size = unit(10, "points"),
+            legend.position = "top",
+            legend.justification = c(0, 0.5)
+        ) +
+        labs(x = expression(mu^"*"), y = expression(sigma))
+    file_name <- paste0("sensitivity-plot-morris.png")
+    png(file_name, res = 150, width = 30, height = 15, units = "in", pointsize = 12)
+    print(plot_output)
+    dev.off()
+}
+plot_morris(x)
