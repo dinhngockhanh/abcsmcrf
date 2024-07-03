@@ -49,6 +49,8 @@ smcrf_single_param <- function(statistics_target = NULL,
                                parallel,
                                n_cores = NULL,
                                save_model = TRUE,
+                               save_rda = FALSE,
+                               filename_rda = "ABCSMCRF.rda",
                                smcrf_single_param_results = NULL,
                                ...) {
     library(abcrf)
@@ -71,6 +73,12 @@ smcrf_single_param <- function(statistics_target = NULL,
         nIterations <- length(nParticles)
         begin_iteration <- 1
     }
+    SMCRF[["method"]] <- "smcrf-single-param"
+    SMCRF[["nIterations"]] <- nIterations
+    SMCRF[["nParticles"]] <- nParticles
+    SMCRF[["statistics_target"]] <- statistics_target
+    SMCRF[["parameters_labels"]] <- data.frame(parameter = parameters_ids)
+    SMCRF[["statistics_labels"]] <- data.frame(ID = colnames(statistics_target))
     for (iteration in begin_iteration:(nIterations + 1)) {
         if (iteration == (nIterations + 1)) {
             cat(paste0("\n\n++++++++++++++++++++++++\nSimulation count: ", nSimulations, "\n++++++++++++++++++++++++\n\n\n"))
@@ -243,13 +251,10 @@ smcrf_single_param <- function(statistics_target = NULL,
             SMCRF_iteration$rf_predict <- posterior_gamma_RFs
         }
         SMCRF[[paste0("Iteration_", iteration)]] <- SMCRF_iteration
+        if (save_rda == TRUE) {
+            save(SMCRF, file = filename_rda)
+        }
     }
-    SMCRF[["method"]] <- "smcrf-single-param"
-    SMCRF[["nIterations"]] <- nIterations
-    SMCRF[["nParticles"]] <- nParticles
-    SMCRF[["statistics_target"]] <- statistics_target
-    SMCRF[["parameters_labels"]] <- data.frame(parameter = parameters_ids)
-    SMCRF[["statistics_labels"]] <- data.frame(ID = colnames(reference)[!colnames(reference) %in% parameters_ids])
     return(SMCRF)
 }
 
@@ -262,6 +267,8 @@ smcrf_multi_param <- function(statistics_target = NULL,
                               parallel,
                               n_cores = NULL,
                               save_model = TRUE,
+                              save_rda = FALSE,
+                              filename_rda = "ABCSMCDRF.rda",
                               splitting.rule = "CART",
                               smcrf_multi_param_results = NULL,
                               ...) {
@@ -285,6 +292,12 @@ smcrf_multi_param <- function(statistics_target = NULL,
         nIterations <- length(nParticles)
         begin_iteration <- 1
     }
+    SMCDRF[["method"]] <- "smcrf-multi-param"
+    SMCDRF[["nIterations"]] <- nIterations
+    SMCDRF[["nParticles"]] <- nParticles
+    SMCDRF[["statistics_target"]] <- statistics_target
+    SMCDRF[["parameters_labels"]] <- data.frame(parameter = parameters_ids)
+    SMCDRF[["statistics_labels"]] <- data.frame(ID = colnames(statistics_target))
     for (iteration in begin_iteration:(nIterations + 1)) {
         if (iteration == (nIterations + 1)) {
             cat(paste0("\n\n++++++++++++++++++++++++\nSimulation count: ", nSimulations, "\n++++++++++++++++++++++++\n\n\n"))
@@ -443,12 +456,9 @@ smcrf_multi_param <- function(statistics_target = NULL,
             SMCDRF_iteration$rf_predict <- def_pred
         }
         SMCDRF[[paste0("Iteration_", iteration)]] <- SMCDRF_iteration
+        if (save_rda == TRUE) {
+            save(SMCDRF, file = filename_rda)
+        }
     }
-    SMCDRF[["method"]] <- "smcrf-multi-param"
-    SMCDRF[["nIterations"]] <- nIterations
-    SMCDRF[["nParticles"]] <- nParticles
-    SMCDRF[["statistics_target"]] <- statistics_target
-    SMCDRF[["parameters_labels"]] <- data.frame(parameter = parameters_ids)
-    SMCDRF[["statistics_labels"]] <- data.frame(ID = colnames(reference)[!colnames(reference) %in% parameters_ids])
     return(SMCDRF)
 }
