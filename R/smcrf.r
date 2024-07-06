@@ -208,6 +208,9 @@ smcrf_single_param <- function(statistics_target = NULL,
             SMCRF_iteration$parameters_unperturbed <- parameters_unperturbed
             SMCRF_iteration$statistics <- statistics
             SMCRF[[paste0("Iteration_", iteration)]] <- SMCRF_iteration
+            if (save_rda == TRUE) {
+                save(SMCRF, file = filename_rda)
+            }
             break
         }
         #---Run ABCRF for each parameter
@@ -433,6 +436,9 @@ smcrf_multi_param <- function(statistics_target = NULL,
             SMCDRF_iteration$parameters_unperturbed <- parameters_unperturbed
             SMCDRF_iteration$statistics <- statistics
             SMCDRF[[paste0("Iteration_", iteration)]] <- SMCDRF_iteration
+            if (save_rda == TRUE) {
+                save(SMCDRF, file = filename_rda)
+            }
             break
         }
         #---Run DRF for all parameter
