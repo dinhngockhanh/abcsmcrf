@@ -20,7 +20,8 @@ smcrf(
 )
 }
 \arguments{
-\item{method}{.}
+\item{method}{"smcrf-single-param" or "smcrf-multi-param".
+sss}
 
 \item{statistics_target}{.}
 
