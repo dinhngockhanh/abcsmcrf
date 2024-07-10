@@ -1,3 +1,18 @@
+#' Approximate Bayesian Computation sequential Monte Carlo via random forests
+#' for marginal or joint posterior distributions.
+#'
+#' @param method .
+#' @param statistics_target .
+#' @param smcrf_existed_results .
+#' @param model .
+#' @param perturb .
+#' @param range .
+#' @param parameters_initial .
+#' @param nParticles .
+#' @param parallel .
+#' @param n_cores .
+#' @param ... .
+#' @return Something.
 smcrf <- function(method = "smcrf-single-param",
                   statistics_target = NULL,
                   smcrf_existed_results = NULL,
