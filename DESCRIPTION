@@ -11,20 +11,31 @@ Authors@R: c(
     )
 Description: Parameter inference using random forests in the framework of Approximate Bayesian Computation sequential Monte Carlo.
 License: GPL (>= 2)
-Imports:
+Imports: 
     abcrf,
+    data.table,
+    dplyr,
     drf,
-    matrixStats,
+    EasyABC,
     Hmisc,
     MASS,
-    dplyr,
-    RColorBrewer,
-    ggplot2
-Suggests:
+    matrixStats,
     parallel,
     pbapply,
-    EasyABC,
-    data.table
+    RColorBrewer
+Suggests: 
+    coala,
+    deSolve,
+    ggplot2,
+    grid,
+    gridExtra,
+    invgamma,
+    knitr,
+    patchwork,
+    reshape2,
+    rmarkdown,
+    sensitivity,
+    SimBIID
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.3.1

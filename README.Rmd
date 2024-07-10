@@ -1,10 +1,14 @@
 #   Approximate Bayesian Computation sequential Monte Carlo via random forests
 
+<!-- badges: start -->
+[![Dependencies](https://img.shields.io/badge/dependencies-10/85-red?style=flat)](#)
+<!-- badges: end -->
+
 ##  Installation
 
 The ABC-SMC-(D)RF library can be installed with
 
-```R
+```{r}
 devtools::install_github("dinhngockhanh/abcsmcrf")
 ```
 
@@ -26,3 +30,4 @@ File `Michaelis-Menten model.r`uses ABC-SMC-(D)RF to infer reaction rates in the
 1.  Dinh KN, Xiang Z, Liu Z, Tavaré S. Approximate Bayesian Computation sequential Monte Carlo via random forests. arXiv preprint arXiv:2406.15865. 2024 Jun 22.
 2.  Raynal L, Marin JM, Pudlo P, Ribatet M, Robert CP, Estoup A. ABC random forests for Bayesian parameter inference. Bioinformatics. 2019 May 15;35(10):1720-8.
 3.  Cevid D, Michel L, Näf J, Bühlmann P, Meinshausen N. Distributional random forests: Heterogeneity adjustment and multivariate distributional regression. Journal of Machine Learning Research. 2022;23(333):1-79.
+
