@@ -1,6 +1,6 @@
 Package: abcsmcrf
 Type: Package
-Version: 0.1.0
+Version: 1.0.0
 Date: 2024-07-10
 Title: Approximate Bayesian Computation sequential Monte Carlo via random forests
 Authors@R: c(
