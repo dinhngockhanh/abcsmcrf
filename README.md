@@ -10,7 +10,7 @@ devtools::install_github("dinhngockhanh/abc-smc-rf")
 
 ##  Vignettes
 
-The `vignettes` folder contains examples of using ABC-SMC-(D)RF to infer parameters in different mathematical models. These examples are showcased in the paper "Approximate Bayesian Computation sequential Monte Carlo via random forests" [1].
+The `vignettes` folder contains examples of using ABC-RF, ABC-DRF and ABC-SMC-(D)RF to infer parameters in different mathematical models. These examples are showcased in the paper "Approximate Bayesian Computation sequential Monte Carlo via random forests" [1].
 
 Files `Coalescent model with stats=S.r`, `Coalescent model with stats=S+SFS.r`, and `Coalescent model with stats=SFS.r` examine the inference of mutation rate in a coalescent model, with different statistics from the observed DNA sequences (Figure 1; Section 2.2; [1]) using ABC-RF [2].
 
