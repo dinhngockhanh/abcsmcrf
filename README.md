@@ -1,9 +1,5 @@
 #   Approximate Bayesian Computation sequential Monte Carlo via random forests
 
-<!-- badges: start -->
-[![Dependencies](https://img.shields.io/badge/dependencies-10/85-red?style=flat)](#)
-<!-- badges: end -->
-
 ##  Installation
 
 The ABC-SMC-(D)RF library can be installed with
