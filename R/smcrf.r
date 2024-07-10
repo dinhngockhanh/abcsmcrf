@@ -13,6 +13,7 @@
 #' @param n_cores .
 #' @param ... .
 #' @return Something.
+#' @export
 smcrf <- function(method = "smcrf-single-param",
                   statistics_target = NULL,
                   smcrf_existed_results = NULL,
