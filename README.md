@@ -5,7 +5,7 @@
 The ABC-SMC-(D)RF library can be installed with
 
 ```R
-devtools::install_github("dinhngockhanh/abc-smc-rf")
+devtools::install_github("dinhngockhanh/abcsmcrf")
 ```
 
 ##  Vignettes
