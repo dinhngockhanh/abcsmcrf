@@ -1,12 +1,16 @@
 #' Approximate Bayesian Computation sequential Monte Carlo via random forests
 #' for marginal or joint posterior distributions.
 #'
-#' @param method Random forest to implement in each iteration.
-#' Option 1 is "smcrf-single-param", which implements ABC-RF for each parameter and results in marginal posterior distributions.
-#' Option 2 is "smcrf-multi-param", which implements ABC-DRF for all parameters and results in a joint posterior distribution.
-#' @param statistics_target .
-#' @param smcrf_existed_results .
-#' @param model .
+#' @param method Random forest method to implement in each iteration ("smcrf-single-param" by default).
+#' method = "smcrf-single-param": implements ABC-RF for each parameter and results in their marginal posterior distributions.
+#' method = "smcrf-multi-param": implements ABC-DRF for all parameters and results in the joint posterior distribution.
+#' @param statistics_target A dataframe containing statistics from data.
+#' Column names are the statistics IDs.
+#' @param smcrf_existed_results An existing ABC-SMC-RF result (NULL by default).
+#' If provided, smcrf will continue ABC-SMC-RF from the last iteration of the previous run.
+#' @param model Model for the statistics.
+#' The function must take two inputs: parameters and parallel.
+#'
 #' @param perturb .
 #' @param range .
 #' @param parameters_initial .
