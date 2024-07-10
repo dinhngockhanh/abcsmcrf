@@ -1,8 +1,9 @@
 #' Approximate Bayesian Computation sequential Monte Carlo via random forests
 #' for marginal or joint posterior distributions.
 #'
-#' @param method "smcrf-single-param" or "smcrf-multi-param".
-#' sss
+#' @param method Random forest to implement in each iteration.
+#' Option 1 is "smcrf-single-param", which implements ABC-RF for each parameter and results in marginal posterior distributions.
+#' Option 2 is "smcrf-multi-param", which implements ABC-DRF for all parameters and results in a joint posterior distribution.
 #' @param statistics_target .
 #' @param smcrf_existed_results .
 #' @param model .

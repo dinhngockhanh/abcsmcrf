@@ -20,8 +20,9 @@ smcrf(
 )
 }
 \arguments{
-\item{method}{"smcrf-single-param" or "smcrf-multi-param".
-sss}
+\item{method}{Random forest to implement in each iteration.
+Option 1 is "smcrf-single-param", which implements ABC-RF for each parameter and results in marginal posterior distributions.
+Option 2 is "smcrf-multi-param", which implements ABC-DRF for all parameters and results in a joint posterior distribution.}
 
 \item{statistics_target}{.}
 
