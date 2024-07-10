@@ -27,11 +27,11 @@ method = "smcrf-multi-param": implements ABC-DRF for all parameters and results 
 \item{statistics_target}{A dataframe containing statistics from data.
 Column names are the statistics IDs.}
 
-\item{smcrf_existed_results}{An existing ABC-SMC-RF result (NULL by default).
+\item{smcrf_existed_results}{An existing ABC-SMC-RF result.
 If provided, smcrf will continue ABC-SMC-RF from the last iteration of the previous run.}
 
 \item{model}{Model for the statistics.
-The function must take two inputs: parameters and parallel.}
+The function must take two inputs: a data frame parameters and logic variable parallel.}
 
 \item{perturb}{.}
 

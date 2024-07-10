@@ -6,11 +6,10 @@
 #' method = "smcrf-multi-param": implements ABC-DRF for all parameters and results in the joint posterior distribution.
 #' @param statistics_target A dataframe containing statistics from data.
 #' Column names are the statistics IDs.
-#' @param smcrf_existed_results An existing ABC-SMC-RF result (NULL by default).
+#' @param smcrf_existed_results An existing ABC-SMC-RF result.
 #' If provided, smcrf will continue ABC-SMC-RF from the last iteration of the previous run.
 #' @param model Model for the statistics.
-#' The function must take two inputs: parameters and parallel.
-#'
+#' The function must take two inputs: a data frame parameters and logic variable parallel.
 #' @param perturb .
 #' @param range .
 #' @param parameters_initial .
@@ -62,6 +61,8 @@ smcrf <- function(method = "smcrf-single-param",
     }
 }
 
+#' .......
+#' @export
 smcrf_single_param <- function(statistics_target = NULL,
                                model,
                                perturb,
@@ -283,6 +284,8 @@ smcrf_single_param <- function(statistics_target = NULL,
     return(SMCRF)
 }
 
+#' .......
+#' @export
 smcrf_multi_param <- function(statistics_target = NULL,
                               model,
                               perturb,

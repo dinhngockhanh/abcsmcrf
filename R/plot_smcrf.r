@@ -1,3 +1,5 @@
+#' .......
+#' @export
 plot_smcrf_marginal <- function(smcrf_results,
                                 parameters_truth = NULL,
                                 parameters_labels = NULL,
@@ -139,6 +141,8 @@ plot_smcrf_marginal <- function(smcrf_results,
     }
 }
 
+#' .......
+#' @export
 plot_compare_marginal <- function(plots = NULL,
                                   abc_results,
                                   parameters_truth = NULL,
@@ -405,6 +409,8 @@ plot_compare_marginal <- function(plots = NULL,
 }
 
 
+#' .......
+#' @export
 plot_smcrf_joint <- function(smcrf_results,
                              parameters_truth = NULL,
                              parameters_labels = NULL,
@@ -482,6 +488,8 @@ plot_smcrf_joint <- function(smcrf_results,
     dev.off()
 }
 
+#' .......
+#' @export
 plot_compare_joint <- function(plots = NULL,
                                abc_results,
                                parameters_truth = NULL,
@@ -635,6 +643,8 @@ plot_compare_joint <- function(plots = NULL,
     return(plots)
 }
 
+#' .......
+#' @export
 plot_compare_qqplot <- function(plots = NULL,
                                 abc_results,
                                 parameters_truth = NULL,
