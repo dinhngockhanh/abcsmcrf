@@ -31,7 +31,7 @@
 #' @examples
 #' library(abcsmcrf)
 #' #---------------------------ABC-SMC-RF for a model with one parameter
-#' #    Data statistics to be fitted:
+#' #    Data to be fitted, consisting of two statistics s1 and s2:
 #' statistics_target <- data.frame(s1 = 0, s2 = 2)
 #' #    Parametrized model for the statistics:
 #' model <- function(parameters) {
@@ -41,20 +41,20 @@
 #'     )
 #'     cbind(parameters, statistics)
 #' }
-#' #    Perturbation function for the parameters:
+#' #    Function to perturb the parameters with random noise:
 #' perturb <- function(parameters) {
 #'     parameters$theta <- parameters$theta + runif(nrow(parameters), min = -0.1, max = 0.1)
 #'     return(parameters)
 #' }
-#' #    Initial guesses for the parameters:
+#' #    Initial guesses for the parameter theta:
 #' parameters_initial <- data.frame(theta = runif(100000, -10, 10))
-#' #    Ranges for the parameters:
+#' #    Make sure that theta stays within bounds of prior distribution:
 #' range <- data.frame(
 #'     parameter = c("theta"),
 #'     min = c(-10),
 #'     max = c(10)
 #' )
-#' #    Run ABC-SMC-RF for one parameter:
+#' #    Run ABC-SMC-RF:
 #' smcrf_results <- smcrf(
 #'     method = "smcrf-single-param",
 #'     statistics_target = statistics_target,
