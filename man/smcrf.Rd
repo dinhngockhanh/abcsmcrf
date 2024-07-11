@@ -2,8 +2,7 @@
 % Please edit documentation in R/smcrf.r
 \name{smcrf}
 \alias{smcrf}
-\title{Approximate Bayesian Computation sequential Monte Carlo via random forests
-for marginal or joint posterior distributions.}
+\title{`smcrf()` is the main function to implement ABC-SMC-RF and ABC-DRF.}
 \usage{
 smcrf(
   method = "smcrf-single-param",
@@ -51,6 +50,5 @@ The function must take two inputs: a data frame parameters and logic variable pa
 Something.
 }
 \description{
-Approximate Bayesian Computation sequential Monte Carlo via random forests
-for marginal or joint posterior distributions.
+`smcrf()` is the main function to implement ABC-SMC-RF and ABC-DRF.
 }
