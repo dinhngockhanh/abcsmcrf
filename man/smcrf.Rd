@@ -10,7 +10,7 @@ smcrf(
   smcrf_results = NULL,
   model,
   perturb,
-  range = NULL,
+  bounds = NULL,
   parameters_initial = NULL,
   nParticles,
   parallel = FALSE,
@@ -36,7 +36,7 @@ The function must take two inputs: a data frame parameters and logic variable pa
 
 \item{perturb}{...}
 
-\item{range}{...}
+\item{bounds}{...}
 
 \item{parameters_initial}{...}
 
@@ -81,7 +81,7 @@ perturb <- function(parameters) {
 #    Initial guesses for the parameter theta:
 parameters_initial <- data.frame(theta = runif(100000, -10, 10))
 #    Make sure that theta stays within bounds of prior distribution:
-range <- data.frame(
+bounds <- data.frame(
     parameter = c("theta"),
     min = c(-10),
     max = c(10)
@@ -92,7 +92,7 @@ smcrf_results <- smcrf(
     statistics_target = statistics_target,
     model = model,
     perturb = perturb,
-    range = range,
+    bounds = bounds,
     parameters_initial = parameters_initial,
     nParticles = c(100, 100, 100),
 )

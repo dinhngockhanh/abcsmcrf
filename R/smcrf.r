@@ -17,7 +17,7 @@
 #' @param model Model for the statistics.
 #' The function must take two inputs: a data frame parameters and logic variable parallel.
 #' @param perturb ...
-#' @param range ...
+#' @param bounds ...
 #' @param parameters_initial ...
 #' @param nParticles ...
 #' @param parallel ...
@@ -49,7 +49,7 @@
 #' #    Initial guesses for the parameter theta:
 #' parameters_initial <- data.frame(theta = runif(100000, -10, 10))
 #' #    Make sure that theta stays within bounds of prior distribution:
-#' range <- data.frame(
+#' bounds <- data.frame(
 #'     parameter = c("theta"),
 #'     min = c(-10),
 #'     max = c(10)
@@ -60,7 +60,7 @@
 #'     statistics_target = statistics_target,
 #'     model = model,
 #'     perturb = perturb,
-#'     range = range,
+#'     bounds = bounds,
 #'     parameters_initial = parameters_initial,
 #'     nParticles = c(100, 100, 100),
 #' )
@@ -69,7 +69,7 @@ smcrf <- function(method = "smcrf-single-param",
                   smcrf_results = NULL,
                   model,
                   perturb,
-                  range = NULL,
+                  bounds = NULL,
                   parameters_initial = NULL,
                   nParticles,
                   parallel = FALSE,
@@ -80,7 +80,7 @@ smcrf <- function(method = "smcrf-single-param",
             statistics_target = statistics_target,
             model = model,
             perturb = perturb,
-            range = range,
+            bounds = bounds,
             parameters_initial = parameters_initial,
             smcrf_single_param_results = smcrf_results,
             nParticles = nParticles,
@@ -93,7 +93,7 @@ smcrf <- function(method = "smcrf-single-param",
             statistics_target = statistics_target,
             model = model,
             perturb = perturb,
-            range = range,
+            bounds = bounds,
             parameters_initial = parameters_initial,
             smcrf_multi_param_results = smcrf_results,
             nParticles = nParticles,
@@ -111,7 +111,7 @@ smcrf <- function(method = "smcrf-single-param",
 smcrf_single_param <- function(statistics_target = NULL,
                                model,
                                perturb,
-                               range = NULL,
+                               bounds = NULL,
                                parameters_initial = NULL,
                                nParticles,
                                parallel,
@@ -194,15 +194,15 @@ smcrf_single_param <- function(statistics_target = NULL,
                             )
                         }
                     }
-                    #   Check if parameters are within range, otherwise redo the failed parameters
+                    #   Check if parameters are within bounds, otherwise redo the failed parameters
                     parameters_next[[parameter_id]][invalid_indices] <- parameter_replace[[parameter_id]]
-                    if (is.null(range)) {
+                    if (is.null(bounds)) {
                         invalid_indices <- which(is.na(parameters_next[, parameter_id]))
                     } else {
                         invalid_indices <- which(
                             is.na(parameters_next[, parameter_id]) |
-                                parameters_next[, parameter_id] < range$min[which(range$parameter == parameter_id)] |
-                                parameters_next[, parameter_id] > range$max[which(range$parameter == parameter_id)]
+                                parameters_next[, parameter_id] < bounds$min[which(bounds$parameter == parameter_id)] |
+                                parameters_next[, parameter_id] > bounds$max[which(bounds$parameter == parameter_id)]
                         )
                     }
                 }
@@ -244,15 +244,15 @@ smcrf_single_param <- function(statistics_target = NULL,
                                 )
                             }
                         }
-                        #   Check if parameters are within range, otherwise redo the failed parameters
+                        #   Check if parameters are within bounds, otherwise redo the failed parameters
                         parameters_next[[parameter_id]][invalid_indices] <- parameter_replace[[parameter_id]]
-                        if (is.null(range)) {
+                        if (is.null(bounds)) {
                             invalid_indices <- which(is.na(parameters_next[, parameter_id]))
                         } else {
                             invalid_indices <- which(
                                 is.na(parameters_next[, parameter_id]) |
-                                    parameters_next[, parameter_id] < range$min[which(range$parameter == parameter_id)] |
-                                    parameters_next[, parameter_id] > range$max[which(range$parameter == parameter_id)]
+                                    parameters_next[, parameter_id] < bounds$min[which(bounds$parameter == parameter_id)] |
+                                    parameters_next[, parameter_id] > bounds$max[which(bounds$parameter == parameter_id)]
                             )
                         }
                     }
@@ -333,7 +333,7 @@ smcrf_single_param <- function(statistics_target = NULL,
 smcrf_multi_param <- function(statistics_target = NULL,
                               model,
                               perturb,
-                              range = NULL,
+                              bounds = NULL,
                               parameters_initial = NULL,
                               nParticles,
                               parallel,
@@ -419,17 +419,17 @@ smcrf_multi_param <- function(statistics_target = NULL,
                         }
                     }
                 }
-                #   Check if parameters are within range, otherwise redo the failed parameters
+                #   Check if parameters are within bounds, otherwise redo the failed parameters
                 parameters_next[invalid_indices, ] <- parameter_replace
-                if (is.null(range)) {
+                if (is.null(bounds)) {
                     invalid_indices <- which(apply(parameters_next, 1, function(x) any(is.na(x))))
                 } else {
                     invalid_indices <- c()
                     for (parameter_id in parameters_ids) {
                         invalid_indices <- union(invalid_indices, which(
                             is.na(parameters_next[, parameter_id]) |
-                                parameters_next[, parameter_id] < range$min[which(range$parameter == parameter_id)] |
-                                parameters_next[, parameter_id] > range$max[which(range$parameter == parameter_id)]
+                                parameters_next[, parameter_id] < bounds$min[which(bounds$parameter == parameter_id)] |
+                                parameters_next[, parameter_id] > bounds$max[which(bounds$parameter == parameter_id)]
                         ))
                     }
                 }
@@ -472,17 +472,17 @@ smcrf_multi_param <- function(statistics_target = NULL,
                             }
                         }
                     }
-                    #   Check if parameters are within range, otherwise redo the failed parameters
+                    #   Check if parameters are within bounds, otherwise redo the failed parameters
                     parameters_next[invalid_indices, ] <- parameter_replace
-                    if (is.null(range)) {
+                    if (is.null(bounds)) {
                         invalid_indices <- which(apply(parameters_next, 1, function(x) any(is.na(x))))
                     } else {
                         invalid_indices <- c()
                         for (parameter_id in parameters_ids) {
                             invalid_indices <- union(invalid_indices, which(
                                 is.na(parameters_next[, parameter_id]) |
-                                    parameters_next[, parameter_id] < range$min[which(range$parameter == parameter_id)] |
-                                    parameters_next[, parameter_id] > range$max[which(range$parameter == parameter_id)]
+                                    parameters_next[, parameter_id] < bounds$min[which(bounds$parameter == parameter_id)] |
+                                    parameters_next[, parameter_id] > bounds$max[which(bounds$parameter == parameter_id)]
                             ))
                         }
                     }

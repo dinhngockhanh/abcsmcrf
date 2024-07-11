@@ -8,7 +8,7 @@ smcrf_single_param(
   statistics_target = NULL,
   model,
   perturb,
-  range = NULL,
+  bounds = NULL,
   parameters_initial = NULL,
   nParticles,
   parallel,
