@@ -18,28 +18,6 @@
 #' @param ... .
 #' @return Something.
 #' @export
-
-
-
-
-
-# SMCRF[["method"]] <- "smcrf-single-param"
-# SMCRF[["nIterations"]] <- nIterations
-# SMCRF[["nParticles"]] <- nParticles
-# SMCRF[["statistics_target"]] <- statistics_target
-# SMCRF[["parameters_labels"]] <- data.frame(parameter = parameters_ids)
-# SMCRF[["statistics_labels"]] <- data.frame(ID = colnames(statistics_target))
-# SMCRF_iteration <- list()
-# SMCRF_iteration$reference <- reference
-# SMCRF_iteration$parameters <- parameters
-# SMCRF_iteration$parameters_unperturbed <- parameters_unperturbed
-# SMCRF_iteration$statistics <- statistics
-# SMCRF_iteration$weights <- ABCRF_weights
-# if (save_model == TRUE) {
-#     SMCRF_iteration$rf_model <- RFmodels
-#     SMCRF_iteration$rf_predict <- posterior_gamma_RFs
-# }
-# SMCRF[[paste0("Iteration_", iteration)]] <- SMCRF_iteration
 smcrf <- function(method = "smcrf-single-param",
                   statistics_target = NULL,
                   smcrf_existed_results = NULL,
@@ -51,6 +29,23 @@ smcrf <- function(method = "smcrf-single-param",
                   parallel,
                   n_cores = NULL,
                   ...) {
+    # SMCRF[["method"]] <- "smcrf-single-param"
+    # SMCRF[["nIterations"]] <- nIterations
+    # SMCRF[["nParticles"]] <- nParticles
+    # SMCRF[["statistics_target"]] <- statistics_target
+    # SMCRF[["parameters_labels"]] <- data.frame(parameter = parameters_ids)
+    # SMCRF[["statistics_labels"]] <- data.frame(ID = colnames(statistics_target))
+    # SMCRF_iteration <- list()
+    # SMCRF_iteration$reference <- reference
+    # SMCRF_iteration$parameters <- parameters
+    # SMCRF_iteration$parameters_unperturbed <- parameters_unperturbed
+    # SMCRF_iteration$statistics <- statistics
+    # SMCRF_iteration$weights <- ABCRF_weights
+    # if (save_model == TRUE) {
+    #     SMCRF_iteration$rf_model <- RFmodels
+    #     SMCRF_iteration$rf_predict <- posterior_gamma_RFs
+    # }
+    # SMCRF[[paste0("Iteration_", iteration)]] <- SMCRF_iteration
     if (method == "smcrf-single-param") {
         return(smcrf_single_param(
             statistics_target = statistics_target,
