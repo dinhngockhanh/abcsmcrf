@@ -29,7 +29,9 @@
 #' in which case ABC-SMC-(D)RF will continue iterating from the last run in `smcrf_results`.
 #' @export
 #' @examples
-#' model <- function(blah blah blah) {something else...}
+#' library(abcsmcrf)
+#' # ~~~~~~~~~~~~~~~~~~~~~~~~~~~ABC-SMC-RF for a model with one parameter
+#' model <- function(parameters) {}
 smcrf <- function(method = "smcrf-single-param",
                   statistics_target = NULL,
                   smcrf_results = NULL,
@@ -38,7 +40,7 @@ smcrf <- function(method = "smcrf-single-param",
                   range = NULL,
                   parameters_initial = NULL,
                   nParticles,
-                  parallel,
+                  parallel = FALSE,
                   n_cores = NULL,
                   ...) {
     if (method == "smcrf-single-param") {

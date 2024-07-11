@@ -13,7 +13,7 @@ smcrf(
   range = NULL,
   parameters_initial = NULL,
   nParticles,
-  parallel,
+  parallel = FALSE,
   n_cores = NULL,
   ...
 )
@@ -61,5 +61,7 @@ uses either ABC-RF (functions `regAbcrf` and `predict` in R package `abcrf`)
 or ABC-DRF (functions `drf` and `predict` in R package `drf`) to update the posterior distribution(s).
 }
 \examples{
-model <- function(blah blah blah) {something else...}
+library(abcsmcrf)
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~ABC-SMC-RF for a model with one parameter
+model <- function(parameters) {}
 }
