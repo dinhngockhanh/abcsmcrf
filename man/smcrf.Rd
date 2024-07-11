@@ -34,7 +34,7 @@ If provided, smcrf will continue ABC-SMC-RF from the last iteration of the previ
 \item{model}{Model for the statistics.
 The function must take two inputs: a data frame parameters and logic variable parallel.}
 
-\item{perturb}{...}
+\item{perturb}{blah blah blah...}
 
 \item{bounds}{...}
 
