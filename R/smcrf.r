@@ -30,8 +30,40 @@
 #' @export
 #' @examples
 #' library(abcsmcrf)
-#' # ~~~~~~~~~~~~~~~~~~~~~~~~~~~ABC-SMC-RF for a model with one parameter
-#' model <- function(parameters) {}
+#' #---------------------------ABC-SMC-RF for a model with one parameter
+#' #    Data statistics to be fitted:
+#' statistics_target <- data.frame(s1 = 0, s2 = 2)
+#' #    Parametrized model for the statistics:
+#' model <- function(parameters) {
+#'     statistics <- data.frame(
+#'         s1 = parameters$theta - 1 + runif(nrow(parameters)),
+#'         s2 = parameters$theta + 1 + runif(nrow(parameters))
+#'     )
+#'     cbind(parameters, statistics)
+#' }
+#' #    Perturbation function for the parameters:
+#' perturb <- function(parameters) {
+#'     parameters$theta <- parameters$theta + runif(nrow(parameters), min = -0.1, max = 0.1)
+#'     return(parameters)
+#' }
+#' #    Initial guesses for the parameters:
+#' parameters_initial <- data.frame(theta = runif(100000, -10, 10))
+#' #    Ranges for the parameters:
+#' range <- data.frame(
+#'     parameter = c("theta"),
+#'     min = c(-10),
+#'     max = c(10)
+#' )
+#' #    Run ABC-SMC-RF for one parameter:
+#' smcrf_results <- smcrf(
+#'     method = "smcrf-single-param",
+#'     statistics_target = statistics_target,
+#'     model = model,
+#'     perturb = perturb,
+#'     range = range,
+#'     parameters_initial = parameters_initial,
+#'     nParticles = c(100, 100, 100),
+#' )
 smcrf <- function(method = "smcrf-single-param",
                   statistics_target = NULL,
                   smcrf_results = NULL,
