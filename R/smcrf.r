@@ -64,6 +64,14 @@
 #'     parameters_initial = parameters_initial,
 #'     nParticles = c(100, 100, 100),
 #' )
+#' #    Get the posterior mean of theta:
+#' ..........
+#' #    If the posterior distribution has not converged, we can continue the ABC-SMC-RF run:
+#' ..........
+#' #---------------------ABC-SMC-RF for a model with multiple parameters
+#' ..........
+#' #--------------------------------ABC-SMC-DRF for a multivariate model
+#' ..........
 smcrf <- function(method = "smcrf-single-param",
                   statistics_target = NULL,
                   smcrf_results = NULL,
@@ -106,8 +114,6 @@ smcrf <- function(method = "smcrf-single-param",
     }
 }
 
-#' .......
-#' @export
 smcrf_single_param <- function(statistics_target = NULL,
                                model,
                                perturb,
@@ -328,8 +334,6 @@ smcrf_single_param <- function(statistics_target = NULL,
     return(SMCRF)
 }
 
-#' .......
-#' @export
 smcrf_multi_param <- function(statistics_target = NULL,
                               model,
                               perturb,
