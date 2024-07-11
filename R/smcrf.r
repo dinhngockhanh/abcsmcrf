@@ -1,26 +1,34 @@
-#' `smcrf()` is the main function to implement ABC-SMC-RF and ABC-DRF.
+#' Approximate Bayesian Computation sequential Monte Carlo via random forests
+#'
+#' `smcrf()` implements random forests to find the posterior distribution(s) for one or more parameters in a model,
+#' using either ABC-RF or ABC-DRF in the sequential Monte Carlo framework.
 #'
 #' @param method Random forest method to implement in each iteration ("smcrf-single-param" by default).
 #' method = "smcrf-single-param": implements ABC-RF for each parameter and results in their marginal posterior distributions.
 #' method = "smcrf-multi-param": implements ABC-DRF for all parameters and results in the joint posterior distribution.
 #' @param statistics_target A dataframe containing statistics from data.
 #' Column names are the statistics IDs.
-#' @param smcrf_existed_results An existing ABC-SMC-RF result.
+#' `smcrf()` only supports one row of statistics.
+#' If there are multiple observations, we recommend applying `smcrf()` to each row individually.
+#' @param smcrf_results An existing ABC-SMC-RF result.
 #' If provided, smcrf will continue ABC-SMC-RF from the last iteration of the previous run.
 #' @param model Model for the statistics.
 #' The function must take two inputs: a data frame parameters and logic variable parallel.
-#' @param perturb .
-#' @param range .
-#' @param parameters_initial .
-#' @param nParticles .
-#' @param parallel .
-#' @param n_cores .
-#' @param ... .
-#' @return Something.
+#' @param perturb ...
+#' @param range ...
+#' @param parameters_initial ...
+#' @param nParticles ...
+#' @param parallel ...
+#' @param n_cores ...
+#' @param ... ...
+#' @return An object `smcrf_results` containing the results of the inference.
+#' If the posterior distributions have not converged to a satisfactory level,
+#' the user may continue with `smcrf(smcrf_results = smcrf_results, ...)`,
+#' in which case ABC-SMC-(D)RF will continue from the last iteration in `smcrf_results`.
 #' @export
 smcrf <- function(method = "smcrf-single-param",
                   statistics_target = NULL,
-                  smcrf_existed_results = NULL,
+                  smcrf_results = NULL,
                   model,
                   perturb,
                   range = NULL,
@@ -29,23 +37,6 @@ smcrf <- function(method = "smcrf-single-param",
                   parallel,
                   n_cores = NULL,
                   ...) {
-    # SMCRF[["method"]] <- "smcrf-single-param"
-    # SMCRF[["nIterations"]] <- nIterations
-    # SMCRF[["nParticles"]] <- nParticles
-    # SMCRF[["statistics_target"]] <- statistics_target
-    # SMCRF[["parameters_labels"]] <- data.frame(parameter = parameters_ids)
-    # SMCRF[["statistics_labels"]] <- data.frame(ID = colnames(statistics_target))
-    # SMCRF_iteration <- list()
-    # SMCRF_iteration$reference <- reference
-    # SMCRF_iteration$parameters <- parameters
-    # SMCRF_iteration$parameters_unperturbed <- parameters_unperturbed
-    # SMCRF_iteration$statistics <- statistics
-    # SMCRF_iteration$weights <- ABCRF_weights
-    # if (save_model == TRUE) {
-    #     SMCRF_iteration$rf_model <- RFmodels
-    #     SMCRF_iteration$rf_predict <- posterior_gamma_RFs
-    # }
-    # SMCRF[[paste0("Iteration_", iteration)]] <- SMCRF_iteration
     if (method == "smcrf-single-param") {
         return(smcrf_single_param(
             statistics_target = statistics_target,
@@ -53,7 +44,7 @@ smcrf <- function(method = "smcrf-single-param",
             perturb = perturb,
             range = range,
             parameters_initial = parameters_initial,
-            smcrf_single_param_results = smcrf_existed_results,
+            smcrf_single_param_results = smcrf_results,
             nParticles = nParticles,
             parallel = parallel,
             n_cores = n_cores,
@@ -66,7 +57,7 @@ smcrf <- function(method = "smcrf-single-param",
             perturb = perturb,
             range = range,
             parameters_initial = parameters_initial,
-            smcrf_multi_param_results = smcrf_existed_results,
+            smcrf_multi_param_results = smcrf_results,
             nParticles = nParticles,
             parallel = parallel,
             n_cores = n_cores,
