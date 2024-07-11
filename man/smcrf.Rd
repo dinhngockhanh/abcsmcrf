@@ -46,15 +46,20 @@ The function must take two inputs: a data frame parameters and logic variable pa
 
 \item{n_cores}{...}
 
-\item{...}{...}
+\item{...}{Additional arguments to be passed to `abcrf` or `drf`.}
 }
 \value{
 An object `smcrf_results` containing the results of the inference.
 If the posterior distributions have not converged to a satisfactory level,
 the user may continue with `smcrf(smcrf_results = smcrf_results, ...)`,
-in which case ABC-SMC-(D)RF will continue from the last iteration in `smcrf_results`.
+in which case ABC-SMC-(D)RF will continue iterating from the last run in `smcrf_results`.
 }
 \description{
-`smcrf()` implements random forests to find the posterior distribution(s) for one or more parameters in a model,
-using either ABC-RF or ABC-DRF in the sequential Monte Carlo framework.
+`smcrf()` uses random forests to find the posterior distribution(s) for one or more parameters in a model.
+It implements the sequential Monte Carlo framework, where each iteration
+uses either ABC-RF (functions `regAbcrf` and `predict` in R package `abcrf`)
+or ABC-DRF (functions `drf` and `predict` in R package `drf`) to update the posterior distribution(s).
+}
+\examples{
+model <- function(blah blah blah) {something else...}
 }

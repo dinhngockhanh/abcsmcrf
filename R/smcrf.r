@@ -1,7 +1,9 @@
 #' Approximate Bayesian Computation sequential Monte Carlo via random forests
 #'
-#' `smcrf()` implements random forests to find the posterior distribution(s) for one or more parameters in a model,
-#' using either ABC-RF or ABC-DRF in the sequential Monte Carlo framework.
+#' `smcrf()` uses random forests to find the posterior distribution(s) for one or more parameters in a model.
+#' It implements the sequential Monte Carlo framework, where each iteration
+#' uses either ABC-RF (functions `regAbcrf` and `predict` in R package `abcrf`)
+#' or ABC-DRF (functions `drf` and `predict` in R package `drf`) to update the posterior distribution(s).
 #'
 #' @param method Random forest method to implement in each iteration ("smcrf-single-param" by default).
 #' method = "smcrf-single-param": implements ABC-RF for each parameter and results in their marginal posterior distributions.
@@ -20,12 +22,14 @@
 #' @param nParticles ...
 #' @param parallel ...
 #' @param n_cores ...
-#' @param ... ...
+#' @param ... Additional arguments to be passed to `abcrf` or `drf`.
 #' @return An object `smcrf_results` containing the results of the inference.
 #' If the posterior distributions have not converged to a satisfactory level,
 #' the user may continue with `smcrf(smcrf_results = smcrf_results, ...)`,
-#' in which case ABC-SMC-(D)RF will continue from the last iteration in `smcrf_results`.
+#' in which case ABC-SMC-(D)RF will continue iterating from the last run in `smcrf_results`.
 #' @export
+#' @examples
+#' model <- function(blah blah blah) {something else...}
 smcrf <- function(method = "smcrf-single-param",
                   statistics_target = NULL,
                   smcrf_results = NULL,
@@ -171,7 +175,6 @@ smcrf_single_param <- function(statistics_target = NULL,
             }
             parameters <- parameters_next
         }
-
         #---Simulate statistics
         cat("Making model simulations...\n")
         reference <- model(parameters = parameters)
