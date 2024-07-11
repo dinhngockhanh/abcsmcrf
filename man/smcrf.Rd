@@ -2,12 +2,12 @@
 % Please edit documentation in R/smcrf.r
 \name{smcrf}
 \alias{smcrf}
-\title{`smcrf()` is the main function to implement ABC-SMC-RF and ABC-DRF.}
+\title{Approximate Bayesian Computation sequential Monte Carlo via random forests}
 \usage{
 smcrf(
   method = "smcrf-single-param",
   statistics_target = NULL,
-  smcrf_existed_results = NULL,
+  smcrf_results = NULL,
   model,
   perturb,
   range = NULL,
@@ -24,31 +24,37 @@ method = "smcrf-single-param": implements ABC-RF for each parameter and results 
 method = "smcrf-multi-param": implements ABC-DRF for all parameters and results in the joint posterior distribution.}
 
 \item{statistics_target}{A dataframe containing statistics from data.
-Column names are the statistics IDs.}
+Column names are the statistics IDs.
+`smcrf()` only supports one row of statistics.
+If there are multiple observations, we recommend applying `smcrf()` to each row individually.}
 
-\item{smcrf_existed_results}{An existing ABC-SMC-RF result.
+\item{smcrf_results}{An existing ABC-SMC-RF result.
 If provided, smcrf will continue ABC-SMC-RF from the last iteration of the previous run.}
 
 \item{model}{Model for the statistics.
 The function must take two inputs: a data frame parameters and logic variable parallel.}
 
-\item{perturb}{.}
+\item{perturb}{...}
 
-\item{range}{.}
+\item{range}{...}
 
-\item{parameters_initial}{.}
+\item{parameters_initial}{...}
 
-\item{nParticles}{.}
+\item{nParticles}{...}
 
-\item{parallel}{.}
+\item{parallel}{...}
 
-\item{n_cores}{.}
+\item{n_cores}{...}
 
-\item{...}{.}
+\item{...}{...}
 }
 \value{
-Something.
+An object `smcrf_results` containing the results of the inference.
+If the posterior distributions have not converged to a satisfactory level,
+the user may continue with `smcrf(smcrf_results = smcrf_results, ...)`,
+in which case ABC-SMC-(D)RF will continue from the last iteration in `smcrf_results`.
 }
 \description{
-`smcrf()` is the main function to implement ABC-SMC-RF and ABC-DRF.
+`smcrf()` implements random forests to find the posterior distribution(s) for one or more parameters in a model,
+using either ABC-RF or ABC-DRF in the sequential Monte Carlo framework.
 }
