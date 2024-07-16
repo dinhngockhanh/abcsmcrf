@@ -71,30 +71,30 @@ or ABC-DRF (functions `drf` and `predict` in R package `drf`) to update the post
 \examples{
 library(abcsmcrf)
 #---------------------------ABC-SMC-RF for a model with one parameter
-#    Data to be fitted, consisting of two statistics s1 and s2:
+# Data to be fitted consists of two statistics s1 and s2
 statistics_target <- data.frame(s1 = 0, s2 = 2)
-#    Parametrized model for the statistics:
+# We then define a parametrized model for the statistics
 model <- function(parameters) {
     statistics <- data.frame(
-        s1 = parameters$theta - 1 + runif(nrow(parameters)),
-        s2 = parameters$theta + 1 + runif(nrow(parameters))
+        s1 = parameters$theta - 1 + runif(nrow(parameters), -0.1, 0.1),
+        s2 = parameters$theta + 1 + runif(nrow(parameters), -0.1, 0.1)
     )
     cbind(parameters, statistics)
 }
-#    Function to perturb the parameters with random noise:
+# and a function to perturb the parameters with random noise between iterations
 perturb <- function(parameters) {
     parameters$theta <- parameters$theta + runif(nrow(parameters), min = -0.1, max = 0.1)
     return(parameters)
 }
-#    Initial guesses for the parameter theta:
+# We start from initial guesses for theta from Uniform(-10, 10)
 parameters_initial <- data.frame(theta = runif(100000, -10, 10))
-#    Make sure that theta stays within bounds of prior distribution:
+# while ensuring that theta stays within bounds
 bounds <- data.frame(
     parameter = c("theta"),
     min = c(-10),
     max = c(10)
 )
-#    Run ABC-SMC-RF:
+# Finally, we run ABC-SMC-RF with 2 iterations, each with 1000 particles
 smcrf_results <- smcrf(
     method = "smcrf-single-param",
     statistics_target = statistics_target,
@@ -102,24 +102,35 @@ smcrf_results <- smcrf(
     perturb = perturb,
     bounds = bounds,
     parameters_initial = parameters_initial,
-    nParticles = c(1000, 1000, 1000),
+    nParticles = c(1000, 1000),
 )
-# Get the posterior distribution of theta
+# Now we examine the posterior distribution of theta
 posterior_iteration <- paste0("Iteration_", (smcrf_results$nIterations + 1))
 posterior_theta <- smcrf_results[[posterior_iteration]]$parameters$theta
-#    Get the posterior mean of theta:
+# We look at the posterior mean of theta
 theta_mean <- mean(posterior_theta)
-#    Get the posterior variance of theta:
+print(theta_mean)
+# Notice that the mean is close to 1, the true value of theta.
+# We can also look at the posterior variance of theta
 theta_var <- var(posterior_theta)
-#    If the posterior distribution has not converged, we can continue the ABC-SMC-RF run:
+print(theta_var)
+# We can also continue the ABC-SMC-RF run if the posterior convergence is not satisfactory
 smcrf_results <- smcrf(
     method = "smcrf-single-param",
     smcrf_results = smcrf_results,
     model = model,
     perturb = perturb,
     bounds = bounds,
-    nParticles = c(1000, 1000),
+    nParticles = c(1000, 1000)
 )
+# We look again at the posterior mean and variance of theta
+posterior_iteration <- paste0("Iteration_", (smcrf_results$nIterations + 1))
+posterior_theta <- smcrf_results[[posterior_iteration]]$parameters$theta
+theta_mean <- mean(posterior_theta)
+print(theta_mean)
+theta_var <- var(posterior_theta)
+print(theta_var)
+# and notice that while the mean doesn't change much, the variance decreases, signifying higher certainty
 #---------------------ABC-SMC-RF for a model with multiple parameters
 #    Data to be fitted, consisting of two statistics s1 and s2:
 statistics_target <- data.frame(s1 = 4, s2 = 4)
