@@ -248,8 +248,8 @@ smcrf_single_param <- function(statistics_target = NULL,
                                ...) {
     library(abcrf)
     library(Hmisc)
-    nSimulations <<- 0
-    cat("\n\n==============================================================================================================================================\n")
+    # nSimulations <<- 0
+    # cat("\n\n==============================================================================================================================================\n")
     #---Obtain information from previous SMC-RF
     if (!is.null(smcrf_single_param_results)) {
         SMCRF <- smcrf_single_param_results
@@ -470,7 +470,7 @@ smcrf_multi_param <- function(statistics_target = NULL,
     library(drf)
     library(matrixStats)
     library(Hmisc)
-    nSimulations <<- 0
+    # nSimulations <<- 0
     #---Obtain information from previous SMC-DRF
     if (!is.null(smcrf_multi_param_results)) {
         SMCDRF <- smcrf_multi_param_results
