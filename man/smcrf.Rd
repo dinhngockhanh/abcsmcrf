@@ -25,8 +25,8 @@ method = "smcrf-multi-param": implements ABC-DRF for all parameters and results 
 
 \item{statistics_target}{A dataframe containing statistics from data.
 Column names are the statistics IDs.
-`smcrf()` only supports one row of statistics.
-If there are multiple observations, we recommend applying `smcrf()` to each row individually.}
+\code{\link{smcrf}} only supports one row of statistics.
+If there are multiple observations, we recommend applying \code{\link{smcrf}} to each row individually.}
 
 \item{smcrf_results}{An existing ABC-SMC-RF result.
 If provided, smcrf will continue ABC-SMC-RF from the last iteration of the previous run.}
@@ -54,19 +54,19 @@ If parallel = TRUE, the ABC-RF functions will be computed in parallel.}
 \item{n_cores}{Number of cores in used in parallel computation.
 When default with n_cores = NULL, the parallel function will use maximum number of available cores.}
 
-\item{...}{Additional arguments to be passed to `abcrf` or `drf`.}
+\item{...}{Additional arguments to be passed to \code{abcrf} or \code{drf}.}
 }
 \value{
-An object `smcrf_results` containing the results of the inference.
+An object \code{smcrf_results} containing the results of the inference.
 If the posterior distributions have not converged to a satisfactory level,
-the user may continue with `smcrf(smcrf_results = smcrf_results, ...)`,
-in which case ABC-SMC-(D)RF will continue iterating from the last run in `smcrf_results`.
+the user may continue with \code{smcrf(smcrf_results = smcrf_results, ...)},
+in which case ABC-SMC-(D)RF will continue iterating from the last run in \code{smcrf_results}.
 }
 \description{
-`smcrf()` uses random forests to find the posterior distribution(s) for one or more parameters in a model.
+\code{\link{smcrf}} uses random forests to find the posterior distribution(s) for one or more parameters in a model.
 It implements the sequential Monte Carlo framework, where each iteration
-uses either ABC-RF (functions `regAbcrf` and `predict` in R package `abcrf`)
-or ABC-DRF (functions `drf` and `predict` in R package `drf`) to update the posterior distribution(s).
+uses either ABC-RF (functions \code{regAbcrf} and \code{predict} in R package \code{abcrf})
+or ABC-DRF (functions \code{drf} and \code{predict} in R package \code{drf}) to update the posterior distribution(s).
 }
 \examples{
 library(abcsmcrf)

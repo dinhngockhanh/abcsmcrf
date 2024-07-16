@@ -39,7 +39,7 @@ If provided, the x-axis will be scaled by them.}
 If plot_hist = TRUE, marginal distributions will be plotted in histograms.}
 }
 \description{
-`plot_smcrf_marginal()` plot the marginal distribution(s) for each iteration from an
+\code{\link{plot_smcrf_marginal}} plot the marginal distribution(s) for each iteration from an
 Approximate Bayesian Computation sequential Monte Carlo via random forest result.
 }
 \examples{

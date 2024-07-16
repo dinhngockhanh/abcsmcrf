@@ -20,8 +20,8 @@ plot_compare_marginal(
 }
 \arguments{
 \item{plots}{An existed ABC-SMC-(D)RF marginal plots result.
-If provided, plot_compare_marginal() will plot the new ABC-SMC-(D)RF result and compare it with provided plots results.
-If plots = NULL, plot_compare_marginal() will make a new plot for the ABC-SMC-(D)RF result.}
+If provided, \code{\link{plot_compare_marginal}} will plot the new ABC-SMC-(D)RF result and compare it with provided plots results.
+If plots = NULL, \code{\link{plot_compare_marginal}} will make a new plot for the ABC-SMC-(D)RF result.}
 
 \item{abc_results}{An ABC-SMC-(D)RF result.
 Will be plotted out by the function.}
@@ -53,12 +53,12 @@ If plot_hist_point = TRUE, marginal distributions will be plotted in histograms 
 If plot_prior = TRUE, the prior distribution will be plotted out.}
 }
 \value{
-An ABC-SMC-(D)RF marginal plots object `plots` containing the marginal plots results of posterior distributions.
+A list of \code{ggplot2} objects containing the marginal plots results of posterior distributions.
 The user can use the function to compare ABC-SMC-(D)RF marginal plots with the marginal posterior distribution(s)
 of other ABC-SMC-(D)RF result(s).
 }
 \description{
-`plot_compare_marginal()` plots the marginal posterior distribution(s) for the provided ABC-SMC-(D)RF result.
+\code{\link{plot_compare_marginal}} plots the marginal posterior distribution(s) for the provided ABC-SMC-(D)RF result.
 It can also compare the marginal posterior distributions for the provided ABC-SMC-(D)RF result with several ABC-SMC-(D)RF plots results.
 }
 \seealso{

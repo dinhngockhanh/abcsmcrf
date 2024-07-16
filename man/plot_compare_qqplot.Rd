@@ -14,8 +14,8 @@ plot_compare_qqplot(
 }
 \arguments{
 \item{plots}{An existed ABC-SMC-(D)RF quantile-quantile plots result.
-If provided, plot_compare_qqplot() will plot the quantile-qantile plot for inferred parameters in the new ABC-SMC-(D)RF result and compare it with provided quantile-quantile plots result.
-If plots = NULL, plot_compare_qqplot() will make a new quantile-quantile plot for inferred parameters in the ABC-SMC-(D)RF result and true parameters.}
+If provided, \code{\link{plot_compare_qqplot}} will plot the quantile-qantile plot for inferred parameters in the new ABC-SMC-(D)RF result and compare it with provided quantile-quantile plots result.
+If plots = NULL, \code{\link{plot_compare_qqplot}} will make a new quantile-quantile plot for inferred parameters in the ABC-SMC-(D)RF result and true parameters.}
 
 \item{abc_results}{An ABC-SMC-(D)RF result.
 The function will plot the quantile-quantile plot between the inferred parameters from the ABC-SMC-(D)RF result and true parameters.}
@@ -29,10 +29,10 @@ If provided, parameter labels will be exhibited on the plots' axes.}
 If provided, x-axis and y-axis will be scaled by them.}
 }
 \value{
-An ABC-SMC-(D)RF quantile-quantile plots object `plots` containing the quantile-quantile plots results.
+A list of \code{ggplot2} objects containing the quantile-quantile plots results.
 The user can use the function to compare ABC-SMC-(D)RF quantile-quantile plots with the quantile-quantile plots
 of other ABC-SMC-(D)RF result(s).
 }
 \description{
-`plot_compare_qqplot()` plots the marginal quantile-quantile plots for inferred parameters and parameters from ground-truth distributions.
+\code{\link{plot_compare_qqplot}} plots the marginal quantile-quantile plots for inferred parameters and parameters from ground-truth distributions.
 }

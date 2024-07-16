@@ -1,17 +1,17 @@
 #' Approximate Bayesian Computation sequential Monte Carlo via random forests
 #'
-#' `smcrf()` uses random forests to find the posterior distribution(s) for one or more parameters in a model.
+#' \code{\link{smcrf}} uses random forests to find the posterior distribution(s) for one or more parameters in a model.
 #' It implements the sequential Monte Carlo framework, where each iteration
-#' uses either ABC-RF (functions `regAbcrf` and `predict` in R package `abcrf`)
-#' or ABC-DRF (functions `drf` and `predict` in R package `drf`) to update the posterior distribution(s).
+#' uses either ABC-RF (functions \code{regAbcrf} and \code{predict} in R package \code{abcrf})
+#' or ABC-DRF (functions \code{drf} and \code{predict} in R package \code{drf}) to update the posterior distribution(s).
 #'
 #' @param method Random forest method to implement in each iteration ("smcrf-single-param" by default).
 #' method = "smcrf-single-param": implements ABC-RF for each parameter and results in their marginal posterior distributions.
 #' method = "smcrf-multi-param": implements ABC-DRF for all parameters and results in the joint posterior distribution.
 #' @param statistics_target A dataframe containing statistics from data.
 #' Column names are the statistics IDs.
-#' `smcrf()` only supports one row of statistics.
-#' If there are multiple observations, we recommend applying `smcrf()` to each row individually.
+#' \code{\link{smcrf}} only supports one row of statistics.
+#' If there are multiple observations, we recommend applying \code{\link{smcrf}} to each row individually.
 #' @param smcrf_results An existing ABC-SMC-RF result.
 #' If provided, smcrf will continue ABC-SMC-RF from the last iteration of the previous run.
 #' @param model Model for the statistics.
@@ -30,11 +30,11 @@
 #' If parallel = TRUE, the ABC-RF functions will be computed in parallel.
 #' @param n_cores Number of cores in used in parallel computation.
 #' When default with n_cores = NULL, the parallel function will use maximum number of available cores.
-#' @param ... Additional arguments to be passed to `abcrf` or `drf`.
-#' @return An object `smcrf_results` containing the results of the inference.
+#' @param ... Additional arguments to be passed to \code{abcrf} or \code{drf}.
+#' @return An object \code{smcrf_results} containing the results of the inference.
 #' If the posterior distributions have not converged to a satisfactory level,
-#' the user may continue with `smcrf(smcrf_results = smcrf_results, ...)`,
-#' in which case ABC-SMC-(D)RF will continue iterating from the last run in `smcrf_results`.
+#' the user may continue with \code{smcrf(smcrf_results = smcrf_results, ...)},
+#' in which case ABC-SMC-(D)RF will continue iterating from the last run in \code{smcrf_results}.
 #' @export
 #' @examples
 #' library(abcsmcrf)

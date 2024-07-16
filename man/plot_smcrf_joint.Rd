@@ -27,7 +27,7 @@ If provided, x-axis and y-axis will be scaled by them.}
 \item{nBins}{Number of contour bins shown in the plot. Default is 5.}
 }
 \description{
-`plot_smcrf_joint()` plots the joint distribution(s) of two parameters for each iteration from an
+\code{\link{plot_smcrf_joint}} plots the joint distribution(s) of two parameters for each iteration from an
 Approximate Bayesian Computation sequential Monte Carlo via random forest result.
 }
 \examples{

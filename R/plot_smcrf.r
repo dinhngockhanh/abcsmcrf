@@ -1,6 +1,6 @@
 #' Plot distribution(s) in each iteration from ABC-SMC-(D)RF result
 #'
-#' `plot_smcrf_marginal()` plot the marginal distribution(s) for each iteration from an
+#' \code{\link{plot_smcrf_marginal}} plot the marginal distribution(s) for each iteration from an
 #' Approximate Bayesian Computation sequential Monte Carlo via random forest result.
 #'
 #' @param smcrf_results An ABC-SMC-(D)RF result containing the inference distributions of parameters from each iteration.
@@ -179,12 +179,12 @@ plot_smcrf_marginal <- function(smcrf_results,
 }
 #' Plot and compare marginal posterior distribution(s) from ABC-SMC-(D)RF result
 #'
-#' `plot_compare_marginal()` plots the marginal posterior distribution(s) for the provided ABC-SMC-(D)RF result.
+#' \code{\link{plot_compare_marginal}} plots the marginal posterior distribution(s) for the provided ABC-SMC-(D)RF result.
 #' It can also compare the marginal posterior distributions for the provided ABC-SMC-(D)RF result with several ABC-SMC-(D)RF plots results.
 #'
 #' @param plots An existed ABC-SMC-(D)RF marginal plots result.
-#' If provided, plot_compare_marginal() will plot the new ABC-SMC-(D)RF result and compare it with provided plots results.
-#' If plots = NULL, plot_compare_marginal() will make a new plot for the ABC-SMC-(D)RF result.
+#' If provided, \code{\link{plot_compare_marginal}} will plot the new ABC-SMC-(D)RF result and compare it with provided plots results.
+#' If plots = NULL, \code{\link{plot_compare_marginal}} will make a new plot for the ABC-SMC-(D)RF result.
 #' @param abc_results An ABC-SMC-(D)RF result.
 #' Will be plotted out by the function.
 #' @param parameters_truth A dataframe containing true values of parameters from the ground-truth distributions.
@@ -204,7 +204,7 @@ plot_smcrf_marginal <- function(smcrf_results,
 #' @param alpha The numeric number to modify transparency. Default is 0.3.
 #' @param plot_prior A logic variable (plot_prior = FALSE by default)
 #' If plot_prior = TRUE, the prior distribution will be plotted out.
-#' @return An ABC-SMC-(D)RF marginal plots object `plots` containing the marginal plots results of posterior distributions.
+#' @return A list of \code{ggplot2} objects containing the marginal plots results of posterior distributions.
 #' The user can use the function to compare ABC-SMC-(D)RF marginal plots with the marginal posterior distribution(s)
 #' of other ABC-SMC-(D)RF result(s).
 #' @seealso
@@ -473,7 +473,7 @@ plot_compare_marginal <- function(plots = NULL,
 
 #' Plot joint distribution(s) of each iteration from ABC-SMC-(D)RF result
 #'
-#' `plot_smcrf_joint()` plots the joint distribution(s) of two parameters for each iteration from an
+#' \code{\link{plot_smcrf_joint}} plots the joint distribution(s) of two parameters for each iteration from an
 #' Approximate Bayesian Computation sequential Monte Carlo via random forest result.
 #'
 #' @param smcrf_results An ABC-SMC-(D)RF result containing the inference distributions of parameters from each iteration.
@@ -572,12 +572,12 @@ plot_smcrf_joint <- function(smcrf_results,
 
 #' Plot and compare joint posterior distribution(s) from ABC-SMC-(D)RF result
 #'
-#' `plot_compare_joint()` plots the joint posterior distribution(s) for the provided ABC-SMC-(D)RF result.
+#' \code{\link{plot_compare_joint}} plots the joint posterior distribution(s) for the provided ABC-SMC-(D)RF result.
 #' It can also compare the joint posterior distributions for the provided ABC-SMC-(D)RF result with several ABC-SMC-(D)RF plots results.
 #'
 #' @param plots An existed ABC-SMC-(D)RF joint plots result.
-#' If provided, plot_compare_joint() will plot the new ABC-SMC-(D)RF result and compare it with provided plots results.
-#' If plots = NULL, plot_compare_joint() will make a new plot for the ABC-SMC-(D)RF result.
+#' If provided, \code{\link{plot_compare_joint}} will plot the new ABC-SMC-(D)RF result and compare it with provided plots results.
+#' If plots = NULL, \code{\link{plot_compare_joint}} will make a new plot for the ABC-SMC-(D)RF result.
 #' @param abc_results An ABC-SMC-(D)RF result.
 #' Will be plotted out by the function.
 #' @param parameters_truth A dataframe containing true values of parameters from the ground-truth distributions.
@@ -587,7 +587,7 @@ plot_smcrf_joint <- function(smcrf_results,
 #' @param lims A dataframe containing the maximum and minimum bounds for parameters.
 #' If provided, x-axis and y-axis will be scaled by them.
 #' @param nBins Number of contour bins shown in the plot. Default is 5.
-#' @return An ABC-SMC-(D)RF joint plots object `plots` containing the joint plots results of posterior distributions.
+#' @return A list of \code{ggplot2} objects containing the joint plots results of posterior distributions.
 #' The user can use the function to compare ABC-SMC-(D)RF joint plots with the joint posterior distribution(s)
 #' of other ABC-SMC-(D)RF result(s).
 #'
@@ -747,11 +747,11 @@ plot_compare_joint <- function(plots = NULL,
 
 #' Plot and compare marginal quantile-quantile plots from ABC-SMC-(D)RF result
 #'
-#' `plot_compare_qqplot()` plots the marginal quantile-quantile plots for inferred parameters and parameters from ground-truth distributions.
+#' \code{\link{plot_compare_qqplot}} plots the marginal quantile-quantile plots for inferred parameters and parameters from ground-truth distributions.
 #'
 #' @param plots An existed ABC-SMC-(D)RF quantile-quantile plots result.
-#' If provided, plot_compare_qqplot() will plot the quantile-qantile plot for inferred parameters in the new ABC-SMC-(D)RF result and compare it with provided quantile-quantile plots result.
-#' If plots = NULL, plot_compare_qqplot() will make a new quantile-quantile plot for inferred parameters in the ABC-SMC-(D)RF result and true parameters.
+#' If provided, \code{\link{plot_compare_qqplot}} will plot the quantile-qantile plot for inferred parameters in the new ABC-SMC-(D)RF result and compare it with provided quantile-quantile plots result.
+#' If plots = NULL, \code{\link{plot_compare_qqplot}} will make a new quantile-quantile plot for inferred parameters in the ABC-SMC-(D)RF result and true parameters.
 #' @param abc_results An ABC-SMC-(D)RF result.
 #' The function will plot the quantile-quantile plot between the inferred parameters from the ABC-SMC-(D)RF result and true parameters.
 #' @param parameters_truth A dataframe containing true values of parameters from the ground-truth distributions.
@@ -759,7 +759,7 @@ plot_compare_joint <- function(plots = NULL,
 #' If provided, parameter labels will be exhibited on the plots' axes.
 #' @param lims A dataframe containing the maximum and minimum bounds for parameters.
 #' If provided, x-axis and y-axis will be scaled by them.
-#' @return An ABC-SMC-(D)RF quantile-quantile plots object `plots` containing the quantile-quantile plots results.
+#' @return A list of \code{ggplot2} objects containing the quantile-quantile plots results.
 #' The user can use the function to compare ABC-SMC-(D)RF quantile-quantile plots with the quantile-quantile plots
 #' of other ABC-SMC-(D)RF result(s).
 #' @export
