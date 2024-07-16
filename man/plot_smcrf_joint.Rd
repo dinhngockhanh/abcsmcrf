@@ -37,3 +37,6 @@ lims <- data.frame(
     max = c(10, 10)
 )
 }
+\seealso{
+\code{\link{smcrf}}
+}

@@ -9,7 +9,6 @@ plot_compare_qqplot(
   abc_results,
   parameters_truth,
   parameters_labels = NULL,
-  sample_num = NULL,
   lims = NULL
 )
 }
@@ -25,9 +24,6 @@ The function will plot the quantile-quantile plot between the inferred parameter
 
 \item{parameters_labels}{A dataframe containing labels in the plots for corresponding parameters.
 If provided, parameter labels will be exhibited on the plots' axes.}
-
-\item{sample_num}{A numeric number.
-If provided, the function will plot sample_num samples from the posterior distribution(s).}
 
 \item{lims}{A dataframe containing the maximum and minimum bounds for parameters.
 If provided, x-axis and y-axis will be scaled by them.}

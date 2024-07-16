@@ -11,7 +11,6 @@ plot_compare_marginal(
   parameters_labels = NULL,
   statistics_labels = NULL,
   xlimit = NULL,
-  sample_num = NULL,
   plot_statistics = FALSE,
   plot_hist = FALSE,
   plot_hist_point = FALSE,
@@ -39,9 +38,6 @@ If provided, statistics labels will exhibit on the plots' axes.}
 \item{xlimit}{A dataframe containing the maximum and minimum bounds for parameters.
 If provided, the x-axis will be scaled by them.}
 
-\item{sample_num}{A numeric number.
-If provided, the function will plot sample_num samples from the posterior distribution(s).}
-
 \item{plot_statistics}{A logic variable (plot_statistics = FALSE by default).
 If plot_statistics = TRUE, the marginal distributions in each iteration for corresponding statistics will also be output.}
 
@@ -64,4 +60,7 @@ of other ABC-SMC-(D)RF result(s).
 \description{
 `plot_compare_marginal()` plots the marginal posterior distribution(s) for the provided ABC-SMC-(D)RF result.
 It can also compare the marginal posterior distributions for the provided ABC-SMC-(D)RF result with several ABC-SMC-(D)RF plots results.
+}
+\seealso{
+\code{\link{smcrf}}
 }

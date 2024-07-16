@@ -195,8 +195,6 @@ plot_smcrf_marginal <- function(smcrf_results,
 #' If provided, statistics labels will exhibit on the plots' axes.
 #' @param xlimit A dataframe containing the maximum and minimum bounds for parameters.
 #' If provided, the x-axis will be scaled by them.
-#' @param sample_num A numeric number.
-#' If provided, the function will plot sample_num samples from the posterior distribution(s).
 #' @param plot_statistics A logic variable (plot_statistics = FALSE by default).
 #' If plot_statistics = TRUE, the marginal distributions in each iteration for corresponding statistics will also be output.
 #' @param plot_hist A logic variable (plot_hist = FALSE by default).
@@ -209,6 +207,8 @@ plot_smcrf_marginal <- function(smcrf_results,
 #' @return An ABC-SMC-(D)RF marginal plots object `plots` containing the marginal plots results of posterior distributions.
 #' The user can use the function to compare ABC-SMC-(D)RF marginal plots with the marginal posterior distribution(s)
 #' of other ABC-SMC-(D)RF result(s).
+#' @seealso
+#' \code{\link{smcrf}}
 #' @export
 plot_compare_marginal <- function(plots = NULL,
                                   abc_results,
@@ -216,7 +216,6 @@ plot_compare_marginal <- function(plots = NULL,
                                   parameters_labels = NULL,
                                   statistics_labels = NULL,
                                   xlimit = NULL,
-                                  sample_num = NULL,
                                   plot_statistics = FALSE,
                                   plot_hist = FALSE,
                                   plot_hist_point = FALSE,
@@ -326,9 +325,6 @@ plot_compare_marginal <- function(plots = NULL,
             legend_label <- "ABC-SMC-RF"
         }
         parameters_values <- abc_results[[paste0("Iteration_", nIterations + 1)]]$parameters_unperturbed
-        if (!is.null(sample_num)) {
-            parameters_values <- abc_results[[paste0("Iteration_", nIterations + 1)]]$parameters_unperturbed[1:sample_num, , drop = FALSE]
-        }
         if (plot_statistics) statistics_values <- abc_results[[paste0("Iteration_", nIterations + 1)]]$statistics
     } else if (method == "smcrf-multi-param") {
         nIterations <- abc_results[["nIterations"]]
@@ -488,6 +484,8 @@ plot_compare_marginal <- function(plots = NULL,
 #' @param lims A dataframe containing the maximum and minimum bounds for parameters.
 #' If provided, x-axis and y-axis will be scaled by them.
 #' @param nBins Number of contour bins shown in the plot. Default is 5.
+#' @seealso
+#' \code{\link{smcrf}}
 #' @export
 #' @examples
 #' lims <- data.frame(
@@ -759,8 +757,6 @@ plot_compare_joint <- function(plots = NULL,
 #' @param parameters_truth A dataframe containing true values of parameters from the ground-truth distributions.
 #' @param parameters_labels A dataframe containing labels in the plots for corresponding parameters.
 #' If provided, parameter labels will be exhibited on the plots' axes.
-#' @param sample_num A numeric number.
-#' If provided, the function will plot sample_num samples from the posterior distribution(s).
 #' @param lims A dataframe containing the maximum and minimum bounds for parameters.
 #' If provided, x-axis and y-axis will be scaled by them.
 #' @return An ABC-SMC-(D)RF quantile-quantile plots object `plots` containing the quantile-quantile plots results.
@@ -771,7 +767,6 @@ plot_compare_qqplot <- function(plots = NULL,
                                 abc_results,
                                 parameters_truth,
                                 parameters_labels = NULL,
-                                sample_num = NULL,
                                 lims = NULL) {
     if (is.null(parameters_labels)) parameters_labels <- abc_results[["parameters_labels"]]
     method <- abc_results[["method"]]
@@ -816,9 +811,6 @@ plot_compare_qqplot <- function(plots = NULL,
             legend_label <- "ABC-SMC-RF"
         }
         parameters_values <- abc_results[[paste0("Iteration_", nIterations + 1)]]$parameters_unperturbed
-        if (!is.null(sample_num)) {
-            parameters_values <- abc_results[[paste0("Iteration_", nIterations + 1)]]$parameters_unperturbed[1:sample_num, , drop = FALSE]
-        }
     } else if (method == "smcrf-multi-param") {
         nIterations <- abc_results[["nIterations"]]
         if (nIterations == 1) {
