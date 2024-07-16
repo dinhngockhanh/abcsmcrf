@@ -38,7 +38,9 @@
 #' @export
 #' @examples
 #' library(abcsmcrf)
+#' #--------------------------------------------------------------------
 #' #---------------------------ABC-SMC-RF for a model with one parameter
+#' #--------------------------------------------------------------------
 #' # Data to be fitted consists of two statistics s1 and s2
 #' statistics_target <- data.frame(s1 = 0, s2 = 2)
 #' # We then define a parametrized model for the statistics
@@ -98,19 +100,22 @@
 #' print(theta_mean)
 #' theta_var <- var(posterior_theta)
 #' print(theta_var)
-#' # and notice that while the mean doesn't change much, the variance decreases, signifying higher certainty
+#' # and notice whether there is any improvement in the posterior distribution
+#' # We can continue the runs of ABC-SMC-(D)RF similarly for the examples below
+#' #--------------------------------------------------------------------
 #' #---------------------ABC-SMC-RF for a model with multiple parameters
-#' #    Data to be fitted, consisting of two statistics s1 and s2:
+#' #--------------------------------------------------------------------
+#' # Data to be fitted consists of two statistics s1 and s2
 #' statistics_target <- data.frame(s1 = 4, s2 = 4)
-#' #    Parametrized model for the statistics:
+#' # We then define a parametrized model for the statistics
 #' model <- function(parameters) {
 #'     statistics <- data.frame(
-#'         s1 = parameters$mu + parameters$theta + runif(nrow(parameters)),
-#'         s2 = parameters$mu * parameters$theta + runif(nrow(parameters))
+#'         s1 = parameters$mu + parameters$theta + runif(nrow(parameters), -0.1, 0.1),
+#'         s2 = parameters$mu * parameters$theta + runif(nrow(parameters), -0.1, 0.1)
 #'     )
 #'     cbind(parameters, statistics)
 #' }
-#' #    Function to perturb the parameters with random noise:
+#' # and a function to perturb the parameters with random noise between iterations
 #' perturb <- function(parameters) {
 #'     if (any(grepl("theta", colnames(parameters)))) {
 #'         parameters[["theta"]] <- parameters[["theta"]] + runif(nrow(parameters), min = -0.1, max = 0.1)
@@ -119,18 +124,18 @@
 #'     }
 #'     return(parameters)
 #' }
-#' #    Initial guesses for the parameter theta:
+#' # We start from initial guesses from U(-10, 10) x U(-10, 10)
 #' parameters_initial <- data.frame(
 #'     theta = runif(100000, -10, 10),
 #'     mu = runif(100000, -10, 10)
 #' )
-#' #    Make sure that theta stays within bounds of prior distribution:
+#' # while ensuring that the parameters stay within bounds
 #' bounds <- data.frame(
 #'     parameter = c("theta", "mu"),
 #'     min = c(-10, -10),
 #'     max = c(10, 10)
 #' )
-#' #    Run ABC-SMC-RF:
+#' # Finally, we run ABC-SMC-RF with 3 iterations, each with 1000 particles
 #' smcrf_results <- smcrf(
 #'     method = "smcrf-single-param",
 #'     statistics_target = statistics_target,
@@ -140,24 +145,27 @@
 #'     parameters_initial = parameters_initial,
 #'     nParticles = c(1000, 1000, 1000),
 #' )
-#' #    Get the posterior means of parameters:
+#' # Now we examine the posterior distribution of each parameter
 #' posterior_iteration <- paste0("Iteration_", (smcrf_results$nIterations + 1))
 #' posterior_params <- smcrf_results[[posterior_iteration]]$parameters
 #' posterior_means <- colMeans(posterior_params)
-#' #    Get the posterior covariance matrix of parameters:
 #' posterior_vars <- var(posterior_params)
+#' print(posterior_means)
+#' print(posterior_vars)
+#' #--------------------------------------------------------------------
 #' #--------------------------------ABC-SMC-DRF for a multivariate model
-#' #   Data to be fitted, consisting of three statistics s1, s2, and s3:
-#' statistics_target <- data.frame(s1 = 9, s2 = 18, s3 = 3)
-#' #    Parametrized model for the statistics:
+#' #--------------------------------------------------------------------
+#' # Data to be fitted consists of 3 statistics s1, s2 and s3
+#' statistics_target <- data.frame(s1 = 9, s2 = 18)
+#' # We then define a parametrized model for the statistics
 #' model <- function(parameters) {
 #'     statistics <- data.frame(
-#'         s1 = parameters$mu + parameters$theta + runif(nrow(parameters)),
-#'         s2 = parameters$mu * parameters$theta + runif(nrow(parameters))
+#'         s1 = parameters$mu + parameters$theta + runif(nrow(parameters), -0.1, 0.1),
+#'         s2 = parameters$mu * parameters$theta + runif(nrow(parameters), -0.1, 0.1)
 #'     )
 #'     cbind(parameters, statistics)
 #' }
-#' #    Function to perturb the parameters with random noise:
+#' # and a function to perturb the parameters with random noise between iterations
 #' perturb <- function(parameters) {
 #'     if (any(grepl("theta", colnames(parameters)))) {
 #'         parameters[["theta"]] <- parameters[["theta"]] + runif(nrow(parameters), min = -0.1, max = 0.1)
@@ -166,19 +174,19 @@
 #'     }
 #'     return(parameters)
 #' }
-#' #    Initial guesses for the parameter theta:
+#' # We start from initial guesses from U(-10, 10) x U(-10, 10)
 #' theta <- runif(100000, -10, 10)
 #' parameters_initial <- data.frame(
-#'     theta = theta,
-#'     mu = theta * 2
+#'     theta = runif(100000, -10, 10),
+#'     mu = runif(100000, -10, 10)
 #' )
-#' #    Make sure that theta stays within bounds of prior distribution:
+#' # while ensuring that the parameters stay within bounds
 #' bounds <- data.frame(
 #'     parameter = c("theta", "mu"),
 #'     min = c(-10, -10),
 #'     max = c(10, 10)
 #' )
-#' #    Run ABC-SMC-DRF:
+#' # Finally, we run ABC-SMC-DRF with 3 iterations, each with 1000 particles
 #' smcrf_results <- smcrf(
 #'     method = "smcrf-multi-param",
 #'     statistics_target = statistics_target,
@@ -188,20 +196,13 @@
 #'     parameters_initial = parameters_initial,
 #'     nParticles = c(1000, 1000, 1000),
 #' )
-#' #    Get the posterior means of parameters:
+#' # Now we examine the posterior distribution of each parameter
 #' posterior_iteration <- paste0("Iteration_", (smcrf_results$nIterations + 1))
 #' posterior_params <- smcrf_results[[posterior_iteration]]$parameters
 #' posterior_means <- colMeans(posterior_params)
-#' #    Get the posterior covariance matrix of parameters:
 #' posterior_vars <- var(posterior_params)
-#' #    If the posterior distribution has not converged, we can continue the ABC-SMC-DRF run:
-#' smcrf_results <- smcrf(
-#'     method = "smcrf-multi-param",
-#'     model = model,
-#'     perturb = perturb,
-#'     bounds = bounds,
-#'     nParticles = c(1000, 1000),
-#' )
+#' print(posterior_means)
+#' print(posterior_vars)
 smcrf <- function(method = "smcrf-single-param",
                   statistics_target = NULL,
                   smcrf_results = NULL,
