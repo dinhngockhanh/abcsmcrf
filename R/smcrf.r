@@ -274,7 +274,7 @@ smcrf_single_param <- function(statistics_target = NULL,
     SMCRF[["statistics_labels"]] <- data.frame(ID = colnames(statistics_target))
     for (iteration in begin_iteration:(nIterations + 1)) {
         if (iteration == (nIterations + 1)) {
-            cat(paste0("\n\n++++++++++++++++++++++++\nSimulation count: ", nSimulations, "\n++++++++++++++++++++++++\n\n\n"))
+            # cat(paste0("\n\n++++++++++++++++++++++++\nSimulation count: ", nSimulations, "\n++++++++++++++++++++++++\n\n\n"))
             cat("\n\nSIMULATING STATISTICS FROM FINAL POSTERIOR DISTRIBUTION...\n")
         } else {
             cat(paste0("SMC-RF FOR SINGLE PARAMETERS: iteration ", iteration, "...\n"))
@@ -495,7 +495,7 @@ smcrf_multi_param <- function(statistics_target = NULL,
     SMCDRF[["statistics_labels"]] <- data.frame(ID = colnames(statistics_target))
     for (iteration in begin_iteration:(nIterations + 1)) {
         if (iteration == (nIterations + 1)) {
-            cat(paste0("\n\n++++++++++++++++++++++++\nSimulation count: ", nSimulations, "\n++++++++++++++++++++++++\n\n\n"))
+            # cat(paste0("\n\n++++++++++++++++++++++++\nSimulation count: ", nSimulations, "\n++++++++++++++++++++++++\n\n\n"))
             cat("\n\nSIMULATING STATISTICS FROM FINAL POSTERIOR DISTRIBUTION...\n")
         } else {
             cat(paste0("SMC-RF FOR MULTIPLE PARAMETERS: iteration ", iteration, "...\n"))
