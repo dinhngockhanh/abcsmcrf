@@ -2,7 +2,8 @@
 % Please edit documentation in R/plot_smcrf.r
 \name{plot_compare_joint}
 \alias{plot_compare_joint}
-\title{.......}
+\title{`plot_compare_joint()` plots the joint posterior distribution(s) for the provided ABC-SMC-(D)RF result.
+It can also compare the joint posterior distributions for the provided ABC-SMC-(D)RF result with several ABC-SMC-(D)RF plots results.}
 \usage{
 plot_compare_joint(
   plots = NULL,
@@ -13,6 +14,26 @@ plot_compare_joint(
   nBins = 5
 )
 }
+\arguments{
+\item{plots}{An existed ABC-SMC-(D)RF plots result.
+If provided, plot_compare_marginal() will plot the new ABC-SMC-(D)RF result and compare it with provided plots results.
+If plots = NULL, plot_compare_marginal() will make a new plot for the ABC-SMC-(D)RF result.}
+
+\item{abc_results}{An ABC-SMC-(D)RF result.
+Will be plotted out by the function.}
+
+\item{parameters_truth}{A dataframe containing true values or the ground-truth distributions of parameters.
+If provided, the function will plot the true values or distributions of parameters.}
+
+\item{parameters_labels}{A dataframe containing labels in the plots for corresponding parameters.
+If provided, parameter labels will exhibit on the plots' axes.}
+
+\item{lims}{A dataframe containing the maximum and minimum bounds for parameters.
+If provided, x-axis and y-axis will be scaled by them.}
+
+\item{nBins}{Number of contour bins shown in the plot. Default is 5.}
+}
 \description{
-.......
+`plot_compare_joint()` plots the joint posterior distribution(s) for the provided ABC-SMC-(D)RF result.
+It can also compare the joint posterior distributions for the provided ABC-SMC-(D)RF result with several ABC-SMC-(D)RF plots results.
 }

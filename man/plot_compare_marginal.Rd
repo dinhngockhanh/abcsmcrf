@@ -2,7 +2,8 @@
 % Please edit documentation in R/plot_smcrf.r
 \name{plot_compare_marginal}
 \alias{plot_compare_marginal}
-\title{.......}
+\title{`plot_compare_marginal()` plots the marginal posterior distribution(s) for the provided ABC-SMC-(D)RF result.
+It can also compare the marginal posterior distributions for the provided ABC-SMC-(D)RF result with several ABC-SMC-(D)RF plots results.}
 \usage{
 plot_compare_marginal(
   plots = NULL,
@@ -19,6 +20,49 @@ plot_compare_marginal(
   plot_prior = FALSE
 )
 }
+\arguments{
+\item{plots}{An existed ABC-SMC-(D)RF marginal plots result.
+If provided, plot_compare_marginal() will plot the new ABC-SMC-(D)RF result and compare it with provided plots results.
+If plots = NULL, plot_compare_marginal() will make a new plot for the ABC-SMC-(D)RF result.}
+
+\item{abc_results}{An ABC-SMC-(D)RF result.
+Will be plotted out by the function.}
+
+\item{parameters_truth}{A dataframe containing true values or the ground-truth distributions of parameters.
+If provided, the function will plot the true values or distributions of parameters.}
+
+\item{parameters_labels}{A dataframe containing labels in the plots for corresponding parameters.
+If provided, parameter labels will exhibit on the plots' axes.}
+
+\item{statistics_labels}{A dataframe containing labels in the plots for corresponding statistics.
+If provided, statistics labels will exhibit on the plots' axes.}
+
+\item{xlimit}{A dataframe containing the maximum and minimum bounds for parameters.
+If provided, the x-axis will be scaled by them.}
+
+\item{sample_num}{A numeric number.
+If provided, the function will plot sample_num samples from the posterior distribution(s).}
+
+\item{plot_statistics}{A logic variable (plot_statistics = FALSE by default).
+If plot_statistics = TRUE, the marginal distributions in each iteration for corresponding statistics will also output.}
+
+\item{plot_hist}{A logic variable (plot_hist = FALSE by default).
+If plot_hist = TRUE, marginal distributions will be plotted in histograms.}
+
+\item{plot_hist_point}{A logic variable (plot_hist_point = FALSE by default).
+If plot_hist_point = TRUE, marginal distributions will be plotted in histograms with points in the middle.}
+
+\item{alpha}{The numeric number to modify transparency. Default is 0.3.}
+
+\item{plot_prior}{A logic variable (plot_prior = FALSE by default)
+If plot_prior = TRUE, the prior distribution will be plotted out.}
+}
+\value{
+An ABC-SMC-(D)RF marginal plots object `plots` containing the marginal plots results of posterior distributions.
+The user can use the function to compare ABC-SMC-(D)RF plots with the marginal posterior distribution(s)
+of other ABC-SMC-(D)RF result(s).
+}
 \description{
-.......
+`plot_compare_marginal()` plots the marginal posterior distribution(s) for the provided ABC-SMC-(D)RF result.
+It can also compare the marginal posterior distributions for the provided ABC-SMC-(D)RF result with several ABC-SMC-(D)RF plots results.
 }

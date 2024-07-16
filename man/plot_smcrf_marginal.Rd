@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_smcrf.r
 \name{plot_smcrf_marginal}
 \alias{plot_smcrf_marginal}
-\title{.......}
+\title{Plot results in each iteration from Approximate Bayesian Computation sequential Monte Carlo via random forests}
 \usage{
 plot_smcrf_marginal(
   smcrf_results,
@@ -15,6 +15,47 @@ plot_smcrf_marginal(
   plot_hist = FALSE
 )
 }
+\arguments{
+\item{smcrf_results}{An ABC-SMC-(D)RF result containing the inference distributions of parameters from each iteration.}
+
+\item{parameters_truth}{A dataframe containing true values or the ground-truth distributions of parameters.
+If provided, the function will plot the true values or distributions of parameters.}
+
+\item{parameters_labels}{A dataframe containing labels in the plots for corresponding parameters.
+If provided, parameter labels will exhibit on the plots' axes.}
+
+\item{statistics_labels}{A dataframe containing labels in the plots for corresponding statistics.
+If provided, statistics labels will exhibit on the plots' axes.}
+
+\item{plot_statistics}{A logic variable (plot_statistics = FALSE by default).
+If plot_statistics = TRUE, the marginal distributions in each iteration for corresponding statistics will also output.}
+
+\item{xlimit}{A dataframe containing the maximum and minimum bounds for parameters.
+If provided, the x-axis will be scaled by them.}
+
+\item{alpha}{The numeric number to modify transparency. Default is 0.3.}
+
+\item{plot_hist}{A logic variable (plot_hist = FALSE by default).
+If plot_hist = TRUE, marginal distributions will be plotted in histograms.}
+}
 \description{
-.......
+`plot_smcrf_marginal()` plot the marginal distribution(s) for each iteration from an
+Approximate Bayesian Computation sequential Monte Carlo via random forest result.
+}
+\examples{
+#    Dataframe containing the true parameters
+parameters_truth <- data.frame(
+    theta = 2
+)
+#    Dataframe containing the parameter labels
+parameters_labels <- data.frame(
+    parameter = c("theta"),
+    label = c(deparse(expression(theta)))
+)
+#    Dataframe containing the x-axis bounds
+xlimit <- data.frame(
+    parameter = c("theta"),
+    min = c(1),
+    max = c(20)
+)
 }

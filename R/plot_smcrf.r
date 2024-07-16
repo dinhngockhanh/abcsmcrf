@@ -1,5 +1,40 @@
-#' .......
+#' Plot distribution(s) in each iteration from ABC-SMC-(D)RF result
+#'
+#' `plot_smcrf_marginal()` plot the marginal distribution(s) for each iteration from an
+#' Approximate Bayesian Computation sequential Monte Carlo via random forest result.
+#'
+#' @param smcrf_results An ABC-SMC-(D)RF result containing the inference distributions of parameters from each iteration.
+#' @param parameters_truth A dataframe containing true values of parameters from the ground-truth distributions.
+#' If provided, the function will plot the true values or distributions of parameters.
+#' @param parameters_labels A dataframe containing labels in the plots for corresponding parameters.
+#' If provided, parameter labels will be exhibited on the plots' axes.
+#' @param statistics_labels A dataframe containing labels in the plots for corresponding statistics.
+#' If provided, statistics labels will exhibit on the plots' axes.
+#' @param plot_statistics A logic variable (plot_statistics = FALSE by default).
+#' If plot_statistics = TRUE, the marginal distributions in each iteration for corresponding statistics will also be output.
+#' @param xlimit A dataframe containing the maximum and minimum bounds for parameters.
+#' If provided, the x-axis will be scaled by them.
+#' @param alpha The numeric number to modify transparency. Default is 0.3.
+#' @param plot_hist A logic variable (plot_hist = FALSE by default).
+#' If plot_hist = TRUE, marginal distributions will be plotted in histograms.
+#'
 #' @export
+#' @examples
+#' #    Dataframe containing the true parameters
+#' parameters_truth <- data.frame(
+#'     theta = 2
+#' )
+#' #    Dataframe containing the parameter labels
+#' parameters_labels <- data.frame(
+#'     parameter = c("theta"),
+#'     label = c(deparse(expression(theta)))
+#' )
+#' #    Dataframe containing the x-axis bounds
+#' xlimit <- data.frame(
+#'     parameter = c("theta"),
+#'     min = c(1),
+#'     max = c(20)
+#' )
 plot_smcrf_marginal <- function(smcrf_results,
                                 parameters_truth = NULL,
                                 parameters_labels = NULL,
@@ -140,8 +175,38 @@ plot_smcrf_marginal <- function(smcrf_results,
         }
     }
 }
-
-#' .......
+#' Plot and compare marginal posterior distribution(s) from ABC-SMC-(D)RF result
+#'
+#' `plot_compare_marginal()` plots the marginal posterior distribution(s) for the provided ABC-SMC-(D)RF result.
+#' It can also compare the marginal posterior distributions for the provided ABC-SMC-(D)RF result with several ABC-SMC-(D)RF plots results.
+#'
+#' @param plots An existed ABC-SMC-(D)RF marginal plots result.
+#' If provided, plot_compare_marginal() will plot the new ABC-SMC-(D)RF result and compare it with provided plots results.
+#' If plots = NULL, plot_compare_marginal() will make a new plot for the ABC-SMC-(D)RF result.
+#' @param abc_results An ABC-SMC-(D)RF result.
+#' Will be plotted out by the function.
+#' @param parameters_truth A dataframe containing true values of parameters from the ground-truth distributions.
+#' If provided, the function will plot the true values or distributions of parameters.
+#' @param parameters_labels A dataframe containing labels in the plots for corresponding parameters.
+#' If provided, parameter labels will be exhibited on the plots' axes.
+#' @param statistics_labels A dataframe containing labels in the plots for corresponding statistics.
+#' If provided, statistics labels will exhibit on the plots' axes.
+#' @param xlimit A dataframe containing the maximum and minimum bounds for parameters.
+#' If provided, the x-axis will be scaled by them.
+#' @param sample_num A numeric number.
+#' If provided, the function will plot sample_num samples from the posterior distribution(s).
+#' @param plot_statistics A logic variable (plot_statistics = FALSE by default).
+#' If plot_statistics = TRUE, the marginal distributions in each iteration for corresponding statistics will also be output.
+#' @param plot_hist A logic variable (plot_hist = FALSE by default).
+#' If plot_hist = TRUE, marginal distributions will be plotted in histograms.
+#' @param plot_hist_point A logic variable (plot_hist_point = FALSE by default).
+#' If plot_hist_point = TRUE, marginal distributions will be plotted in histograms with points in the middle.
+#' @param alpha The numeric number to modify transparency. Default is 0.3.
+#' @param plot_prior A logic variable (plot_prior = FALSE by default)
+#' If plot_prior = TRUE, the prior distribution will be plotted out.
+#' @return An ABC-SMC-(D)RF marginal plots object `plots` containing the marginal plots results of posterior distributions.
+#' The user can use the function to compare ABC-SMC-(D)RF marginal plots with the marginal posterior distribution(s)
+#' of other ABC-SMC-(D)RF result(s).
 #' @export
 plot_compare_marginal <- function(plots = NULL,
                                   abc_results,
@@ -408,9 +473,26 @@ plot_compare_marginal <- function(plots = NULL,
     return(plots)
 }
 
-
-#' .......
+#' Plot joint distribution(s) of each iteration from ABC-SMC-(D)RF result
+#'
+#' `plot_smcrf_joint()` plots the joint distribution(s) of two parameters for each iteration from an
+#' Approximate Bayesian Computation sequential Monte Carlo via random forest result.
+#'
+#' @param smcrf_results An ABC-SMC-(D)RF result containing the inference distributions of parameters from each iteration.
+#' @param parameters_truth A dataframe containing true values of parameters from the ground-truth distributions.
+#' If provided, the function will plot the true values or distributions of parameters.
+#' @param parameters_labels A dataframe containing labels in the plots for corresponding parameters.
+#' If provided, parameter labels will be exhibited on the plots' axes.
+#' @param lims A dataframe containing the maximum and minimum bounds for parameters.
+#' If provided, x-axis and y-axis will be scaled by them.
+#' @param nBins Number of contour bins shown in the plot. Default is 5.
 #' @export
+#' @examples
+#' lims <- data.frame(
+#'     parameter = c("theta", "mu"),
+#'     min = c(0, 0),
+#'     max = c(10, 10)
+#' )
 plot_smcrf_joint <- function(smcrf_results,
                              parameters_truth = NULL,
                              parameters_labels = NULL,
@@ -488,7 +570,27 @@ plot_smcrf_joint <- function(smcrf_results,
     dev.off()
 }
 
-#' .......
+#' Plot and compare joint posterior distribution(s) from ABC-SMC-(D)RF result
+#'
+#' `plot_compare_joint()` plots the joint posterior distribution(s) for the provided ABC-SMC-(D)RF result.
+#' It can also compare the joint posterior distributions for the provided ABC-SMC-(D)RF result with several ABC-SMC-(D)RF plots results.
+#'
+#' @param plots An existed ABC-SMC-(D)RF joint plots result.
+#' If provided, plot_compare_joint() will plot the new ABC-SMC-(D)RF result and compare it with provided plots results.
+#' If plots = NULL, plot_compare_joint() will make a new plot for the ABC-SMC-(D)RF result.
+#' @param abc_results An ABC-SMC-(D)RF result.
+#' Will be plotted out by the function.
+#' @param parameters_truth A dataframe containing true values of parameters from the ground-truth distributions.
+#' If provided, the function will plot the true values or distributions of parameters.
+#' @param parameters_labels A dataframe containing labels in the plots for corresponding parameters.
+#' If provided, parameter labels will be exhibited on the plots' axes.
+#' @param lims A dataframe containing the maximum and minimum bounds for parameters.
+#' If provided, x-axis and y-axis will be scaled by them.
+#' @param nBins Number of contour bins shown in the plot. Default is 5.
+#' @return An ABC-SMC-(D)RF joint plots object `plots` containing the joint plots results of posterior distributions.
+#' The user can use the function to compare ABC-SMC-(D)RF joint plots with the joint posterior distribution(s)
+#' of other ABC-SMC-(D)RF result(s).
+#'
 #' @export
 plot_compare_joint <- function(plots = NULL,
                                abc_results,
@@ -643,19 +745,32 @@ plot_compare_joint <- function(plots = NULL,
     return(plots)
 }
 
-#' .......
+#' Plot and compare marginal quantile-quantile plots from ABC-SMC-(D)RF result
+#'
+#' `plot_compare_qqplot()` plots the marginal quantile-quantile plots for inferred parameters and parameters from ground-truth distributions.
+#'
+#' @param plots An existed ABC-SMC-(D)RF quantile-quantile plots result.
+#' If provided, plot_compare_qqplot() will plot the quantile-qantile plot for inferred parameters in the new ABC-SMC-(D)RF result and compare it with provided quantile-quantile plots result.
+#' If plots = NULL, plot_compare_qqplot() will make a new quantile-quantile plot for inferred parameters in the ABC-SMC-(D)RF result and true parameters.
+#' @param abc_results An ABC-SMC-(D)RF result.
+#' The function will plot the quantile-quantile plot between the inferred parameters from the ABC-SMC-(D)RF result and true parameters.
+#' @param parameters_truth A dataframe containing true values of parameters from the ground-truth distributions.
+#' @param parameters_labels A dataframe containing labels in the plots for corresponding parameters.
+#' If provided, parameter labels will be exhibited on the plots' axes.
+#' @param sample_num A numeric number.
+#' If provided, the function will plot sample_num samples from the posterior distribution(s).
+#' @param lims A dataframe containing the maximum and minimum bounds for parameters.
+#' If provided, x-axis and y-axis will be scaled by them.
+#' @return An ABC-SMC-(D)RF quantile-quantile plots object `plots` containing the quantile-quantile plots results.
+#' The user can use the function to compare ABC-SMC-(D)RF quantile-quantile plots with the quantile-quantile plots
+#' of other ABC-SMC-(D)RF result(s).
 #' @export
 plot_compare_qqplot <- function(plots = NULL,
                                 abc_results,
-                                parameters_truth = NULL,
+                                parameters_truth,
                                 parameters_labels = NULL,
-                                statistics_labels = NULL,
                                 sample_num = NULL,
-                                plot_statistics = FALSE,
-                                plot_hist = FALSE,
-                                lims = NULL,
-                                alpha = 0.3,
-                                plot_prior = FALSE) {
+                                lims = NULL) {
     if (is.null(parameters_labels)) parameters_labels <- abc_results[["parameters_labels"]]
     method <- abc_results[["method"]]
     #---Set up color scheme for plotting
