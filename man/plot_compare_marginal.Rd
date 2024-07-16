@@ -2,8 +2,7 @@
 % Please edit documentation in R/plot_smcrf.r
 \name{plot_compare_marginal}
 \alias{plot_compare_marginal}
-\title{`plot_compare_marginal()` plots the marginal posterior distribution(s) for the provided ABC-SMC-(D)RF result.
-It can also compare the marginal posterior distributions for the provided ABC-SMC-(D)RF result with several ABC-SMC-(D)RF plots results.}
+\title{Plot and compare marginal posterior distribution(s) from ABC-SMC-(D)RF result}
 \usage{
 plot_compare_marginal(
   plots = NULL,
@@ -28,11 +27,11 @@ If plots = NULL, plot_compare_marginal() will make a new plot for the ABC-SMC-(D
 \item{abc_results}{An ABC-SMC-(D)RF result.
 Will be plotted out by the function.}
 
-\item{parameters_truth}{A dataframe containing true values or the ground-truth distributions of parameters.
+\item{parameters_truth}{A dataframe containing true values of parameters from the ground-truth distributions.
 If provided, the function will plot the true values or distributions of parameters.}
 
 \item{parameters_labels}{A dataframe containing labels in the plots for corresponding parameters.
-If provided, parameter labels will exhibit on the plots' axes.}
+If provided, parameter labels will be exhibited on the plots' axes.}
 
 \item{statistics_labels}{A dataframe containing labels in the plots for corresponding statistics.
 If provided, statistics labels will exhibit on the plots' axes.}
@@ -44,7 +43,7 @@ If provided, the x-axis will be scaled by them.}
 If provided, the function will plot sample_num samples from the posterior distribution(s).}
 
 \item{plot_statistics}{A logic variable (plot_statistics = FALSE by default).
-If plot_statistics = TRUE, the marginal distributions in each iteration for corresponding statistics will also output.}
+If plot_statistics = TRUE, the marginal distributions in each iteration for corresponding statistics will also be output.}
 
 \item{plot_hist}{A logic variable (plot_hist = FALSE by default).
 If plot_hist = TRUE, marginal distributions will be plotted in histograms.}
@@ -59,7 +58,7 @@ If plot_prior = TRUE, the prior distribution will be plotted out.}
 }
 \value{
 An ABC-SMC-(D)RF marginal plots object `plots` containing the marginal plots results of posterior distributions.
-The user can use the function to compare ABC-SMC-(D)RF plots with the marginal posterior distribution(s)
+The user can use the function to compare ABC-SMC-(D)RF marginal plots with the marginal posterior distribution(s)
 of other ABC-SMC-(D)RF result(s).
 }
 \description{

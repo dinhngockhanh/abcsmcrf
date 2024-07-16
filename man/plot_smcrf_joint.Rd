@@ -2,8 +2,7 @@
 % Please edit documentation in R/plot_smcrf.r
 \name{plot_smcrf_joint}
 \alias{plot_smcrf_joint}
-\title{`plot_smcrf_joint()` plots the joint distribution(s) of two parameters for each iteration from an
-Approximate Bayesian Computation sequential Monte Carlo via random forest result.}
+\title{Plot joint distribution(s) of each iteration from ABC-SMC-(D)RF result}
 \usage{
 plot_smcrf_joint(
   smcrf_results,
@@ -16,11 +15,11 @@ plot_smcrf_joint(
 \arguments{
 \item{smcrf_results}{An ABC-SMC-(D)RF result containing the inference distributions of parameters from each iteration.}
 
-\item{parameters_truth}{A dataframe containing true values or the ground-truth distributions of parameters.
+\item{parameters_truth}{A dataframe containing true values of parameters from the ground-truth distributions.
 If provided, the function will plot the true values or distributions of parameters.}
 
 \item{parameters_labels}{A dataframe containing labels in the plots for corresponding parameters.
-If provided, parameter labels will exhibit on the plots' axes.}
+If provided, parameter labels will be exhibited on the plots' axes.}
 
 \item{lims}{A dataframe containing the maximum and minimum bounds for parameters.
 If provided, x-axis and y-axis will be scaled by them.}

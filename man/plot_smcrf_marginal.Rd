@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_smcrf.r
 \name{plot_smcrf_marginal}
 \alias{plot_smcrf_marginal}
-\title{Plot results in each iteration from Approximate Bayesian Computation sequential Monte Carlo via random forests}
+\title{Plot distribution(s) in each iteration from ABC-SMC-(D)RF result}
 \usage{
 plot_smcrf_marginal(
   smcrf_results,
@@ -18,17 +18,17 @@ plot_smcrf_marginal(
 \arguments{
 \item{smcrf_results}{An ABC-SMC-(D)RF result containing the inference distributions of parameters from each iteration.}
 
-\item{parameters_truth}{A dataframe containing true values or the ground-truth distributions of parameters.
+\item{parameters_truth}{A dataframe containing true values of parameters from the ground-truth distributions.
 If provided, the function will plot the true values or distributions of parameters.}
 
 \item{parameters_labels}{A dataframe containing labels in the plots for corresponding parameters.
-If provided, parameter labels will exhibit on the plots' axes.}
+If provided, parameter labels will be exhibited on the plots' axes.}
 
 \item{statistics_labels}{A dataframe containing labels in the plots for corresponding statistics.
 If provided, statistics labels will exhibit on the plots' axes.}
 
 \item{plot_statistics}{A logic variable (plot_statistics = FALSE by default).
-If plot_statistics = TRUE, the marginal distributions in each iteration for corresponding statistics will also output.}
+If plot_statistics = TRUE, the marginal distributions in each iteration for corresponding statistics will also be output.}
 
 \item{xlimit}{A dataframe containing the maximum and minimum bounds for parameters.
 If provided, the x-axis will be scaled by them.}

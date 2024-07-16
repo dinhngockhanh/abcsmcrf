@@ -2,39 +2,40 @@
 % Please edit documentation in R/plot_smcrf.r
 \name{plot_compare_qqplot}
 \alias{plot_compare_qqplot}
-\title{`plot_compare_qqplot()` plots the marginal quantile-quantile plots for inferred parameters and parameters from ground-truth distributions.}
+\title{Plot and compare marginal quantile-quantile plots from ABC-SMC-(D)RF result}
 \usage{
 plot_compare_qqplot(
   plots = NULL,
   abc_results,
   parameters_truth,
   parameters_labels = NULL,
-  statistics_labels = NULL,
   sample_num = NULL,
   lims = NULL
 )
 }
 \arguments{
 \item{plots}{An existed ABC-SMC-(D)RF quantile-quantile plots result.
-If provided, plot_compare_qqplot() will plot the quantile-qantile plot for inferred parameters in new ABC-SMC-(D)RF result and compare it with provided quantile-quantile plots result.
-If plots = NULL, plot_compare_qqplot() will make a new plot for inferred parameters in ABC-SMC-(D)RF result and true parameters.}
+If provided, plot_compare_qqplot() will plot the quantile-qantile plot for inferred parameters in the new ABC-SMC-(D)RF result and compare it with provided quantile-quantile plots result.
+If plots = NULL, plot_compare_qqplot() will make a new quantile-quantile plot for inferred parameters in the ABC-SMC-(D)RF result and true parameters.}
 
 \item{abc_results}{An ABC-SMC-(D)RF result.
 The function will plot the quantile-quantile plot between the inferred parameters from the ABC-SMC-(D)RF result and true parameters.}
 
-\item{parameters_truth}{A dataframe containing true values or the ground-truth distributions of parameters.}
+\item{parameters_truth}{A dataframe containing true values of parameters from the ground-truth distributions.}
 
 \item{parameters_labels}{A dataframe containing labels in the plots for corresponding parameters.
-If provided, parameter labels will exhibit on the plots' axes.}
-
-\item{statistics_labels}{A dataframe containing labels in the plots for corresponding statistics.
-If provided, statistics labels will exhibit on the plots' axes.}
+If provided, parameter labels will be exhibited on the plots' axes.}
 
 \item{sample_num}{A numeric number.
 If provided, the function will plot sample_num samples from the posterior distribution(s).}
 
 \item{lims}{A dataframe containing the maximum and minimum bounds for parameters.
 If provided, x-axis and y-axis will be scaled by them.}
+}
+\value{
+An ABC-SMC-(D)RF quantile-quantile plots object `plots` containing the quantile-quantile plots results.
+The user can use the function to compare ABC-SMC-(D)RF quantile-quantile plots with the quantile-quantile plots
+of other ABC-SMC-(D)RF result(s).
 }
 \description{
 `plot_compare_qqplot()` plots the marginal quantile-quantile plots for inferred parameters and parameters from ground-truth distributions.
