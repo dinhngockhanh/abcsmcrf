@@ -17,6 +17,8 @@
 #' @param alpha The numeric number to modify transparency. Default is 0.3.
 #' @param plot_hist A logic variable (plot_hist = FALSE by default).
 #' If plot_hist = TRUE, marginal distributions will be plotted in histograms.
+#' @seealso
+#' \code{\link{smcrf}}
 #'
 #' @export
 #' @examples

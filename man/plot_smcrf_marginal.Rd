@@ -59,3 +59,6 @@ xlimit <- data.frame(
     max = c(20)
 )
 }
+\seealso{
+\code{\link{smcrf}}
+}
