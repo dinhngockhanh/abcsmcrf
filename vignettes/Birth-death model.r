@@ -124,7 +124,7 @@ perturb <- function(parameters) {
     return(parameters)
 }
 # ======================================Define ranges for the parameters
-range <- data.frame(
+bounds <- data.frame(
     parameter = c("lambda", "mu"),
     min = c(0, 0),
     max = c(20, 20)
@@ -365,7 +365,7 @@ drf_results <- smcrf(
     parameters_initial = parameters_initial,
     model = model,
     perturb = perturb,
-    range = range,
+    bounds = bounds,
     nParticles = rep(20000, 1),
     num.trees = 2500,
     save_model = FALSE,
@@ -399,7 +399,7 @@ abcrf_results <- smcrf(
     parameters_initial = parameters_initial,
     model = model,
     perturb = perturb,
-    range = range,
+    bounds = bounds,
     ntree = 2500,
     nParticles = rep(20000, 1),
     save_model = FALSE,
@@ -427,7 +427,7 @@ smcrf_results_multi_param <- smcrf(
     parameters_initial = parameters_initial,
     model = model,
     perturb = perturb,
-    range = range,
+    bounds = bounds,
     nParticles = rep(5000, 4),
     save_model = FALSE,
     num.trees = 2500,

@@ -101,7 +101,7 @@ perturb <- function(parameters) {
     return(parameters)
 }
 # ======================================Define ranges for the parameters
-range <- data.frame(
+bounds <- data.frame(
     parameter = c("theta"),
     min = c(1),
     max = c(20)
@@ -149,7 +149,7 @@ abcrf_results <- smcrf(
     parameters_initial = parameters_initial,
     model = model,
     perturb = perturb,
-    range = range,
+    bounds = bounds,
     nParticles = rep(10000, 1),
     parallel = TRUE
 )
@@ -159,7 +159,7 @@ plots <- plot_compare_marginal(
     abc_results = abcrf_results,
     parameters_labels = parameters_labels,
     plot_statistics = TRUE,
-    xlimit = range,
+    xlimit = bounds,
     plot_hist = TRUE,
     plot_prior = TRUE
 )

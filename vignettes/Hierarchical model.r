@@ -167,7 +167,7 @@ perturb <- function(parameters) {
     return(parameters)
 }
 # ======================================Define ranges for the parameters
-range <- data.frame(
+bounds <- data.frame(
     parameter = c("theta1", "theta2"),
     min = c(-Inf, 0),
     max = c(Inf, Inf)
@@ -199,7 +199,7 @@ drf_results <- smcrf(
     parameters_initial = parameters_initial,
     model = model,
     perturb = perturb,
-    range = range,
+    bounds = bounds,
     nParticles = rep(20000, 1),
     num.trees = 2500,
     # compute.variable.importance = TRUE,

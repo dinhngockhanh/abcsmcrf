@@ -238,7 +238,7 @@ perturb <- function(parameters) {
     return(parameters)
 }
 # ======================================Define ranges for the parameters
-range <- data.frame(
+bounds <- data.frame(
     parameter = c("c1", "c2", "c3"),
     min = c(0, 5, -5),
     max = c(1, 7, -3)
@@ -266,14 +266,14 @@ drf_results <- smcrf(
     parameters_initial = parameters_initial,
     model = model,
     perturb = perturb,
-    range = range,
+    bounds = bounds,
     nParticles = rep(20000, 1),
     num.trees = 2500,
     parallel = TRUE
 )
 #---Plot marginal distributions compare
 plots_marginal <- plot_compare_marginal(
-    xlimit = range,
+    xlimit = bounds,
     abc_results = drf_results,
     parameters_truth = parameters_truth,
     parameters_labels = parameters_labels,
@@ -287,7 +287,7 @@ smcrf_results_multi_param <- smcrf(
     parameters_initial = parameters_initial,
     model = model,
     perturb = perturb,
-    range = range,
+    bounds = bounds,
     nParticles = rep(4000, 5),
     num.trees = 2500,
     parallel = TRUE
@@ -295,7 +295,7 @@ smcrf_results_multi_param <- smcrf(
 #---Plot marginal distributions compare
 plots_marginal <- plot_compare_marginal(
     plots = plots_marginal,
-    xlimit = range,
+    xlimit = bounds,
     abc_results = smcrf_results_multi_param,
     parameters_truth = parameters_truth,
     parameters_labels = parameters_labels,
