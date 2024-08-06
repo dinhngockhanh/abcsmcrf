@@ -129,7 +129,7 @@ abcrf_results <- smcrf(
     model = model,
     perturb = perturb,
     bounds = bounds,
-    nParticles = rep(1000, 1),
+    nParticles = rep(10000, 1),
     parallel = TRUE
 )
 #---Plot posterior marginal distributions against other methods
@@ -150,7 +150,7 @@ abc_rej_results <- abc_rejection(
     parameters_labels = parameters_labels,
     prior_distributions = list(c("unif", 0, 20)),
     tolerance_quantile = 0.05,
-    nParticles = 1000, progress_bar = TRUE
+    nParticles = 10000, progress_bar = TRUE
 )
 # #---Plot marginal distributions compare
 plots_marginal <- plot_compare_marginal(
