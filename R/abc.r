@@ -1,3 +1,4 @@
+#' @export
 abc_rejection <- function(statistics_target,
                           model,
                           parameters_labels,
@@ -55,6 +56,7 @@ abc_rejection <- function(statistics_target,
     return(ABC_REJECTION)
 }
 
+#' @export
 abc_mcmc <- function(statistics_target,
                      model,
                      parameters_labels,
@@ -111,6 +113,7 @@ abc_mcmc <- function(statistics_target,
     return(AMC_MCMC)
 }
 
+#' @export
 abc_smc <- function(statistics_target,
                     model,
                     parameters_labels,
