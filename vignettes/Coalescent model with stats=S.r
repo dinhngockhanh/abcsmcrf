@@ -1,8 +1,4 @@
 library(abcsmcrf)
-# library(ggplot2)
-# library(gridExtra)
-# library(grid)
-library(invgamma)
 # =========================Model for the Site Frequency Spectrum (SFS)
 #   Input:  data frame of parameters, each row is one set of parameters
 #   Output: data frame of parameters & statistics, each row contains statistics for one set of parameters:
