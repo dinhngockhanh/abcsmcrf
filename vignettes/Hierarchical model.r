@@ -1,27 +1,5 @@
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - Macbook
-# R_workplace <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/vignettes"
-# R_libPaths <- ""
-# R_libPaths_extra <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/R"
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
-R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/adaptive/new_hierarchical_perturb_func"
-R_libPaths <- ""
-R_libPaths_extra <- "/Users/xiangzijin/SMC-RF/R"
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zhihan - Macbook
-# R_workplace <- "/Users/lexie/Documents/DNA/SMC-RF/vignettes"
-# R_libPaths <- ""
-# R_libPaths_extra <- "/Users/lexie/Documents/DNA/SMC-RF/R"
-# =======================================SET UP FOLDER PATHS & LIBRARIES
-.libPaths(R_libPaths)
-library(ggplot2)
-library(gridExtra)
-library(grid)
+library(abcsmcrf)
 library(invgamma)
-library(SimBIID)
-setwd(R_libPaths_extra)
-files_sources <- list.files(pattern = "\\.[rR]$")
-sapply(files_sources, source)
-setwd(R_workplace)
-set.seed(1)
 # ===================================Function for plotting extrame cases
 plot_hierarchical_extreme <- function(
     drf_results,
@@ -180,8 +158,8 @@ limits <- data.frame(
 )
 # ========================================Initial guesses for parameters
 # ====================================(sampled from prior distributions)
-theta2 <- 1 / rgamma(10000, shape = alpha, rate = beta)
-theta1 <- rnorm(10000, 0, sqrt(theta2))
+theta2 <- 1 / rgamma(100000, shape = alpha, rate = beta)
+theta1 <- rnorm(100000, 0, sqrt(theta2))
 parameters_initial <- data.frame(
     theta1 = theta1,
     theta2 = theta2
@@ -211,24 +189,23 @@ plot_hierarchical_extreme(
     limits = limits,
     parameters_truth = parameters_truth
 )
-
-# ==========================================Plot the Variable Importance
-png(paste0("NORMAL_drf_CART_variable_importance.png"), width = 800, height = 800, res = 150)
-n.var <- 30
-variable_importance <- drf_results[["Iteration_1"]]$rf_model$variable.importance
-names(imp) <- c(
-    "mean", "variance", "mad",
-    "mean+var",
-    "mean+mad",
-    "var+mad",
-    "mean+var+mad",
-    "mean*var",
-    "mean*mad",
-    "var*mad",
-    "mean*var*mad",
-    paste0("noise_", c(1:50))
-)
-ord <- rev(order(variable_importance, decreasing = TRUE)[1:n.var])
-xlim <- c(0, max(variable_importance) + 1)
-dotchart(variable_importance[ord], pch = 19, xlab = "Variable Importance", ylab = "", xlim = xlim, main = NULL, bg = "white", cex = 0.7)
-dev.off()
+# # ==========================================Plot the Variable Importance
+# png(paste0("NORMAL_drf_CART_variable_importance.png"), width = 800, height = 800, res = 150)
+# n.var <- 30
+# variable_importance <- drf_results[["Iteration_1"]]$rf_model$variable.importance
+# names(imp) <- c(
+#     "mean", "variance", "mad",
+#     "mean+var",
+#     "mean+mad",
+#     "var+mad",
+#     "mean+var+mad",
+#     "mean*var",
+#     "mean*mad",
+#     "var*mad",
+#     "mean*var*mad",
+#     paste0("noise_", c(1:50))
+# )
+# ord <- rev(order(variable_importance, decreasing = TRUE)[1:n.var])
+# xlim <- c(0, max(variable_importance) + 1)
+# dotchart(variable_importance[ord], pch = 19, xlab = "Variable Importance", ylab = "", xlim = xlim, main = NULL, bg = "white", cex = 0.7)
+# dev.off()

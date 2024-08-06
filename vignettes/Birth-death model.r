@@ -1,31 +1,4 @@
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - Macbook
-# R_workplace <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/vignettes"
-# R_libPaths <- ""
-# R_libPaths_extra <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/R"
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
-# R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/Birth_death/test_0411(try new model)/perturb=+-2;mtry=default;num.tree=1000;5000*4/test_on_targets"
-R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/abc_continue_iterations/bd"
-# R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/Birth_death/test_0411(try new model)/perturb=+-2;mtry=default;num.tree=1000;5000*4/test_on_targets/previous one/try_final_result"
-R_libPaths <- ""
-R_libPaths_extra <- "/Users/xiangzijin/SMC-RF/R"
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zhihan - Macbook
-# R_workplace <- "/Users/lexie/Documents/DNA/SMC-RF/vignettes/birth_death/test"
-# R_libPaths <- ""
-# R_libPaths_extra <- "/Users/lexie/Documents/DNA/SMC-RF/R"
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - HPC
-# R_workplace <- getwd()
-# R_libPaths <- "/burg/iicd/users/zx2406/rpackages"
-# R_libPaths_extra <- "/burg/iicd/users/zx2406/R_smcrf"
-# =======================================SET UP FOLDER PATHS & LIBRARIES
-.libPaths(R_libPaths)
-library(ggplot2)
-library(gridExtra)
-library(grid)
-library(invgamma)
-setwd(R_libPaths_extra)
-files_sources <- list.files(pattern = "\\.[rR]$")
-sapply(files_sources, source)
-setwd(R_workplace)
+library(abcsmcrf)
 # =====================================Model for the birth-death process
 #   Input:  data frame of parameters, each row is one set of parameters
 #   Output: data frame of parameters & statistics, each row contains statistics for one set of parameters:

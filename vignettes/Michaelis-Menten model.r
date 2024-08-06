@@ -1,21 +1,4 @@
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Khanh - Macbook
-# R_workplace <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/vignettes"
-# R_libPaths <- ""
-# R_libPaths_extra <- "/Users/dinhngockhanh/Library/CloudStorage/GoogleDrive-knd2127@columbia.edu/My Drive/RESEARCH AND EVERYTHING/Projects/GITHUB/SMC-RF/R"
-# # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ZIJIN - Macbook
-# R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/CME/m-w/home_made/old_example/timepoints/1-10"
-R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/abc_continue_iterations/mm"
-R_libPaths <- ""
-R_libPaths_extra <- "/Users/xiangzijin/SMC-RF/R"
-# =======================================SET UP FOLDER PATHS & LIBRARIES
-.libPaths(R_libPaths)
-library(ggplot2)
-library(gridExtra)
-library(grid)
-setwd(R_libPaths_extra)
-files_sources <- list.files(pattern = "\\.[rR]$")
-sapply(files_sources, source)
-setwd(R_workplace)
+library(abcsmcrf)
 # ======================================================== Gillespie SSA
 SSA <- function(initial_state, parameters, reaction_propensities, reaction_stoichiometries, time_points) {
     stopifnot(all(diff(time_points) > 0))

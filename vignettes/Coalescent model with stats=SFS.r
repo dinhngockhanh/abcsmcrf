@@ -1,27 +1,4 @@
-# # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
-R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper/coala_npop=1000_nsim=10000/new_results/10000sim;npop=1000;abcrf&abc-rej;onlyS"
-# R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper/coala_npop=1000_nsim=10000/new_results/10000sim npop=1000;abcrf&abc-rej"
-# R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper/coala_npop=1000_nsim=10000/new_results/10000sim;npop=1000;abcrf;onlySFS"
-R_libPaths <- ""
-R_libPaths_extra <- "/Users/xiangzijin/SMC-RF/R"
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macmini
-# R_workplace <- "/Users/khanhngocdinh/Documents/Zijin/0328_sfs_coala"
-# R_libPaths <- ""
-# R_libPaths_extra <- "/Users/khanhngocdinh/Documents/Zijin/SMC-RF/R"
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zhihan - Macbook
-# R_workplace <- "/Users/lexie/Documents/DNA/SMC-RF/vignettes"
-# R_libPaths <- ""
-# R_libPaths_extra <- "/Users/lexie/Documents/DNA/SMC-RF/R"
-# =======================================SET UP FOLDER PATHS & LIBRARIES
-.libPaths(R_libPaths)
-library(ggplot2)
-library(gridExtra)
-library(grid)
-library(invgamma)
-setwd(R_libPaths_extra)
-files_sources <- list.files(pattern = "\\.[rR]$")
-sapply(files_sources, source)
-setwd(R_workplace)
+library(abcsmcrf)
 # =========================Model for the Site Frequency Spectrum (SFS)
 #   Input:  data frame of parameters, each row is one set of parameters
 #   Output: data frame of parameters & statistics, each row contains statistics for one set of parameters:
@@ -118,29 +95,6 @@ parameters_labels <- data.frame(
     parameter = c("theta"),
     label = c(deparse(expression(theta)))
 )
-# ========================================================True posterior
-theta_single <- function(sample_size, a, b, s, theta) {
-    n <- sample_size
-    ln <- sum(1 / 1:(n - 1))
-    cons <- (pgamma(a * ln, s + 1, 1, lower = FALSE) - pgamma(b * ln, s + 1, 1, lower = FALSE)) / ln # could use log(n) for ln
-    print(cons)
-    dens <- dpois(s, theta * ln) / cons
-    integrand <- function(x, s, n) {
-        dpois(s, x * sum(1 / 1:(n - 1)))
-    }
-    val <- integrate(integrand, a, b, s, n)
-    print(val)
-    return(dens)
-}
-density <- c()
-test_theta <- sample(parameters_initial$theta, 1000)
-for (theta in test_theta) {
-    density <- c(density, theta_single(1000, 0, 20, statistics_target$Mutation_count_S, theta))
-}
-parameters_truth <- data.frame(
-    theta = test_theta,
-    density = density
-)
 # ================================================================ABC-RF
 #---Run ABC-RF
 abcrf_results <- smcrf(
@@ -155,7 +109,6 @@ abcrf_results <- smcrf(
 )
 #---Plot posterior marginal distributions against other methods
 plots <- plot_compare_marginal(
-    parameters_truth = parameters_truth,
     abc_results = abcrf_results,
     parameters_labels = parameters_labels,
     plot_statistics = TRUE,

@@ -1,18 +1,4 @@
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zhihan - Macbook
-R_workplace <- "/Users/lexie/Documents/DNA/ode"
-R_libPaths <- ""
-R_libPaths_extra <- "/Users/lexie/Documents/DNA/abc-smc-rf/R"
-# =======================================SET UP FOLDER PATHS & LIBRARIES
-.libPaths(R_libPaths)
-library(ggplot2)
-library(gridExtra)
-library(grid)
-library(invgamma)
-library(SimBIID)
-setwd(R_libPaths_extra)
-files_sources <- list.files(pattern = "\\.[rR]$")
-sapply(files_sources, source)
-setwd(R_workplace)
+library(abcsmcrf)
 # =====================================Model for the predator–prey process
 #   Input:  data frame of parameters, each row is one set of parameters
 #   Output: data frame of parameters & statistics, each row contains statistics for one set of parameters:

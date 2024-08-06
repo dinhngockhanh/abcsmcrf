@@ -1,27 +1,4 @@
-# # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macbook
-R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper/coala_npop=1000_nsim=10000/new_results/10000sim;npop=1000;abcrf&abc-rej;onlyS"
-# R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper/coala_npop=1000_nsim=10000/new_results/10000sim npop=1000;abcrf&abc-rej"
-# R_workplace <- "/Users/xiangzijin/Documents/ABC_SMCRF/0329_sfs_for_paper/coala_npop=1000_nsim=10000/new_results/10000sim;npop=1000;abcrf;onlySFS"
-R_libPaths <- ""
-R_libPaths_extra <- "/Users/xiangzijin/SMC-RF/R"
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zijin - Macmini
-# R_workplace <- "/Users/khanhngocdinh/Documents/Zijin/0328_sfs_coala"
-# R_libPaths <- ""
-# R_libPaths_extra <- "/Users/khanhngocdinh/Documents/Zijin/SMC-RF/R"
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zhihan - Macbook
-# R_workplace <- "/Users/lexie/Documents/DNA/SMC-RF/vignettes"
-# R_libPaths <- ""
-# R_libPaths_extra <- "/Users/lexie/Documents/DNA/SMC-RF/R"
-# =======================================SET UP FOLDER PATHS & LIBRARIES
-.libPaths(R_libPaths)
-library(ggplot2)
-library(gridExtra)
-library(grid)
-library(invgamma)
-setwd(R_libPaths_extra)
-files_sources <- list.files(pattern = "\\.[rR]$")
-sapply(files_sources, source)
-setwd(R_workplace)
+library(abcsmcrf)
 # =========================Model for the Site Frequency Spectrum (SFS)
 #   Input:  data frame of parameters, each row is one set of parameters
 #   Output: data frame of parameters & statistics, each row contains statistics for one set of parameters:
