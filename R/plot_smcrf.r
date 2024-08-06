@@ -45,6 +45,7 @@ plot_smcrf_marginal <- function(smcrf_results,
                                 xlimit = NULL,
                                 alpha = 0.3,
                                 plot_hist = FALSE) {
+    library(ggplot2)
     nIterations <- smcrf_results[["nIterations"]]
     if (is.null(parameters_labels)) parameters_labels <- smcrf_results[["parameters_labels"]]
     if (is.null(statistics_labels)) statistics_labels <- smcrf_results[["statistics_labels"]]
@@ -221,6 +222,7 @@ plot_compare_marginal <- function(plots = NULL,
                                   plot_hist_point = FALSE,
                                   alpha = 0.3,
                                   plot_prior = FALSE) {
+    library(ggplot2)
     if (is.null(parameters_labels)) parameters_labels <- abc_results[["parameters_labels"]]
     if (is.null(statistics_labels)) statistics_labels <- abc_results[["statistics_labels"]]
     method <- abc_results[["method"]]
@@ -500,6 +502,7 @@ plot_smcrf_joint <- function(smcrf_results,
                              nBins = 5) {
     library(MASS)
     library(dplyr)
+    library(ggplot2)
     nIterations <- smcrf_results[["nIterations"]]
     method <- smcrf_results[["method"]]
     if (is.null(parameters_labels)) parameters_labels <- smcrf_results[["parameters_labels"]]
@@ -601,6 +604,7 @@ plot_compare_joint <- function(plots = NULL,
     library(MASS)
     library(dplyr)
     library(RColorBrewer)
+    library(ggplot2)
     method <- abc_results[["method"]]
 
     if (is.null(parameters_labels)) parameters_labels <- abc_results[["parameters_labels"]]
@@ -768,6 +772,7 @@ plot_compare_qqplot <- function(plots = NULL,
                                 parameters_truth,
                                 parameters_labels = NULL,
                                 lims = NULL) {
+    library(ggplot2)
     if (is.null(parameters_labels)) parameters_labels <- abc_results[["parameters_labels"]]
     method <- abc_results[["method"]]
     #---Set up color scheme for plotting

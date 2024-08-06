@@ -17,6 +17,7 @@ Imports:
     dplyr,
     drf,
     EasyABC,
+    ggplot2,
     Hmisc,
     MASS,
     matrixStats,
@@ -26,16 +27,13 @@ Imports:
 Suggests: 
     coala,
     deSolve,
-    ggplot2,
     grid,
     gridExtra,
     invgamma,
-    knitr,
     patchwork,
     reshape2,
-    rmarkdown,
     sensitivity,
     SimBIID
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.2
