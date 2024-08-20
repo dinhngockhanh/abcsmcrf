@@ -64,7 +64,6 @@ plot_hierarchical_extreme <- function(
     file_name <- paste0("NORMAL_drf_contour_with_densities_theta1_theta2.png")
     ggsave(file_name, plot = combined_plot, width = 17, height = 17, units = "in", dpi = 150)
 }
-
 # ==============================Model for the hierarchical model example
 #   Input:  data frame of parameters, each row is one set of parameters
 #   Output: data frame of parameters & statistics, each row contains statistics for one set of parameters:
