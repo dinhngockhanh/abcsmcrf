@@ -28,8 +28,6 @@
 #' Each entry indicates the number of simulations in the corresponding iteration.
 #' @param parallel A logic variable (parallel = FALSE by default).
 #' If parallel = TRUE, the ABC-RF functions will be computed in parallel.
-#' @param n_cores Number of cores in used in parallel computation.
-#' When default with n_cores = NULL, the parallel function will use maximum number of available cores.
 #' @param ... Additional arguments to be passed to \code{abcrf} or \code{drf}.
 #' @return An object \code{smcrf_results} containing the results of the inference.
 #' If the posterior distributions have not converged to a satisfactory level,
@@ -212,7 +210,6 @@ smcrf <- function(method = "smcrf-single-param",
                   parameters_initial = NULL,
                   nParticles,
                   parallel = FALSE,
-                  n_cores = NULL,
                   ...) {
     if (method == "smcrf-single-param") {
         return(smcrf_single_param(
@@ -224,7 +221,6 @@ smcrf <- function(method = "smcrf-single-param",
             smcrf_single_param_results = smcrf_results,
             nParticles = nParticles,
             parallel = parallel,
-            n_cores = n_cores,
             ...
         ))
     } else if (method == "smcrf-multi-param") {
@@ -237,7 +233,6 @@ smcrf <- function(method = "smcrf-single-param",
             smcrf_multi_param_results = smcrf_results,
             nParticles = nParticles,
             parallel = parallel,
-            n_cores = n_cores,
             ...
         ))
     } else {
@@ -252,7 +247,6 @@ smcrf_single_param <- function(statistics_target = NULL,
                                parameters_initial = NULL,
                                nParticles,
                                parallel,
-                               n_cores = NULL,
                                save_model = TRUE,
                                save_rda = FALSE,
                                filename_rda = "ABCSMCRF.rda",
@@ -472,7 +466,6 @@ smcrf_multi_param <- function(statistics_target = NULL,
                               parameters_initial = NULL,
                               nParticles,
                               parallel,
-                              n_cores = NULL,
                               save_model = TRUE,
                               save_rda = FALSE,
                               filename_rda = "ABCSMCDRF.rda",
