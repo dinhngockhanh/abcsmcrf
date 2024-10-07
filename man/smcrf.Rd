@@ -7,6 +7,7 @@
 smcrf(
   method = "smcrf-single-param",
   statistics_target = NULL,
+  statistics_selection = NULL,
   smcrf_results = NULL,
   model,
   perturb,
@@ -14,7 +15,6 @@ smcrf(
   parameters_initial = NULL,
   nParticles,
   parallel = FALSE,
-  n_cores = NULL,
   ...
 )
 }
@@ -27,6 +27,10 @@ method = "smcrf-multi-param": implements ABC-DRF for all parameters and results 
 Column names are the statistics IDs.
 \code{\link{smcrf}} only supports one row of statistics.
 If there are multiple observations, we recommend applying \code{\link{smcrf}} to each row individually.}
+
+\item{statistics_selection}{A dataframe selection of statistics for fitting individual parameters (only works for method "smcrf-single-param"; NULL by default).
+Each column's name is one statistic ID, and each row's name is one parameter ID.
+The value is 1 if the statistic is used for the parameter, 0 otherwise.}
 
 \item{smcrf_results}{An existing ABC-SMC-RF result.
 If provided, smcrf will continue ABC-SMC-RF from the last iteration of the previous run.}
@@ -50,9 +54,6 @@ Each entry indicates the number of simulations in the corresponding iteration.}
 
 \item{parallel}{A logic variable (parallel = FALSE by default).
 If parallel = TRUE, the ABC-RF functions will be computed in parallel.}
-
-\item{n_cores}{Number of cores in used in parallel computation.
-When default with n_cores = NULL, the parallel function will use maximum number of available cores.}
 
 \item{...}{Additional arguments to be passed to \code{abcrf} or \code{drf}.}
 }

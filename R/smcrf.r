@@ -12,6 +12,9 @@
 #' Column names are the statistics IDs.
 #' \code{\link{smcrf}} only supports one row of statistics.
 #' If there are multiple observations, we recommend applying \code{\link{smcrf}} to each row individually.
+#' @param statistics_selection A dataframe selection of statistics for fitting individual parameters (only works for method "smcrf-single-param"; NULL by default).
+#' Each column's name is one statistic ID, and each row's name is one parameter ID.
+#' The value is 1 if the statistic is used for the parameter, 0 otherwise.
 #' @param smcrf_results An existing ABC-SMC-RF result.
 #' If provided, smcrf will continue ABC-SMC-RF from the last iteration of the previous run.
 #' @param model Model for the statistics.
@@ -203,6 +206,7 @@
 #' print(posterior_vars)
 smcrf <- function(method = "smcrf-single-param",
                   statistics_target = NULL,
+                  statistics_selection = NULL,
                   smcrf_results = NULL,
                   model,
                   perturb,
