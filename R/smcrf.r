@@ -424,14 +424,14 @@ smcrf_single_param <- function(statistics_target = NULL,
         RFmodels <- list()
         posterior_gamma_RFs <- list()
         for (parameter_id in parameters_ids) {
+            print("+++++++++++++++++++++++++++++++++++++++++++++++++++")
+            print(parameter_id)
+            print(colnames(statistics_selection)[which(statistics_selection[rownames(statistics_selection) == parameter_id, ] == 1)])
             if (is.null(statistics_selection)) {
                 mini_reference <- reference[, c(parameter_id, colnames(reference)[!colnames(reference) %in% parameters_ids])]
             } else {
                 mini_reference <- reference[, c(parameter_id, colnames(statistics_selection)[which(statistics_selection[rownames(statistics_selection) == parameter_id, ] == 1)])]
             }
-            print("+++++++++++++++++++++++++++++++++++++++++++++++++++")
-            print(parameter_id)
-            print(colnames(statistics_selection)[which(statistics_selection[rownames(statistics_selection) == parameter_id, ] == 1)])
             print(mini_reference)
 
 
