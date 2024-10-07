@@ -15,6 +15,9 @@ smcrf(
   parameters_initial = NULL,
   nParticles,
   parallel = FALSE,
+  save_model = TRUE,
+  save_rda = FALSE,
+  filename_rda = "ABCSMCDRF.rda",
   ...
 )
 }
@@ -54,6 +57,15 @@ Each entry indicates the number of simulations in the corresponding iteration.}
 
 \item{parallel}{A logic variable (parallel = FALSE by default).
 If parallel = TRUE, the ABC-RF functions will be computed in parallel.}
+
+\item{save_model}{A logic variable (parallel = FALSE by default).
+If save_model = TRUE, the random forest will be saved in the output.}
+
+\item{save_rda}{A logic variable (parallel = FALSE by default).
+If save_rda = TRUE, the ABC-SMC-RF results will be saved in an RDA file.}
+
+\item{filename_rda}{A string (filename_rda = "ABCSMCDRF.rda" by default).
+If save_rda = TRUE, the output from ABC-SMC-(D)RF will be saved in a file with this name.}
 
 \item{...}{Additional arguments to be passed to \code{abcrf} or \code{drf}.}
 }

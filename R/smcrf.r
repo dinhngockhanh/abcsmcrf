@@ -31,6 +31,12 @@
 #' Each entry indicates the number of simulations in the corresponding iteration.
 #' @param parallel A logic variable (parallel = FALSE by default).
 #' If parallel = TRUE, the ABC-RF functions will be computed in parallel.
+#' @param save_model A logic variable (parallel = FALSE by default).
+#' If save_model = TRUE, the random forest will be saved in the output.
+#' @param save_rda A logic variable (parallel = FALSE by default).
+#' If save_rda = TRUE, the ABC-SMC-RF results will be saved in an RDA file.
+#' @param filename_rda A string (filename_rda = "ABCSMCDRF.rda" by default).
+#' If save_rda = TRUE, the output from ABC-SMC-(D)RF will be saved in a file with this name.
 #' @param ... Additional arguments to be passed to \code{abcrf} or \code{drf}.
 #' @return An object \code{smcrf_results} containing the results of the inference.
 #' If the posterior distributions have not converged to a satisfactory level,
@@ -214,6 +220,9 @@ smcrf <- function(method = "smcrf-single-param",
                   parameters_initial = NULL,
                   nParticles,
                   parallel = FALSE,
+                  save_model = TRUE,
+                  save_rda = FALSE,
+                  filename_rda = "ABCSMCDRF.rda",
                   ...) {
     if (method == "smcrf-single-param") {
         return(smcrf_single_param(
@@ -223,9 +232,12 @@ smcrf <- function(method = "smcrf-single-param",
             perturb = perturb,
             bounds = bounds,
             parameters_initial = parameters_initial,
-            smcrf_single_param_results = smcrf_results,
             nParticles = nParticles,
             parallel = parallel,
+            save_model = save_model,
+            save_rda = save_rda,
+            filename_rda = filename_rda,
+            smcrf_single_param_results = smcrf_results,
             ...
         ))
     } else if (method == "smcrf-multi-param") {
@@ -239,6 +251,10 @@ smcrf <- function(method = "smcrf-single-param",
             smcrf_multi_param_results = smcrf_results,
             nParticles = nParticles,
             parallel = parallel,
+            save_model = save_model,
+            save_rda = save_rda,
+            filename_rda = filename_rda,
+            smcrf_multi_param_results = smcrf_results,
             ...
         ))
     } else {
