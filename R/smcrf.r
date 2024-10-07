@@ -445,17 +445,6 @@ smcrf_single_param <- function(statistics_target = NULL,
             } else {
                 mini_reference <- reference[, c(parameter_id, colnames(statistics_selection)[which(statistics_selection[rownames(statistics_selection) == parameter_id, ] == 1)])]
             }
-            cat("\n\n\n\n\n\n\n+++++++++++++++++++++++++++++++++++++++++++++++++++\n")
-            print(parameter_id)
-            print(colnames(mini_reference))
-
-
-
-
-
-
-
-
             colnames(mini_reference)[1] <- "para"
             f <- as.formula("para ~.")
             RFmodel <- regAbcrf(
