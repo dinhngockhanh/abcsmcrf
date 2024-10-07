@@ -28,7 +28,7 @@ Column names are the statistics IDs.
 \code{\link{smcrf}} only supports one row of statistics.
 If there are multiple observations, we recommend applying \code{\link{smcrf}} to each row individually.}
 
-\item{statistics_selection}{A dataframe selection of statistics for fitting individual parameters (only works for method "smcrf-single-param"; NULL by default).
+\item{statistics_selection}{A dataframe indicating selection of statistics for fitting individual parameters (only works for method "smcrf-single-param"; NULL by default).
 Each column's name is one statistic ID, and each row's name is one parameter ID.
 The value is 1 if the statistic is used for the parameter, 0 otherwise.}
 

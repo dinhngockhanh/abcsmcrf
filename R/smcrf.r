@@ -12,7 +12,7 @@
 #' Column names are the statistics IDs.
 #' \code{\link{smcrf}} only supports one row of statistics.
 #' If there are multiple observations, we recommend applying \code{\link{smcrf}} to each row individually.
-#' @param statistics_selection A dataframe selection of statistics for fitting individual parameters (only works for method "smcrf-single-param"; NULL by default).
+#' @param statistics_selection A dataframe indicating selection of statistics for fitting individual parameters (only works for method "smcrf-single-param"; NULL by default).
 #' Each column's name is one statistic ID, and each row's name is one parameter ID.
 #' The value is 1 if the statistic is used for the parameter, 0 otherwise.
 #' @param smcrf_results An existing ABC-SMC-RF result.
@@ -218,6 +218,7 @@ smcrf <- function(method = "smcrf-single-param",
     if (method == "smcrf-single-param") {
         return(smcrf_single_param(
             statistics_target = statistics_target,
+            statistics_selection = statistics_selection,
             model = model,
             perturb = perturb,
             bounds = bounds,
@@ -228,6 +229,7 @@ smcrf <- function(method = "smcrf-single-param",
             ...
         ))
     } else if (method == "smcrf-multi-param") {
+        if (!is.null(statistics_selection)) stop("statistics_selection is only available for method 'smcrf-single-param'")
         return(smcrf_multi_param(
             statistics_target = statistics_target,
             model = model,
@@ -245,6 +247,7 @@ smcrf <- function(method = "smcrf-single-param",
 }
 
 smcrf_single_param <- function(statistics_target = NULL,
+                               statistics_selection = NULL,
                                model,
                                perturb,
                                bounds = NULL,
@@ -421,7 +424,22 @@ smcrf_single_param <- function(statistics_target = NULL,
         RFmodels <- list()
         posterior_gamma_RFs <- list()
         for (parameter_id in parameters_ids) {
-            mini_reference <- reference[, c(parameter_id, colnames(reference)[!colnames(reference) %in% parameters_ids])]
+            if (is.null(statistics_selection)) {
+                mini_reference <- reference[, c(parameter_id, colnames(reference)[!colnames(reference) %in% parameters_ids])]
+            } else {
+                mini_reference <- reference[, c(parameter_id, colnames(statistics_selection)[which(statistics_selection[statistics_selection$Variable == parameter_id, ] == 1)])]
+            }
+            print("+++++++++++++++++++++++++++++++++++++++++++++++++++")
+            print(parameter_id)
+            print(colnames(statistics_selection))
+
+
+
+
+
+
+
+
             colnames(mini_reference)[1] <- "para"
             f <- as.formula("para ~.")
             RFmodel <- regAbcrf(
