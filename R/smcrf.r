@@ -33,10 +33,10 @@
 #' If parallel = TRUE, the ABC-RF functions will be computed in parallel.
 #' @param save_model A logic variable (parallel = FALSE by default).
 #' If save_model = TRUE, the random forest will be saved in the output.
-#' @param save_rda A logic variable (parallel = FALSE by default).
-#' If save_rda = TRUE, the ABC-SMC-RF results will be saved in an RDA file.
-#' @param filename_rda A string (filename_rda = "ABCSMCDRF.rda" by default).
-#' If save_rda = TRUE, the output from ABC-SMC-(D)RF will be saved in a file with this name.
+#' @param save_rds A logic variable (parallel = FALSE by default).
+#' If save_rds = TRUE, the ABC-SMC-RF results will be saved in an rds file.
+#' @param filename_rds A string (filename_rds = "ABCSMCDRF.rds" by default).
+#' If save_rds = TRUE, the output from ABC-SMC-(D)RF will be saved in a file with this name.
 #' @param ... Additional arguments to be passed to \code{abcrf} or \code{drf}.
 #' @return An object \code{smcrf_results} containing the results of the inference.
 #' If the posterior distributions have not converged to a satisfactory level,
@@ -221,8 +221,8 @@ smcrf <- function(method = "smcrf-single-param",
                   nParticles,
                   parallel = FALSE,
                   save_model = TRUE,
-                  save_rda = FALSE,
-                  filename_rda = "ABCSMCDRF.rda",
+                  save_rds = FALSE,
+                  filename_rds = "ABCSMCDRF.rds",
                   ...) {
     if (method == "smcrf-single-param") {
         return(smcrf_single_param(
@@ -235,8 +235,8 @@ smcrf <- function(method = "smcrf-single-param",
             nParticles = nParticles,
             parallel = parallel,
             save_model = save_model,
-            save_rda = save_rda,
-            filename_rda = filename_rda,
+            save_rds = save_rds,
+            filename_rds = filename_rds,
             smcrf_single_param_results = smcrf_results,
             ...
         ))
@@ -251,8 +251,8 @@ smcrf <- function(method = "smcrf-single-param",
             nParticles = nParticles,
             parallel = parallel,
             save_model = save_model,
-            save_rda = save_rda,
-            filename_rda = filename_rda,
+            save_rds = save_rds,
+            filename_rds = filename_rds,
             smcrf_multi_param_results = smcrf_results,
             ...
         ))
@@ -270,8 +270,8 @@ smcrf_single_param <- function(statistics_target = NULL,
                                nParticles,
                                parallel,
                                save_model = TRUE,
-                               save_rda = FALSE,
-                               filename_rda = "ABCSMCRF.rda",
+                               save_rds = FALSE,
+                               filename_rds = "ABCSMCRF.rds",
                                smcrf_single_param_results = NULL,
                                ...) {
     library(abcrf)
@@ -428,8 +428,8 @@ smcrf_single_param <- function(statistics_target = NULL,
             SMCRF_iteration$parameters_unperturbed <- parameters_unperturbed
             SMCRF_iteration$statistics <- statistics
             SMCRF[[paste0("Iteration_", iteration)]] <- SMCRF_iteration
-            if (save_rda == TRUE) {
-                save(SMCRF, file = filename_rda)
+            if (save_rds == TRUE) {
+                saveRDS(SMCRF, file = filename_rds)
             }
             break
         }
@@ -478,8 +478,8 @@ smcrf_single_param <- function(statistics_target = NULL,
             SMCRF_iteration$rf_predict <- posterior_gamma_RFs
         }
         SMCRF[[paste0("Iteration_", iteration)]] <- SMCRF_iteration
-        if (save_rda == TRUE) {
-            save(SMCRF, file = filename_rda)
+        if (save_rds == TRUE) {
+            saveRDS(SMCRF, file = filename_rds)
         }
     }
     return(SMCRF)
@@ -493,8 +493,8 @@ smcrf_multi_param <- function(statistics_target = NULL,
                               nParticles,
                               parallel,
                               save_model = TRUE,
-                              save_rda = FALSE,
-                              filename_rda = "ABCSMCDRF.rda",
+                              save_rds = FALSE,
+                              filename_rds = "ABCSMCDRF.rds",
                               splitting.rule = "CART",
                               smcrf_multi_param_results = NULL,
                               ...) {
@@ -659,8 +659,8 @@ smcrf_multi_param <- function(statistics_target = NULL,
             SMCDRF_iteration$parameters_unperturbed <- parameters_unperturbed
             SMCDRF_iteration$statistics <- statistics
             SMCDRF[[paste0("Iteration_", iteration)]] <- SMCDRF_iteration
-            if (save_rda == TRUE) {
-                save(SMCDRF, file = filename_rda)
+            if (save_rds == TRUE) {
+                saveRDS(SMCDRF, file = filename_rds)
             }
             break
         }
@@ -685,8 +685,8 @@ smcrf_multi_param <- function(statistics_target = NULL,
             SMCDRF_iteration$rf_predict <- def_pred
         }
         SMCDRF[[paste0("Iteration_", iteration)]] <- SMCDRF_iteration
-        if (save_rda == TRUE) {
-            save(SMCDRF, file = filename_rda)
+        if (save_rds == TRUE) {
+            saveRDS(SMCDRF, file = filename_rds)
         }
     }
     return(SMCDRF)
