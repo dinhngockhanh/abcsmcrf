@@ -50,27 +50,12 @@ plot_smcrf_marginal <- function(smcrf_results,
     if (is.null(parameters_labels)) parameters_labels <- smcrf_results[["parameters_labels"]]
     if (is.null(statistics_labels)) statistics_labels <- smcrf_results[["statistics_labels"]]
     #---Set up color scheme for plotting
-
-    ###############################
-    ## this version, hcl.colors can't deal with nIterations=1
-    # color_scheme <- c(
-    #     "True Posterior Distribution" = "black", "Data statistic" = "black",
-    #     "Prior Distribution" = "gray",
-    #     setNames(hcl.colors(nIterations, palette = "Earth"), paste0("Iter. ", 1:nIterations))
-    # )
-    ###############################
-    # color_scheme <- c(
-    #     "True Posterior Distribution" = "black", "Data statistic" = "black",
-    #     "Prior Distribution" = "gray",
-    #     setNames(hcl.colors(nIterations, palette = "Earth"), paste0("Iter. ", 1:nIterations))
-    # )
     color_scheme <- c(
         "True Posterior Distribution" = "black",
         "Data statistic" = "black",
         "Prior Distribution" = "gray",
         setNames(hcl.colors(max(nIterations, 2), palette = "Earth"), paste0("Iter. ", 1:nIterations))
     )
-    ###############################
     #---Set up legend order for plotting
     legend_order <- c("True Posterior Distribution", "Data statistic", "Prior Distribution", paste0("Iter. ", 1:nIterations))
     #---Plot marginal distributions for each parameter
