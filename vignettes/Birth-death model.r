@@ -300,6 +300,7 @@ MCMC$acceptance <- acceptance
 MCMC$time_points <- vec
 selected_params <- data.frame(lambda = run10A[vec, 1], mu = run10A[vec, 2])
 MCMC$selected_params <- selected_params
+twodplot <- kde2d(selected_params$lambda, selected_params$mu, n = 1950, lims = c(range(selected_params$lambda), range(selected_params$mu)))
 MCMC$fitted_modes <- data.frame(lambda = twodplot$x[which(twodplot$z == max(twodplot$z), arr.ind = T)[[1]]], mu = twodplot$y[which(twodplot$z == max(twodplot$z), arr.ind = T)[[2]]])
 MCMC[["method"]] <- "mcmc"
 reference <- model(selected_params)
