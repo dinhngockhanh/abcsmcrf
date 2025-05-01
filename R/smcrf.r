@@ -21,14 +21,25 @@
 #' The function must take two inputs: a data frame parameters and logic variable parallel.
 #' The model will output a reference table.
 #' Each row contains parameters for each simulation and corresponding statistics.
-#' @param perturb A choice of kernel function that perturbs parameters for ABC-SMC-RF in each iteration.
-#' If perturb is a specified perturbation kernel function, each parameter follows the perturb function.
-#' @param bounds A dataframe containing bounds for each parameter.
-#' Usually no larger than the bounds of prior distribution.
-#' @param parameters_initial A dataframe containing the initial guess for parameters.
-#' Each column represents the prior distribution for corresponding parameter.
+#' @param rprior Function to generate particles from the prior distribution.
+#' The function must take one input: Nparameters, the number of particles to generate.
+#' The output is a data frame where column names match parameter IDs,
+#' and each row contains one parameter set.
+#' @param dprior Function to compute the prior density.
+#' The function must take two inputs: parameters and parameter_id.
+#' The data frame parameters contains parameter sets in each row, with column names as parameter IDs.
+#' The parameter_id is either "all" or one of the parameter IDs.
+#' The output is a vector of prior probabilities corresponding to rows in parameters,
+#' either for the parameter indicated by parameter_id or jointly for all parameters (if parameter_id = "all").
+#' @param perturbation Perturbation method for the parameters.
+#' abcsmcrf supports perturbation = "Gaussian" (default) or "Uniform".
+#' @param perturbation_parameters A dataframe containing the parameters for the perturbation.
+#' Each row corresponds to one iteration, and each column corresponds to one parameter.
+#' The values are the normal distribution variances (for perturbation = "Gaussian") or ranges (for perturbation = "Uniform").
 #' @param nParticles A list of numbers showing the particles of ABC-SMC-RF.
 #' Each entry indicates the number of simulations in the corresponding iteration.
+#' @param model_redo_if_NA A logic variable (model_redo_if_NA = FALSE by default).
+#' If model_redo_if_NA = TRUE, the model will be re-evaluated if it returns NA.
 #' @param parallel A logic variable (parallel = FALSE by default).
 #' If parallel = TRUE, the ABC-RF functions will be computed in parallel.
 #' @param save_model A logic variable (parallel = FALSE by default).
