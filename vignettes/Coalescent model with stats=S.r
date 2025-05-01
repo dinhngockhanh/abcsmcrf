@@ -15,11 +15,9 @@ model <- function(parameters, parallel = TRUE) {
         library(data.table)
         cl <- makePSOCKcluster(detectCores() - 1)
         clusterExport(cl, varlist = c("SFS_model"))
-        stats <- pblapply(
-            cl = cl, X = 1:nrow(parameters),
-            FUN = function(i) {
-                SFS_model(theta = parameters$theta[i], n = nSamples)
-            }
+        stats <- parLapply(
+            cl = cl, 1:nrow(parameters),
+            function(i) SFS_model(theta = parameters$theta[i], n = nSamples)
         )
         stopCluster(cl)
         stats <- rbindlist(stats)
@@ -70,26 +68,17 @@ parameters_target <- data.frame(
     theta = theta
 )
 statistics_target <- model(parameters = parameters_target, parallel = FALSE)[-c(1:ncol(parameters_target))]
-# ======================================Model for parameter perturbation
-#   Input:  data frame of parameters, each row is one set of parameters
-#   Output: data frame of parameters, after perturbation
-perturb <- function(parameters) {
-    for (i in 1:ncol(parameters)) parameters[[i]] <- parameters[[i]] + runif(nrow(parameters), min = -1, max = 1)
+# ====================================================Prior distribution
+dprior <- function(parameters, parameter_id = "all") {
+    probs <- dunif(parameters$theta, 1, 20)
+    return(probs)
+}
+rprior <- function(Nparameters) {
+    parameters <- data.frame(
+        theta = runif(Nparameters, 1, 20)
+    )
     return(parameters)
 }
-# ======================================Define ranges for the parameters
-bounds <- data.frame(
-    parameter = c("theta"),
-    min = c(1),
-    max = c(20)
-)
-# ========================================Initial guesses for parameters
-# ====================================(sampled from prior distributions)
-set.seed(1)
-theta <- runif(10000, 1, 20)
-parameters_initial <- data.frame(
-    theta = theta
-)
 # ====================================Labels for parameters in the plots
 parameters_labels <- data.frame(
     parameter = c("theta"),
@@ -108,7 +97,7 @@ theta_single <- function(sample_size, a, b, s, theta) {
     return(dens)
 }
 density <- c()
-test_theta <- sample(parameters_initial$theta, 1000)
+test_theta <- rprior(1000)$theta
 for (theta in test_theta) {
     density <- c(density, theta_single(1000, 0, 20, statistics_target$Mutation_count_S, theta))
 }
@@ -121,20 +110,18 @@ parameters_truth <- data.frame(
 abcrf_results <- smcrf(
     method = "smcrf-single-param",
     statistics_target = statistics_target,
-    parameters_initial = parameters_initial,
     model = model,
-    perturb = perturb,
-    bounds = bounds,
+    rprior = rprior,
+    dprior = dprior,
     nParticles = rep(10000, 1),
     parallel = TRUE
 )
 #---Plot posterior marginal distributions against other methods
 plots <- plot_compare_marginal(
-    parameters_truth = parameters_truth,
     abc_results = abcrf_results,
     parameters_labels = parameters_labels,
+    parameters_truth = parameters_truth,
     plot_statistics = TRUE,
-    xlimit = bounds,
     plot_hist = TRUE,
     plot_prior = TRUE
 )
@@ -148,7 +135,7 @@ abc_rej_results <- abc_rejection(
     tolerance_quantile = 0.05,
     nParticles = 10000, progress_bar = TRUE
 )
-# #---Plot marginal distributions compare
+#---Plot marginal distributions compare
 plots_marginal <- plot_compare_marginal(
     plots = plots,
     abc_results = abc_rej_results,
