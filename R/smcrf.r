@@ -215,24 +215,41 @@ smcrf <- function(method = "smcrf-single-param",
                   statistics_selection = NULL,
                   smcrf_results = NULL,
                   model,
-                  perturb,
-                  bounds = NULL,
-                  parameters_initial = NULL,
+                  rprior,
+                  dprior,
+                  perturbation = "Gaussian",
+                  perturbation_parameters = NULL,
                   nParticles,
+                  model_redo_if_NA = FALSE,
                   parallel = FALSE,
                   save_model = TRUE,
                   save_rds = FALSE,
                   filename_rds = "ABCSMCDRF.rds",
                   ...) {
+    suppressPackageStartupMessages(library(matrixStats))
+    suppressPackageStartupMessages(library(Hmisc))
+    suppressPackageStartupMessages(library(crayon))
+    if (perturbation == "Uniform") {
+        if (is.null(perturbation_parameters)) {
+            stop("Ranges must be specified for uniform perturbations")
+        }
+    } else if (perturbation != "Gaussian") {
+        stop("Invalid perturbation method")
+    }
+    if (method == "smcrf-multi-param" & !is.null(statistics_selection)) {
+        stop("statistics_selection is only available for method 'smcrf-single-param'")
+    }
     if (method == "smcrf-single-param") {
         return(smcrf_single_param(
             statistics_target = statistics_target,
             statistics_selection = statistics_selection,
             model = model,
-            perturb = perturb,
-            bounds = bounds,
-            parameters_initial = parameters_initial,
+            rprior = rprior,
+            dprior = dprior,
+            perturbation = perturbation,
+            perturbation_parameters = perturbation_parameters,
             nParticles = nParticles,
+            model_redo_if_NA = model_redo_if_NA,
             parallel = parallel,
             save_model = save_model,
             save_rds = save_rds,
@@ -245,10 +262,12 @@ smcrf <- function(method = "smcrf-single-param",
         return(smcrf_multi_param(
             statistics_target = statistics_target,
             model = model,
-            perturb = perturb,
-            bounds = bounds,
-            parameters_initial = parameters_initial,
+            rprior = rprior,
+            dprior = dprior,
+            perturbation = perturbation,
+            perturbation_parameters = perturbation_parameters,
             nParticles = nParticles,
+            model_redo_if_NA = model_redo_if_NA,
             parallel = parallel,
             save_model = save_model,
             save_rds = save_rds,
@@ -261,38 +280,43 @@ smcrf <- function(method = "smcrf-single-param",
     }
 }
 
-smcrf_single_param <- function(statistics_target = NULL,
+smcrf_single_param <- function(statistics_target,
                                statistics_selection = NULL,
                                model,
-                               perturb,
-                               bounds = NULL,
-                               parameters_initial = NULL,
+                               rprior,
+                               dprior,
+                               perturbation,
+                               perturbation_parameters,
                                nParticles,
+                               model_redo_if_NA,
                                parallel,
                                save_model = TRUE,
                                save_rds = FALSE,
-                               filename_rds = "ABCSMCRF.rds",
-                               smcrf_single_param_results = NULL,
+                               filename_rds,
+                               smcrf_single_param_results,
                                ...) {
-    library(abcrf)
-    library(Hmisc)
-    # nSimulations <<- 0
-    # cat("\n\n==============================================================================================================================================\n")
+    suppressPackageStartupMessages(library(abcrf))
+    nSimulations <<- 0
     #---Obtain information from previous SMC-RF
     if (!is.null(smcrf_single_param_results)) {
+        #   ... If continuing from a previous ABC-SMC-DRF chain:
         SMCRF <- smcrf_single_param_results
-        old_nIterations <- SMCRF[["nIterations"]]
-        begin_iteration <- old_nIterations + 1
-        nIterations <- length(nParticles) + old_nIterations
-        nParticles <- c(SMCRF[["nParticles"]], nParticles)
-        statistics_target <- SMCRF[["statistics_target"]]
         parameters_ids <- colnames(SMCRF[["Iteration_1"]]$parameters)
+        statistics_ids <- colnames(SMCRF[["Iteration_1"]]$statistics)
+        nIterations <- length(nParticles) + SMCRF[["nIterations"]]
+        iteration_start <- 1 + SMCRF[["nIterations"]]
+        if (is.null(statistics_target)) statistics_target <- SMCRF[["statistics_target"]]
+        nParticles <- c(SMCRF[["nParticles"]], nParticles)
+        SMCRF[[paste0("Iteration_", iteration_start)]] <- c()
+        ABCRF_weights <- SMCRF[[paste0("Iteration_", iteration_start - 1)]]$weights
+        parameters <- SMCRF[[paste0("Iteration_", iteration_start - 1)]]$parameters
     } else {
-        #---Initialize information for SMC-RF
+        #   ... If starting a new ABC-SMC-DRF chain:
         SMCRF <- list()
-        parameters_ids <- colnames(parameters_initial)
+        parameters_ids <- colnames(rprior(Nparameters = 1))
+        statistics_ids <- colnames(statistics_target)
         nIterations <- length(nParticles)
-        begin_iteration <- 1
+        iteration_start <- 1
     }
     SMCRF[["method"]] <- "smcrf-single-param"
     SMCRF[["nIterations"]] <- nIterations
@@ -300,127 +324,103 @@ smcrf_single_param <- function(statistics_target = NULL,
     SMCRF[["statistics_target"]] <- statistics_target
     SMCRF[["parameters_labels"]] <- data.frame(parameter = parameters_ids)
     SMCRF[["statistics_labels"]] <- data.frame(ID = colnames(statistics_target))
-    for (iteration in begin_iteration:(nIterations + 1)) {
+    for (iteration in iteration_start:(nIterations + 1)) {
         if (iteration == (nIterations + 1)) {
-            # cat(paste0("\n\n++++++++++++++++++++++++\nSimulation count: ", nSimulations, "\n++++++++++++++++++++++++\n\n\n"))
-            cat("\n\nSIMULATING STATISTICS FROM FINAL POSTERIOR DISTRIBUTION...\n")
+            cat(bold(red("ABC-SMC-DRF FOR SINGLE PARAMETERS:")), paste0(bold(yellow("final posterior distribution", "\n"))))
         } else {
-            cat(paste0("SMC-RF FOR SINGLE PARAMETERS: iteration ", iteration, "...\n"))
+            cat(bold(red("ABC-SMC-DRF FOR SINGLE PARAMETERS:")), paste0(bold(yellow("iteration", iteration, "\n"))))
         }
-        #---Sample prior parameters for this round of iteration...
-        if (!is.null(smcrf_single_param_results)) {
-            if (iteration == (old_nIterations + 1)) {
-                SMCRF[[paste0("Iteration_", (old_nIterations + 1))]] <- c()
-                ABCRF_weights <- SMCRF[[paste0("Iteration_", old_nIterations)]]$weights
-                parameters <- SMCRF[[paste0("Iteration_", old_nIterations)]]$parameters
+        #---Compute Beaumont variances from the previous iteration
+        if (iteration > 1) {
+            tmp <- parameters[sample(nrow(parameters), size = 10000, prob = ABCRF_weights[, 1], replace = T), ]
+            if (!is.data.frame(tmp)) {
+                Beaumont_variances <- as.data.frame(max(var(tmp), 1e-10))
+                colnames(Beaumont_variances) <- parameters_ids
+            } else {
+                Beaumont_variances <- pmax(sapply(tmp, var), 1e-10)
             }
         }
-        if (iteration == 1) {
-            #   ... For iteration 1: sample from initial parameters
-            parameters <- data.frame(parameters_initial[1:nParticles[iteration], ])
-            colnames(parameters) <- parameters_ids
-            parameters_unperturbed <- parameters
-        } else {
-            #   ... For later iterations:
-            ifelse(iteration == (nIterations + 1), nrow <- nParticles[nIterations], nrow <- nParticles[iteration])
-            parameters_unperturbed <- data.frame(matrix(NA, nrow = nrow, ncol = length(parameters_ids)))
-            colnames(parameters_unperturbed) <- parameters_ids
-            parameters_next <- data.frame(matrix(NA, nrow = nrow, ncol = length(parameters_ids)))
-            colnames(parameters_next) <- parameters_ids
-            for (parameter_id in parameters_ids) {
-                invalid_indices <- 1:nrow
-                while (length(invalid_indices) > 0) {
-                    #   Sample parameters from previous posterior distribution
-                    parameter_replace <- data.frame(sample(parameters[, parameter_id], size = length(invalid_indices), prob = ABCRF_weights[, parameter_id], replace = TRUE))
-                    colnames(parameter_replace) <- parameter_id
-                    if (length(invalid_indices) == nrow) parameters_unperturbed[[parameter_id]][invalid_indices] <- parameter_replace[[parameter_id]]
-                    #   Perturb parameters
-                    if (iteration < (nIterations + 1)) {
-                        if (is.function(perturb)) {
-                            parameter_replace <- perturb(parameters = parameter_replace)
-                        } else if (perturb == "Beaumont") {
-                            wtd.var <- var(data.frame(sample(parameters[, parameter_id], size = 10000, prob = ABCRF_weights[, parameter_id], replace = TRUE)))
+        #---Create training set
+        cat(blue("Sampling parameters and computing model simulations...\n"))
+        nrow <- ifelse(iteration == (nIterations + 1), nParticles[nIterations], nParticles[iteration])
+        invalid_indices <- 1:nrow
+        parameters_unperturbed <- data.frame(matrix(NA, nrow = nrow, ncol = length(parameters_ids)))
+        colnames(parameters_unperturbed) <- parameters_ids
+        parameters_next <- data.frame(matrix(NA, nrow = nrow, ncol = length(parameters_ids)))
+        colnames(parameters_next) <- parameters_ids
+        reference_next <- data.frame(matrix(NA, nrow = nrow, ncol = length(parameters_ids) + ncol(statistics_target)))
+        colnames(reference_next) <- colnames(model(parameters = rprior(Nparameters = 1)))
+        while (length(invalid_indices) > 0) {
+            #   Generate new particles...
+            if (iteration == 1) {
+                #   ... for iteration 1:
+                #   Sample from the prior distribution
+                parameters_unperturbed[invalid_indices, ] <- rprior(Nparameters = length(invalid_indices))
+                parameters_next[invalid_indices, ] <- parameters_unperturbed[invalid_indices, ]
+            } else {
+                #   ... for later iterations:
+                #   Sample from the previous posterior distribution
+                parameters_previous <- parameters
+                weights_previous <- ABCRF_weights
+                parameter_replace <- data.frame(matrix(NA, nrow = length(invalid_indices), ncol = length(parameters_ids)))
+                colnames(parameter_replace) <- parameters_ids
+                for (parameter_id in parameters_ids) {
+                    parameter_replace[, parameter_id] <- parameters_previous[sample(nrow(parameters_previous), size = length(invalid_indices), prob = weights_previous[, parameter_id], replace = T), parameter_id]
+                }
+                parameters_unperturbed[invalid_indices, ] <- parameter_replace
+                #   Perturb parameters
+                if (iteration < (nIterations + 1)) {
+                    if (perturbation == "Gaussian") {
+                        if (is.null(perturbation_parameters)) {
+                            Gaussian_variances <- Beaumont_variances
+                        } else {
+                            Gaussian_variances <- perturbation_parameters[iteration - 1, ]
+                        }
+                        for (parameter_id in parameters_ids) {
                             parameter_replace[[parameter_id]] <- rnorm(
                                 n = nrow(parameter_replace),
                                 mean = parameter_replace[[parameter_id]],
-                                sd = sqrt(2 * wtd.var)
+                                sd = sqrt(Gaussian_variances[[parameter_id]])
                             )
                         }
-                    }
-                    #   Check if parameters are within bounds, otherwise redo the failed parameters
-                    parameters_next[[parameter_id]][invalid_indices] <- parameter_replace[[parameter_id]]
-                    if (is.null(bounds)) {
-                        invalid_indices <- which(is.na(parameters_next[, parameter_id]))
-                    } else {
-                        invalid_indices <- which(
-                            is.na(parameters_next[, parameter_id]) |
-                                parameters_next[, parameter_id] < bounds$min[which(bounds$parameter == parameter_id)] |
-                                parameters_next[, parameter_id] > bounds$max[which(bounds$parameter == parameter_id)]
-                        )
-                    }
-                }
-            }
-            parameters <- parameters_next
-        }
-        #---Simulate statistics
-        cat("Making model simulations...\n")
-        reference <- model(parameters = parameters)
-        #---Re-sample and perturb the parameters if there's NA in the reference table
-        invalid_rows <- rowSums(is.na(reference)) == ncol(reference)
-        while (any(invalid_rows)) {
-            if (iteration == 1) {
-                parameters <- data.frame(parameters_initial[nrow(parameters) + 1:(nrow(parameters) + sum(invalid_rows)), ])
-                colnames(parameters) <- parameters_ids
-                reference[invalid_rows, ] <- model(parameters = parameters)
-                invalid_rows <- rowSums(is.na(reference)) == ncol(reference)
-            } else {
-                #   ... For later iterations:
-                parameters_next <- data.frame(matrix(NA, nrow = sum(invalid_rows), ncol = length(parameters_ids)))
-                colnames(parameters_next) <- parameters_ids
-                parameters_tmp <- parameters
-                for (parameter_id in parameters_ids) {
-                    invalid_indices <- 1:sum(invalid_rows)
-                    while (length(invalid_indices) > 0) {
-                        #   Sample parameters from previous posterior distribution
-                        parameter_replace <- data.frame(parameters_tmp[sample(nrow(parameters_tmp), size = length(invalid_indices), prob = ABCRF_weights[, parameter_id], replace = T), parameter_id])
-                        colnames(parameter_replace) <- parameter_id
-                        #   Perturb parameters
-                        if (iteration < (nIterations + 1)) {
-                            if (is.function(perturb)) {
-                                parameter_replace <- perturb(parameters = parameter_replace)
-                            } else if (perturb == "Beaumont") {
-                                wtd.var <- var(data.frame(parameters_tmp[sample(nrow(parameters_tmp), size = 10000, prob = ABCRF_weights[, parameter_id], replace = T), parameter_id]))
-                                parameter_replace[[parameter_id]] <- rnorm(
-                                    n = nrow(parameter_replace),
-                                    mean = parameter_replace[[parameter_id]],
-                                    sd = sqrt(2 * wtd.var)
-                                )
-                            }
-                        }
-                        #   Check if parameters are within bounds, otherwise redo the failed parameters
-                        parameters_next[[parameter_id]][invalid_indices] <- parameter_replace[[parameter_id]]
-                        if (is.null(bounds)) {
-                            invalid_indices <- which(is.na(parameters_next[, parameter_id]))
-                        } else {
-                            invalid_indices <- which(
-                                is.na(parameters_next[, parameter_id]) |
-                                    parameters_next[, parameter_id] < bounds$min[which(bounds$parameter == parameter_id)] |
-                                    parameters_next[, parameter_id] > bounds$max[which(bounds$parameter == parameter_id)]
+                    } else if (perturbation == "Uniform") {
+                        Uniform_ranges <- perturbation_parameters[iteration - 1, ]
+                        for (parameter_id in parameters_ids) {
+                            parameter_replace[[parameter_id]] <- runif(
+                                n = nrow(parameter_replace),
+                                min = parameter_replace[[parameter_id]] - Uniform_ranges[[parameter_id]],
+                                max = parameter_replace[[parameter_id]] + Uniform_ranges[[parameter_id]]
                             )
                         }
                     }
                 }
-                parameters_tmp <- parameters_next
-                colnames(parameters_tmp) <- parameters_ids
-                reference[invalid_rows, ] <- model(parameters = parameters_tmp)
-                invalid_rows <- rowSums(is.na(reference)) == ncol(reference)
+                parameters_next[invalid_indices, ] <- parameter_replace
             }
+            invalid_indices_next <- which(dprior(parameters_next, parameter_id = "all") <= 0)
+            #   Generate statistics for the new particles
+            ids <- setdiff(invalid_indices, invalid_indices_next)
+            tmp <- parameters_next[ids, ]
+            if (!is.data.frame(tmp)) {
+                tmp <- as.data.frame(tmp, ncol = length(parameters_ids))
+                colnames(tmp) <- parameters_ids
+            }
+            if (length(ids) > 0) reference_next[ids, ] <- model(parameters = tmp)
+            #   Find particles that need to be regenerated
+            invalid_indices <- invalid_indices_next
+            if (model_redo_if_NA) invalid_indices <- unique(c(invalid_indices, which(apply(reference_next, 1, function(x) any(is.na(x))))))
         }
-        statistics <- data.frame(reference[, colnames(reference)[!colnames(reference) %in% parameters_ids]])
-        parameters <- data.frame(reference[, colnames(reference)[colnames(reference) %in% parameters_ids]])
-        colnames(parameters) <- parameters_ids
-        colnames(statistics) <- colnames(reference)[!colnames(reference) %in% parameters_ids]
-        #---Save SMC-RF results from the last iteration
+        reference <- reference_next
+        parameters <- reference[, parameters_ids]
+        if (!is.data.frame(parameters)) {
+            parameters <- as.data.frame(parameters, ncol = length(parameters_ids))
+            colnames(parameters) <- parameters_ids
+        }
+        statistics <- reference[, statistics_ids]
+        if (!is.data.frame(statistics)) {
+            statistics <- as.data.frame(statistics, ncol = length(statistics_ids))
+            colnames(statistics) <- statistics_ids
+        }
+        #   Finish the last iteration
         if (iteration == (nIterations + 1)) {
             SMCRF_iteration <- list()
             SMCRF_iteration$reference <- reference
@@ -431,23 +431,25 @@ smcrf_single_param <- function(statistics_target = NULL,
             if (save_rds == TRUE) {
                 saveRDS(SMCRF, file = filename_rds)
             }
-            break
+            return(SMCRF)
         }
-        #---Run ABCRF for each parameter
-        cat("Performing Random Forest prediction...\n")
+        #---Run ABCRF for all parameters
+        cat(blue("Performing Random Forest prediction...\n"))
         ABCRF_weights <- data.frame(matrix(NA, nrow = nParticles[iteration], ncol = 0))
-        RFmodels <- list()
-        posterior_gamma_RFs <- list()
+        if (save_model == TRUE) {
+            RFmodels <- list()
+            posterior_gamma_RFs <- list()
+        }
         for (parameter_id in parameters_ids) {
+            #   Select statistics for the parameter
             if (is.null(statistics_selection)) {
                 mini_reference <- reference[, c(parameter_id, colnames(reference)[!colnames(reference) %in% parameters_ids])]
             } else {
                 mini_reference <- reference[, c(parameter_id, colnames(statistics_selection)[which(statistics_selection[rownames(statistics_selection) == parameter_id, ] == 1)])]
             }
             colnames(mini_reference)[1] <- "para"
-            f <- as.formula("para ~.")
             RFmodel <- regAbcrf(
-                formula = f,
+                formula = as.formula("para ~."),
                 data = mini_reference,
                 paral = parallel,
                 ...
@@ -465,7 +467,34 @@ smcrf_single_param <- function(statistics_target = NULL,
                 posterior_gamma_RFs[[parameter_id]] <- posterior_gamma_RF
             }
         }
-        cat("\n\n")
+        #---Modify ABCRF weights
+        cat(blue("Recalibrating Random Forest weights...\n"))
+        if (iteration > 1) {
+            for (parameter_id in parameters_ids) {
+                if (perturbation == "Gaussian") {
+                    weight_modifiers <- w_modifiers_normal(
+                        parameters = parameters,
+                        parameters_previous = parameters_previous,
+                        weights_previous = weights_previous[, parameter_id],
+                        perturb_variances = Gaussian_variances,
+                        dprior = dprior,
+                        parameter_id = parameter_id
+                    )
+                } else if (perturbation == "Uniform") {
+                    weight_modifiers <- w_modifiers_uniform(
+                        parameters = parameters,
+                        parameters_previous = parameters_previous,
+                        weights_previous = weights_previous[, parameter_id],
+                        perturb_ranges = Uniform_ranges,
+                        dprior = dprior,
+                        parameter_id = parameter_id
+                    )
+                    weight_modifiers <- rep(1, length(weight_modifiers))
+                }
+                ABCRF_weights[, parameter_id] <- as.vector(ABCRF_weights[, parameter_id]) * weight_modifiers
+                ABCRF_weights[, parameter_id] <- ABCRF_weights[, parameter_id] / sum(ABCRF_weights[, parameter_id])
+            }
+        }
         #---Save SMC-RF results from this iteration
         SMCRF_iteration <- list()
         SMCRF_iteration$reference <- reference
@@ -482,176 +511,145 @@ smcrf_single_param <- function(statistics_target = NULL,
             saveRDS(SMCRF, file = filename_rds)
         }
     }
-    return(SMCRF)
 }
 
-smcrf_multi_param <- function(statistics_target = NULL,
+smcrf_multi_param <- function(statistics_target,
                               model,
-                              perturb,
-                              bounds = NULL,
-                              parameters_initial = NULL,
+                              rprior,
+                              dprior,
+                              perturbation,
+                              perturbation_parameters,
                               nParticles,
+                              model_redo_if_NA,
                               parallel,
-                              save_model = TRUE,
-                              save_rds = FALSE,
-                              filename_rds = "ABCSMCDRF.rds",
+                              save_model,
+                              save_rds,
+                              filename_rds,
                               splitting.rule = "CART",
-                              smcrf_multi_param_results = NULL,
+                              smcrf_multi_param_results,
                               ...) {
-    library(drf)
-    library(matrixStats)
-    library(Hmisc)
-    # nSimulations <<- 0
+    suppressPackageStartupMessages(library(drf))
+    nSimulations <<- 0
     #---Obtain information from previous SMC-DRF
     if (!is.null(smcrf_multi_param_results)) {
+        #   ... If continuing from a previous ABC-SMC-DRF chain:
         SMCDRF <- smcrf_multi_param_results
-        old_nIterations <- SMCDRF[["nIterations"]]
-        begin_iteration <- old_nIterations + 1
-        nIterations <- length(nParticles) + old_nIterations
-        nParticles <- c(SMCDRF[["nParticles"]], nParticles)
-        statistics_target <- SMCDRF[["statistics_target"]]
         parameters_ids <- colnames(SMCDRF[["Iteration_1"]]$parameters)
+        statistics_ids <- colnames(SMCDRF[["Iteration_1"]]$statistics)
+        nIterations <- length(nParticles) + SMCDRF[["nIterations"]]
+        iteration_start <- 1 + SMCDRF[["nIterations"]]
+        if (is.null(statistics_target)) statistics_target <- SMCDRF[["statistics_target"]]
+        nParticles <- c(SMCDRF[["nParticles"]], nParticles)
+        SMCDRF[[paste0("Iteration_", iteration_start)]] <- c()
+        DRF_weights <- SMCDRF[[paste0("Iteration_", iteration_start - 1)]]$weights
+        parameters <- SMCDRF[[paste0("Iteration_", iteration_start - 1)]]$parameters
     } else {
-        #---Initialize information for SMC-DRF
+        #   ... If starting a new ABC-SMC-DRF chain:
         SMCDRF <- list()
-        parameters_ids <- colnames(parameters_initial)
+        parameters_ids <- colnames(rprior(Nparameters = 1))
+        statistics_ids <- colnames(statistics_target)
         nIterations <- length(nParticles)
-        begin_iteration <- 1
+        iteration_start <- 1
     }
     SMCDRF[["method"]] <- "smcrf-multi-param"
     SMCDRF[["nIterations"]] <- nIterations
     SMCDRF[["nParticles"]] <- nParticles
     SMCDRF[["statistics_target"]] <- statistics_target
     SMCDRF[["parameters_labels"]] <- data.frame(parameter = parameters_ids)
-    SMCDRF[["statistics_labels"]] <- data.frame(ID = colnames(statistics_target))
-    for (iteration in begin_iteration:(nIterations + 1)) {
+    SMCDRF[["statistics_labels"]] <- data.frame(ID = statistics_ids)
+    for (iteration in iteration_start:(nIterations + 1)) {
         if (iteration == (nIterations + 1)) {
-            # cat(paste0("\n\n++++++++++++++++++++++++\nSimulation count: ", nSimulations, "\n++++++++++++++++++++++++\n\n\n"))
-            cat("\n\nSIMULATING STATISTICS FROM FINAL POSTERIOR DISTRIBUTION...\n")
+            cat(bold(red("ABC-SMC-DRF FOR MULTIPLE PARAMETERS:")), paste0(bold(yellow("final posterior distribution", "\n"))))
         } else {
-            cat(paste0("SMC-RF FOR MULTIPLE PARAMETERS: iteration ", iteration, "...\n"))
+            cat(bold(red("ABC-SMC-DRF FOR MULTIPLE PARAMETERS:")), paste0(bold(yellow("iteration", iteration, "\n"))))
         }
-        #---Sample prior parameters for this round of iteration...
-        #---Sample prior parameters for this round of iteration...
-        if (!is.null(smcrf_multi_param_results)) {
-            if (iteration == (old_nIterations + 1)) {
-                SMCDRF[[paste0("Iteration_", (old_nIterations + 1))]] <- c()
-                DRF_weights <- SMCDRF[[paste0("Iteration_", old_nIterations)]]$weights
-                parameters <- SMCDRF[[paste0("Iteration_", old_nIterations)]]$parameters
+        #---Compute Beaumont variances from the previous iteration
+        if (iteration > 1) {
+            tmp <- parameters[sample(nrow(parameters), size = 10000, prob = DRF_weights[, 1], replace = T), ]
+            if (!is.data.frame(tmp)) {
+                Beaumont_variances <- as.data.frame(max(var(tmp), 1e-10))
+                colnames(Beaumont_variances) <- parameters_ids
+            } else {
+                Beaumont_variances <- pmax(sapply(tmp, var), 1e-10)
             }
         }
-        if (iteration == 1) {
-            #   ... For iteration 1: sample from initial parameters
-            parameters <- data.frame(parameters_initial[1:nParticles[iteration], ])
-            colnames(parameters) <- parameters_ids
-            parameters_unperturbed <- parameters
-        } else {
-            #   ... For later iterations:
-            ifelse(iteration == (nIterations + 1), nrow <- nParticles[nIterations], nrow <- nParticles[iteration])
-            parameters_unperturbed <- data.frame(matrix(NA, nrow = nrow, ncol = length(parameters_ids)))
-            colnames(parameters_unperturbed) <- parameters_ids
-            parameters_next <- data.frame(matrix(NA, nrow = nrow, ncol = length(parameters_ids)))
-            colnames(parameters_next) <- parameters_ids
-            invalid_indices <- 1:nrow
-            while (length(invalid_indices) > 0) {
-                #   Sample parameters from previous posterior distribution
-                parameter_replace <- data.frame(parameters[sample(nrow(parameters), size = length(invalid_indices), prob = DRF_weights[, 1], replace = T), ])
-                colnames(parameter_replace) <- parameters_ids
-                if (length(invalid_indices) == nrow) parameters_unperturbed <- parameter_replace
+        #---Create training set
+        cat(blue("Sampling parameters and computing model simulations...\n"))
+        nrow <- ifelse(iteration == (nIterations + 1), nParticles[nIterations], nParticles[iteration])
+        invalid_indices <- 1:nrow
+        parameters_unperturbed <- data.frame(matrix(NA, nrow = nrow, ncol = length(parameters_ids)))
+        colnames(parameters_unperturbed) <- parameters_ids
+        parameters_next <- data.frame(matrix(NA, nrow = nrow, ncol = length(parameters_ids)))
+        colnames(parameters_next) <- parameters_ids
+        reference_next <- data.frame(matrix(NA, nrow = nrow, ncol = length(parameters_ids) + ncol(statistics_target)))
+        colnames(reference_next) <- colnames(model(parameters = rprior(Nparameters = 1)))
+        while (length(invalid_indices) > 0) {
+            #   Generate new particles...
+            if (iteration == 1) {
+                #   ... for iteration 1:
+                #   Sample from the prior distribution
+                parameters_unperturbed[invalid_indices, ] <- rprior(Nparameters = length(invalid_indices))
+                parameters_next[invalid_indices, ] <- parameters_unperturbed[invalid_indices, ]
+            } else {
+                #   ... for later iterations:
+                #   Sample from the previous posterior distribution
+                parameters_previous <- parameters
+                weights_previous <- DRF_weights
+                parameter_replace <- parameters[sample(nrow(parameters), size = length(invalid_indices), prob = DRF_weights[, 1], replace = T), ]
+                parameters_unperturbed[invalid_indices, ] <- parameter_replace
                 #   Perturb parameters
                 if (iteration < (nIterations + 1)) {
-                    if (is.function(perturb)) {
-                        parameter_replace <- perturb(parameters = parameter_replace)
-                    } else if (perturb == "Beaumont") {
+                    if (perturbation == "Gaussian") {
+                        if (is.null(perturbation_parameters)) {
+                            Gaussian_variances <- Beaumont_variances
+                        } else {
+                            Gaussian_variances <- perturbation_parameters[iteration - 1, ]
+                        }
                         for (parameter_id in parameters_ids) {
-                            if (length(invalid_indices) == nrow) wtd.var <- var(data.frame(parameters[sample(nrow(parameters), size = 10000, prob = DRF_weights[, 1], replace = T), parameter_id]))
                             parameter_replace[[parameter_id]] <- rnorm(
                                 n = nrow(parameter_replace),
                                 mean = parameter_replace[[parameter_id]],
-                                sd = sqrt(2 * wtd.var)
+                                sd = sqrt(Gaussian_variances[[parameter_id]])
+                            )
+                        }
+                    } else if (perturbation == "Uniform") {
+                        Uniform_ranges <- perturbation_parameters[iteration - 1, ]
+                        for (parameter_id in parameters_ids) {
+                            parameter_replace[[parameter_id]] <- runif(
+                                n = nrow(parameter_replace),
+                                min = parameter_replace[[parameter_id]] - Uniform_ranges[[parameter_id]],
+                                max = parameter_replace[[parameter_id]] + Uniform_ranges[[parameter_id]]
                             )
                         }
                     }
                 }
-                #   Check if parameters are within bounds, otherwise redo the failed parameters
                 parameters_next[invalid_indices, ] <- parameter_replace
-                if (is.null(bounds)) {
-                    invalid_indices <- which(apply(parameters_next, 1, function(x) any(is.na(x))))
-                } else {
-                    invalid_indices <- c()
-                    for (parameter_id in parameters_ids) {
-                        invalid_indices <- union(invalid_indices, which(
-                            is.na(parameters_next[, parameter_id]) |
-                                parameters_next[, parameter_id] < bounds$min[which(bounds$parameter == parameter_id)] |
-                                parameters_next[, parameter_id] > bounds$max[which(bounds$parameter == parameter_id)]
-                        ))
-                    }
-                }
             }
-            parameters <- parameters_next
-        }
-        #---Simulate statistics
-        cat("Making model simulations...\n")
-        reference <- model(parameters = parameters)
-        #---Re-sample and perturb the parameters if there's NA in the reference table
-        invalid_rows <- rowSums(is.na(reference)) == ncol(reference)
-        while (any(invalid_rows)) {
-            if (iteration == 1) {
-                parameters <- data.frame(parameters_initial[(nrow(parameters) + 1):(nrow(parameters) + sum(invalid_rows)), ])
-                colnames(parameters) <- parameters_ids
-                reference[invalid_rows, ] <- model(parameters = parameters)
-                invalid_rows <- rowSums(is.na(reference)) == ncol(reference)
-            } else {
-                parameters_tmp <- parameters
-                #   ... For later iterations:
-                parameters_next <- data.frame(matrix(NA, nrow = sum(invalid_rows), ncol = length(parameters_ids)))
-                colnames(parameters_next) <- parameters_ids
-                invalid_indices <- 1:sum(invalid_rows)
-                while (length(invalid_indices) > 0) {
-                    #   Sample parameters from previous posterior distribution
-                    parameter_replace <- data.frame(parameters_tmp[sample(nrow(parameters_tmp), size = length(invalid_indices), prob = DRF_weights[, 1], replace = T), ])
-                    colnames(parameter_replace) <- parameters_ids
-                    #   Perturb parameters
-                    if (iteration < (nIterations + 1)) {
-                        if (is.function(perturb)) {
-                            parameter_replace <- perturb(parameters = parameter_replace)
-                        } else if (perturb == "Beaumont") {
-                            for (parameter_id in parameters_ids) {
-                                wtd.var <- var(data.frame(parameters_tmp[sample(nrow(parameters_tmp), size = 10000, prob = DRF_weights[, 1], replace = T), parameter_id]))
-                                parameter_replace[[parameter_id]] <- rnorm(
-                                    n = nrow(parameter_replace),
-                                    mean = parameter_replace[[parameter_id]],
-                                    sd = sqrt(2 * wtd.var)
-                                )
-                            }
-                        }
-                    }
-                    #   Check if parameters are within bounds, otherwise redo the failed parameters
-                    parameters_next[invalid_indices, ] <- parameter_replace
-                    if (is.null(bounds)) {
-                        invalid_indices <- which(apply(parameters_next, 1, function(x) any(is.na(x))))
-                    } else {
-                        invalid_indices <- c()
-                        for (parameter_id in parameters_ids) {
-                            invalid_indices <- union(invalid_indices, which(
-                                is.na(parameters_next[, parameter_id]) |
-                                    parameters_next[, parameter_id] < bounds$min[which(bounds$parameter == parameter_id)] |
-                                    parameters_next[, parameter_id] > bounds$max[which(bounds$parameter == parameter_id)]
-                            ))
-                        }
-                    }
-                }
-                parameters_tmp <- parameters_next
-                colnames(parameters_tmp) <- parameters_ids
-                reference[invalid_rows, ] <- model(parameters = parameters_tmp)
-                invalid_rows <- rowSums(is.na(reference)) == ncol(reference)
+            invalid_indices_next <- which(dprior(parameters_next, parameter_id = "all") <= 0)
+            #   Generate statistics for the new particles
+            ids <- setdiff(invalid_indices, invalid_indices_next)
+            tmp <- parameters_next[ids, ]
+            if (!is.data.frame(tmp)) {
+                tmp <- as.data.frame(tmp, ncol = length(parameters_ids))
+                colnames(tmp) <- parameters_ids
             }
+            if (length(ids) > 0) reference_next[ids, ] <- model(parameters = tmp)
+            #   Find particles that need to be regenerated
+            invalid_indices <- invalid_indices_next
+            if (model_redo_if_NA) invalid_indices <- unique(c(invalid_indices, which(apply(reference_next, 1, function(x) any(is.na(x))))))
         }
-        statistics <- data.frame(reference[, colnames(reference)[!colnames(reference) %in% parameters_ids]])
-        parameters <- data.frame(reference[, colnames(reference)[colnames(reference) %in% parameters_ids]])
-        colnames(parameters) <- parameters_ids
-        colnames(statistics) <- colnames(reference)[!colnames(reference) %in% parameters_ids]
-        #---Save SMC-DRF results for the last iteration
+        reference <- reference_next
+        parameters <- reference[, parameters_ids]
+        if (!is.data.frame(parameters)) {
+            parameters <- as.data.frame(parameters, ncol = length(parameters_ids))
+            colnames(parameters) <- parameters_ids
+        }
+        statistics <- reference[, statistics_ids]
+        if (!is.data.frame(statistics)) {
+            statistics <- as.data.frame(statistics, ncol = length(statistics_ids))
+            colnames(statistics) <- statistics_ids
+        }
+        #   Finish the last iteration
         if (iteration == (nIterations + 1)) {
             SMCDRF_iteration <- list()
             SMCDRF_iteration$reference <- reference
@@ -662,18 +660,50 @@ smcrf_multi_param <- function(statistics_target = NULL,
             if (save_rds == TRUE) {
                 saveRDS(SMCDRF, file = filename_rds)
             }
-            break
+            return(SMCDRF)
         }
-        #---Run DRF for all parameter
-        cat("Performing Random Forest prediction...\n")
-        Xdrf <- statistics
-        Ydrf <- reference[, parameters_ids]
-        drfmodel <- drf(Xdrf, Ydrf, splitting.rule = splitting.rule, ...)
-        def_pred <- predict(drfmodel, statistics_target)
+        #---Run DRF for all parameters
+        cat(blue("Performing Random Forest prediction...\n"))
+        drfmodel <- drf(
+            X = statistics,
+            Y = parameters,
+            splitting.rule = splitting.rule,
+            ...
+        )
+        def_pred <- predict(
+            object = drfmodel,
+            newdata = statistics_target
+        )
         DRF_weights <- as.vector(get_sample_weights(drfmodel, statistics_target))
+        #---Modify DRF weights
+        cat(blue("Recalibrating Random Forest weights...\n"))
+        if (iteration > 1) {
+            if (perturbation == "Gaussian") {
+                weight_modifiers <- w_modifiers_normal(
+                    parameters = parameters,
+                    parameters_previous = parameters_previous,
+                    weights_previous = weights_previous[, 1],
+                    perturb_variances = Gaussian_variances,
+                    dprior = dprior,
+                    parameter_id = "all"
+                )
+            } else if (perturbation == "Uniform") {
+                weight_modifiers <- w_modifiers_uniform(
+                    parameters = parameters,
+                    parameters_previous = parameters_previous,
+                    weights_previous = weights_previous[, 1],
+                    perturb_ranges = Uniform_ranges,
+                    dprior = dprior,
+                    parameter_id = "all"
+                )
+                weight_modifiers <- rep(1, length(weight_modifiers))
+            }
+            DRF_weights <- DRF_weights * weight_modifiers
+            DRF_weights <- DRF_weights / sum(DRF_weights)
+        }
         DRF_weights <- data.frame(matrix(rep(DRF_weights, length(parameters_ids)), ncol = length(parameters_ids)))
         colnames(DRF_weights) <- parameters_ids
-        # ---Save SMC-DRF results from this iteration
+        #---Save SMC-DRF results from this iteration
         SMCDRF_iteration <- list()
         SMCDRF_iteration$reference <- reference
         SMCDRF_iteration$parameters <- parameters
@@ -689,5 +719,70 @@ smcrf_multi_param <- function(statistics_target = NULL,
             saveRDS(SMCDRF, file = filename_rds)
         }
     }
-    return(SMCDRF)
+}
+
+w_modifiers_normal <- function(parameters,
+                               parameters_previous,
+                               weights_previous,
+                               perturb_variances,
+                               dprior,
+                               parameter_id = "all") {
+    n_parameters_previous <- dim(parameters_previous)[1]
+    n_parameters <- dim(parameters)[1]
+    if (parameter_id == "all") {
+        parameter_ids <- colnames(parameters)
+    } else {
+        parameter_ids <- parameter_id
+    }
+    #---Compute denominators for weight recalibration
+    weights <- array(0, n_parameters)
+    for (i in 1:n_parameters_previous) {
+        tab_temp <- array(weights_previous[i], n_parameters)
+        for (j in parameter_ids) {
+            tab_temp <- tab_temp *
+                exp(
+                    -0.5 * (parameters[[j]] - parameters_previous[[j]][i]) *
+                        (parameters[[j]] - parameters_previous[[j]][i]) /
+                        perturb_variances[[j]]
+                )
+        }
+        weights <- weights + tab_temp
+    }
+    #---Compute numerators for weight recalibration
+    weights_previous_prior <- dprior(parameters, parameter_id = parameter_id)
+    #---Compute weights for new particles
+    weights <- weights_previous_prior / weights
+    weights <- weights / sum(weights)
+    return(weights)
+}
+
+w_modifiers_uniform <- function(parameters,
+                                parameters_previous,
+                                weights_previous,
+                                perturb_ranges,
+                                dprior,
+                                parameter_id = "all") {
+    n_parameters_previous <- dim(parameters_previous)[1]
+    n_parameters <- dim(parameters)[1]
+    if (parameter_id == "all") {
+        parameter_ids <- colnames(parameters)
+    } else {
+        parameter_ids <- parameter_id
+    }
+    #---Compute denominators for weight recalibration
+    weights <- array(0, n_parameters)
+    for (i in 1:n_parameters_previous) {
+        tab_temp <- array(weights_previous[i], n_parameters)
+        for (j in parameter_ids) {
+            tab_temp[which(parameters[[j]] < parameters_previous[[j]][i] - perturb_ranges[j] |
+                parameters[[j]] > parameters_previous[[j]][i] + perturb_ranges[j])] <- 0
+        }
+        weights <- weights + tab_temp
+    }
+    #---Compute numerators for weight recalibration
+    weights_previous_prior <- dprior(parameters, parameter_id = parameter_id)
+    #---Compute weights for new particles
+    weights <- weights_previous_prior / weights
+    weights <- weights / sum(weights)
+    return(weights)
 }

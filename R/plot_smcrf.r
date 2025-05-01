@@ -219,8 +219,11 @@ plot_compare_marginal <- function(plots = NULL,
                                   statistics_labels = NULL,
                                   xlimit = NULL,
                                   plot_statistics = FALSE,
+                                  plot_truth_hist = TRUE,
                                   plot_hist = FALSE,
                                   plot_hist_point = FALSE,
+                                  breaks = NULL,
+                                  alpha_truth = 0.8,
                                   alpha = 0.3,
                                   plot_prior = FALSE) {
     library(ggplot2)
@@ -234,11 +237,12 @@ plot_compare_marginal <- function(plots = NULL,
         "ABC-REJ" = "forestgreen",
         "ABC-RF" = "magenta4",
         "ABC-DRF" = "royalblue2",
-        "MCMC" = "goldenrod2",
-        "ABC-MCMC" = "goldenrod2",
-        "ABC-SMC" = "goldenrod2",
-        "ABC-SMC-RF" = "salmon",
-        "ABC-SMC-DRF" = "salmon"
+        "MCMC" = "#FFD320",
+        "ABC-MCMC" = "#FFD320",
+        "ABC-SMC" = "#FFD320",
+        "ABC-SMC-RF" = "#C03728",
+        # "ABC-SMC-DRF" = "#C03728"
+        "ABC-SMC-DRF" = "#FFD320"
     )
     #---Set up legend order for plotting
     legend_order <- c(
@@ -273,12 +277,20 @@ plot_compare_marginal <- function(plots = NULL,
         for (parameter_id in parameters_labels$parameter) {
             if (any(grepl("density", colnames(parameters_truth)))) {
                 true_posterior_df <- data.frame(value = parameters_truth[[parameter_id]], density = parameters_truth[["density"]], legend = "True Posterior Distribution")
-                if (plot_hist || plot_hist_point) {
+                if (plot_truth_hist) {
                     plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
-                        geom_histogram(data = true_posterior_df, aes(x = value, weight = density, y = ..density.., fill = legend, color = legend), alpha = 0.5)
+                        geom_histogram(
+                            data = true_posterior_df,
+                            aes(x = value, weight = density, y = ..density.., fill = legend, color = legend),
+                            breaks = breaks, alpha = alpha_truth
+                        )
                 } else {
                     plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
-                        geom_line(data = true_posterior_df, aes(x = value, y = density, color = legend), alpha = 0.5, linetype = "solid", linewidth = 5) +
+                        geom_line(
+                            data = true_posterior_df,
+                            aes(x = value, y = density, color = legend),
+                            alpha = alpha_truth, linetype = "solid", linewidth = 5
+                        ) +
                         geom_area(alpha = 0.5, fill = legend)
                 }
             } else {
@@ -287,12 +299,20 @@ plot_compare_marginal <- function(plots = NULL,
                     plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
                         geom_vline(data = true_posterior_df, aes(xintercept = value), linetype = "solid", linewidth = 5)
                 } else {
-                    if (plot_hist || plot_hist_point) {
+                    if (plot_truth_hist) {
                         plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
-                            geom_histogram(data = true_posterior_df, aes(x = value, y = ..density.., fill = legend, color = legend), alpha = 0.5)
+                            geom_histogram(
+                                data = true_posterior_df,
+                                aes(x = value, y = ..density.., fill = legend, color = legend),
+                                breaks = breaks, alpha = alpha_truth
+                            )
                     } else {
                         plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
-                            geom_density(data = true_posterior_df, aes(x = value, fill = legend, color = legend), alpha = 0.5, linewidth = 2)
+                            geom_density(
+                                data = true_posterior_df,
+                                aes(x = value, fill = legend, color = legend),
+                                alpha = alpha_truth, linewidth = 2
+                            )
                     }
                 }
             }
@@ -304,10 +324,18 @@ plot_compare_marginal <- function(plots = NULL,
             prior_df <- data.frame(value = abc_results[["Iteration_1"]]$parameters[[parameter_id]], legend = "Prior Distribution")
             if (plot_hist) {
                 plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
-                    geom_histogram(data = prior_df, aes(x = value, y = ..density.., fill = legend, color = legend), alpha = alpha)
+                    geom_histogram(
+                        data = prior_df,
+                        aes(x = value, y = ..density.., fill = legend, color = legend),
+                        breaks = breaks, alpha = alpha
+                    )
             } else {
                 plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
-                    geom_density(data = prior_df, aes(x = value, fill = legend, color = legend), alpha = alpha, linewidth = 2)
+                    geom_density(
+                        data = prior_df,
+                        aes(x = value, fill = legend, color = legend),
+                        alpha = alpha, linewidth = 2
+                    )
             }
         }
     }
@@ -363,14 +391,27 @@ plot_compare_marginal <- function(plots = NULL,
         )
         if (plot_hist) {
             plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
-                geom_histogram(data = posterior_df, aes(x = value, y = ..density.., fill = legend, color = legend), alpha = alpha)
+                geom_histogram(
+                    data = posterior_df,
+                    aes(x = value, y = ..density.., fill = legend, color = legend),
+                    breaks = breaks, alpha = alpha
+                )
         } else if (plot_hist_point) {
             plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
                 stat_bin(data = posterior_df, aes(x = value, y = ..density.., fill = legend, color = legend), geom = "point", bins = 30, position = "identity", size = 10) +
                 stat_bin(data = posterior_df, aes(x = value, y = ..density.., fill = legend, color = legend), geom = "line", bins = 30, position = "identity", size = 3, show.legend = FALSE)
         } else {
+            rows_remove <- which((posterior_df$value < min(breaks)) | (posterior_df$value > max(breaks)))
+            if (length(rows_remove) > 0) posterior_df <- posterior_df[-rows_remove, ]
+            tmp <- hist(posterior_df$value, breaks = breaks, plot = FALSE)
+            tmp <- data.frame(mids = tmp$mids, density = tmp$density, legend_label = legend_label)
             plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
-                geom_density(data = posterior_df, aes(x = value, fill = legend, color = legend), alpha = alpha, linewidth = 2)
+                geom_line(
+                    data = tmp,
+                    aes(x = mids, y = density, color = legend_label, fill = legend_label),
+                    size = 3
+                )
+            # geom_density(data = posterior_df[sample(1:nrow(posterior_df), size = 600, replace = T), ], aes(x = value, fill = legend, color = legend), alpha = 0, linewidth = 3)
         }
         if (!is.null(xlimit)) {
             plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
@@ -601,7 +642,7 @@ plot_compare_joint <- function(plots = NULL,
                                parameters_truth = NULL,
                                parameters_labels = NULL,
                                lims = NULL,
-                               nBins = 5) {
+                               nBins = 3) {
     library(MASS)
     library(dplyr)
     library(RColorBrewer)
@@ -614,12 +655,13 @@ plot_compare_joint <- function(plots = NULL,
     color_scheme <- c(
         "ABC-REJ" = "forestgreen",
         "ABC-RF" = "magenta4",
-        "ABC-DRF" = "cyan1",
-        "MCMC" = "khaki",
-        "ABC-MCMC" = "khaki",
-        "ABC-SMC" = "goldenrod2",
-        "ABC-SMC-RF" = "firebrick1",
-        "ABC-SMC-DRF" = "firebrick1"
+        # "ABC-DRF" = "cyan1",
+        "ABC-DRF" = "royalblue2",
+        "MCMC" = "#FFD320",
+        "ABC-MCMC" = "#FFD320",
+        "ABC-SMC" = "#FFD320",
+        "ABC-SMC-RF" = "#C03728",
+        "ABC-SMC-DRF" = "#C03728"
     )
     #---Set up legend order for plotting
     legend_order <- c(
@@ -711,10 +753,13 @@ plot_compare_joint <- function(plots = NULL,
     #---Plot joint distribution
     if (method == "true-joint") {
         plots <- plots +
-            geom_density_2d_filled(data = posterior_df, aes(x = x, y = y), show.legend = FALSE)
+            geom_density_2d_filled(data = posterior_df, aes(x = x, y = y), show.legend = FALSE) +
+            scale_fill_grey()
     } else {
+        nBins <- 4
+        posterior_df <- posterior_df[sample(1:nrow(posterior_df), size = 400, replace = T), ]
         plots <- plots +
-            geom_density_2d(data = posterior_df, aes(x = x, y = y, color = legend), linewidth = 3, bins = 3)
+            geom_density_2d(data = posterior_df, aes(x = x, y = y, color = legend), linewidth = 3, bins = nBins)
     }
     #---Add label for parameter
     if (new_plot == TRUE) {
@@ -781,11 +826,11 @@ plot_compare_qqplot <- function(plots = NULL,
         "ABC-REJ" = "forestgreen",
         "ABC-RF" = "magenta4",
         "ABC-DRF" = "royalblue2",
-        "MCMC" = "goldenrod2",
-        "ABC-MCMC" = "goldenrod2",
-        "ABC-SMC" = "goldenrod2",
-        "ABC-SMC-RF" = "salmon",
-        "ABC-SMC-DRF" = "salmon"
+        "MCMC" = "#FFD320",
+        "ABC-MCMC" = "#FFD320",
+        "ABC-SMC" = "#FFD320",
+        "ABC-SMC-RF" = "#C03728",
+        "ABC-SMC-DRF" = "#C03728"
     )
     #---Set up legend order for plotting
     legend_order <- c(
