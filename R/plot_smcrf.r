@@ -51,9 +51,9 @@ plot_smcrf_marginal <- function(smcrf_results,
     if (is.null(statistics_labels)) statistics_labels <- smcrf_results[["statistics_labels"]]
     #---Set up color scheme for plotting
     color_scheme <- c(
-        "True Posterior Distribution" = "black",
-        "Data statistic" = "black",
-        "Prior Distribution" = "gray",
+        "True Posterior Distribution" = "#666666",
+        "Data statistic" = "#666666",
+        "Prior Distribution" = "#E5E5E5",
         setNames(hcl.colors(max(nIterations, 2), palette = "Earth"), paste0("Iter. ", 1:nIterations))
     )
     #---Set up legend order for plotting
@@ -232,17 +232,16 @@ plot_compare_marginal <- function(plots = NULL,
     method <- abc_results[["method"]]
     #---Set up color scheme for plotting
     color_scheme <- c(
-        "Prior Distribution" = "gray",
-        "True Posterior Distribution" = "black",
-        "ABC-REJ" = "forestgreen",
-        "ABC-RF" = "magenta4",
-        "ABC-DRF" = "royalblue2",
-        "MCMC" = "#FFD320",
-        "ABC-MCMC" = "#FFD320",
-        "ABC-SMC" = "#FFD320",
-        "ABC-SMC-RF" = "#C03728",
-        # "ABC-SMC-DRF" = "#C03728"
-        "ABC-SMC-DRF" = "#FFD320"
+        "Prior Distribution" = "#E5E5E5",
+        "True Posterior Distribution" = "#666666",
+        "ABC-REJ" = "#20854E",
+        "ABC-RF" = "#7876B1",
+        "ABC-DRF" = "#0072B5",
+        "MCMC" = "#E18727",
+        "ABC-MCMC" = "#E18727",
+        "ABC-SMC" = "#E18727",
+        "ABC-SMC-RF" = "#BC3C29",
+        "ABC-SMC-DRF" = "#BC3C29"
     )
     #---Set up legend order for plotting
     legend_order <- c(
@@ -271,6 +270,27 @@ plot_compare_marginal <- function(plots = NULL,
         new_plot <- TRUE
     } else {
         new_plot <- FALSE
+    }
+    #---Plot prior distributions (if provided)
+    if (plot_prior) {
+        for (parameter_id in parameters_labels$parameter) {
+            prior_df <- data.frame(value = abc_results[["Iteration_1"]]$parameters[[parameter_id]], legend = "Prior Distribution")
+            if (plot_hist) {
+                plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
+                    geom_histogram(
+                        data = prior_df,
+                        aes(x = value, y = ..density.., fill = legend, color = legend),
+                        breaks = breaks, alpha = alpha
+                    )
+            } else {
+                plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
+                    geom_density(
+                        data = prior_df,
+                        aes(x = value, fill = legend, color = legend),
+                        alpha = alpha, linewidth = 2
+                    )
+            }
+        }
     }
     #---Plot True Posterior Distribution parameter distributions (if provided)
     if (!is.null(parameters_truth)) {
@@ -315,27 +335,6 @@ plot_compare_marginal <- function(plots = NULL,
                             )
                     }
                 }
-            }
-        }
-    }
-    #---Plot prior distributions (if provided)
-    if (plot_prior) {
-        for (parameter_id in parameters_labels$parameter) {
-            prior_df <- data.frame(value = abc_results[["Iteration_1"]]$parameters[[parameter_id]], legend = "Prior Distribution")
-            if (plot_hist) {
-                plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
-                    geom_histogram(
-                        data = prior_df,
-                        aes(x = value, y = ..density.., fill = legend, color = legend),
-                        breaks = breaks, alpha = alpha
-                    )
-            } else {
-                plots$parameters[[parameter_id]] <- plots$parameters[[parameter_id]] +
-                    geom_density(
-                        data = prior_df,
-                        aes(x = value, fill = legend, color = legend),
-                        alpha = alpha, linewidth = 2
-                    )
             }
         }
     }
@@ -551,7 +550,7 @@ plot_smcrf_joint <- function(smcrf_results,
     if (nrow(parameters_labels) != 2) stop("ERROR: plot_smcrf_joint only works for two parameters. Please check parameters_labels.")
     #---Set up color scheme for plotting
     color_scheme <- c(
-        "Prior Distribution" = "gray",
+        "Prior Distribution" = "#E5E5E5",
         setNames(rev(rainbow(nIterations)), paste0("Iter. ", 1:nIterations))
     )
     #---Set up legend order for plotting
@@ -653,15 +652,14 @@ plot_compare_joint <- function(plots = NULL,
     if (nrow(parameters_labels) != 2) stop("ERROR: plot_compare_joint only works for two parameters. Please check parameters_labels.")
     #---Set up color scheme for plotting
     color_scheme <- c(
-        "ABC-REJ" = "forestgreen",
-        "ABC-RF" = "magenta4",
-        # "ABC-DRF" = "cyan1",
-        "ABC-DRF" = "royalblue2",
-        "MCMC" = "#FFD320",
-        "ABC-MCMC" = "#FFD320",
-        "ABC-SMC" = "#FFD320",
-        "ABC-SMC-RF" = "#C03728",
-        "ABC-SMC-DRF" = "#C03728"
+        "ABC-REJ" = "#20854E",
+        "ABC-RF" = "#7876B1",
+        "ABC-DRF" = "#0072B5",
+        "MCMC" = "#E18727",
+        "ABC-MCMC" = "#E18727",
+        "ABC-SMC" = "#E18727",
+        "ABC-SMC-RF" = "#BC3C29",
+        "ABC-SMC-DRF" = "#BC3C29"
     )
     #---Set up legend order for plotting
     legend_order <- c(
@@ -823,14 +821,14 @@ plot_compare_qqplot <- function(plots = NULL,
     method <- abc_results[["method"]]
     #---Set up color scheme for plotting
     color_scheme <- c(
-        "ABC-REJ" = "forestgreen",
-        "ABC-RF" = "magenta4",
-        "ABC-DRF" = "royalblue2",
-        "MCMC" = "#FFD320",
-        "ABC-MCMC" = "#FFD320",
-        "ABC-SMC" = "#FFD320",
-        "ABC-SMC-RF" = "#C03728",
-        "ABC-SMC-DRF" = "#C03728"
+        "ABC-REJ" = "#20854E",
+        "ABC-RF" = "#7876B1",
+        "ABC-DRF" = "#0072B5",
+        "MCMC" = "#E18727",
+        "ABC-MCMC" = "#E18727",
+        "ABC-SMC" = "#E18727",
+        "ABC-SMC-RF" = "#BC3C29",
+        "ABC-SMC-DRF" = "#BC3C29"
     )
     #---Set up legend order for plotting
     legend_order <- c(
