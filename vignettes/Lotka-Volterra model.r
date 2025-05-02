@@ -4,8 +4,8 @@ library(abcsmcrf)
 #   Output: data frame of parameters & statistics, each row contains statistics for one set of parameters:
 #           first columns = input parameters
 #           next columns = summary statistics
-nSimulations <- 0
-model <- function(parameters, parallel = FALSE) {
+# nSimulations <- 0
+model <- function(parameters, parallel = TRUE) {
     nNoise <- 0
     if (exists("nSimulations")) {
         nSimulations <<- nSimulations + nrow(parameters)
@@ -18,9 +18,9 @@ model <- function(parameters, parallel = FALSE) {
         library(data.table)
         cl <- makePSOCKcluster(detectCores() - 1)
         clusterExport(cl, varlist = c("LV_model"))
-        stats <- pblapply(
-            cl = cl, X = 1:nrow(parameters),
-            FUN = function(i) LV_model(parameters$a[i], parameters$b[i])
+        stats <- parLapply(
+            cl = cl, 1:nrow(parameters),
+            function(i) LV_model(parameters$a[i], parameters$b[i])
         )
         stopCluster(cl)
         stats <- rbindlist(stats)
@@ -89,28 +89,24 @@ Xt <- c(1.87, 0.65, 0.22, 0.31, 1.64, 1.15, 0.24, 2.91)
 Yt <- c(0.49, 2.62, 1.54, 0.02, 1.14, 1.68, 1.07, 0.88)
 statistics_target <- data.frame(matrix(c(Xt, Yt), nrow = 1))
 colnames(statistics_target) <- c(paste0("X_", 1:8), paste0("Y_", 1:8))
-# ======================================Model for parameter perturbation
-#   Input:  data frame of parameters, each row is one set of parameters
-#   Output: data frame of parameters, after perturbation
-perturb <- function(parameters) {
-    parameters[[1]] <- parameters[[1]] + runif(nrow(parameters), min = -0.1, max = 0.1)
-    parameters[[2]] <- parameters[[2]] + runif(nrow(parameters), min = -0.1, max = 0.1)
+# ====================================================Prior distribution
+dprior <- function(parameters, parameter_id = "all") {
+    probs <- rep(1, nrow(parameters))
+    if (parameter_id %in% c("all", "a")) {
+        probs <- probs * dunif(parameters[["a"]], min = -10, max = 10)
+    }
+    if (parameter_id %in% c("all", "b")) {
+        probs <- probs * dunif(parameters[["b"]], min = -10, max = 10)
+    }
+    return(probs)
+}
+rprior <- function(Nparameters) {
+    parameters <- data.frame(
+        a = runif(Nparameters, min = -10, max = 10),
+        b = runif(Nparameters, min = -10, max = 10)
+    )
     return(parameters)
 }
-# ======================================Define ranges for the parameters
-bounds <- data.frame(
-    parameter = c("a", "b"),
-    min = c(-10, -10),
-    max = c(10, 10)
-)
-# ========================================Initial guesses for parameters
-# ====================================(sampled from prior distributions)
-a <- runif(100000, -10, 10)
-b <- runif(100000, -10, 10)
-parameters_initial <- data.frame(
-    a = a,
-    b = b
-)
 # ====================================Labels for parameters in the plots
 parameters_labels <- data.frame(
     parameter = c("a", "b"),
@@ -121,11 +117,12 @@ parameters_labels <- data.frame(
 smcrf_results_multi_param <- smcrf(
     method = "smcrf-multi-param",
     statistics_target = statistics_target,
-    parameters_initial = parameters_initial,
     model = model,
-    perturb = perturb,
-    bounds = bounds,
+    rprior = rprior,
+    dprior = dprior,
     nParticles = rep(5000, 4),
+    perturbation = "Uniform",
+    perturbation_parameters = data.frame(a = rep(0.1, 3), b = rep(0.1, 3)),
     parallel = TRUE
 )
 #---Plot marginal distributions
@@ -144,15 +141,14 @@ plots <- plot_compare_marginal(
     plot_hist = TRUE,
     plot_prior = TRUE
 )
-# ========================================DRF
+# ===================================================================DRF
 #---Run DRF
 drf_results <- smcrf(
     method = "smcrf-multi-param",
     statistics_target = statistics_target,
-    parameters_initial = parameters_initial,
     model = model,
-    perturb = perturb,
-    bounds = bounds,
+    rprior = rprior,
+    dprior = dprior,
     nParticles = rep(20000, 1),
     parallel = TRUE
 )
@@ -165,7 +161,7 @@ plots <- plot_compare_marginal(
     plot_statistics = FALSE,
     plot_hist = TRUE
 )
-# ============================================================ABC-SMC
+# ===============================================================ABC-SMC
 # ---Run ABC-SMC
 abc_smc_results <- abc_smc(
     statistics_target = statistics_target,
