@@ -1,62 +1,118 @@
 library(abcsmcrf)
 library(invgamma)
+set.seed(1)
 # ===================================Function for plotting extrame cases
-plot_hierarchical_extreme <- function(
-    drf_results,
-    parameters_truth,
-    limits) {
+plot_hierarchical_extreme <- function(drf_results,
+                                      smcdrf_results = NULL,
+                                      parameters_truth,
+                                      limits) {
     library(ggplot2)
     library(patchwork)
-    # ========================================Plot multidimensional contours
-    Y_drf <- drf_results[["Iteration_2"]]$parameters
-    indx.sim <- sample(1:nrow(Y_drf), size = 500, replace = T)
-    Y_drf <- Y_drf[indx.sim, ]
+    color_drf <- "#FFD320"
+    color_smcdrf <- "#C03728"
+    color_truth <- "#2E2A2B"
+    print(smcdrf_results)
+    print(is.null(smcdrf_results))
+    #---Get parameters from each method
+    Y_drf <- drf_results[[paste0("Iteration_", drf_results$nIterations + 1)]]$parameters_unperturbed
+    Y_drf <- Y_drf[sample(1:nrow(Y_drf), size = 400, replace = T), ]
+    if (!is.null(smcdrf_results)) {
+        Y_smcdrf <- smcdrf_results[[paste0("Iteration_", smcdrf_results$nIterations + 1)]]$parameters_unperturbed
+        Y_smcdrf <- Y_smcdrf[sample(1:nrow(Y_smcdrf), size = 400, replace = T), ]
+    }
     Y_truth <- parameters_truth
-    # ==========================TOP plot = marginal distribution for theta_1
+    #---TOP plot = marginal distribution for theta_1
+    drf_density <- density(Y_drf$theta1)
+    drf_df <- data.frame(x = drf_density$x, y = drf_density$y)
     p_top <- ggplot() +
         geom_histogram(
-            data = Y_drf,
-            aes(x = theta1, y = ..density..),
-            fill = "royalblue2", color = "royalblue2", alpha = 0.5
-        ) +
-        geom_histogram(
             data = Y_truth, aes(x = theta1, y = ..density..),
-            fill = "firebrick1", color = "firebrick1", alpha = 0.5
+            fill = color_truth, color = color_truth, alpha = 1
+        ) +
+        # geom_histogram(
+        #     data = Y_drf,
+        #     aes(x = theta1, y = ..density..),
+        #     fill = color_drf, color = color_drf, alpha = 0.3
+        # ) +
+        geom_line(
+            data = drf_df,
+            aes(x = x, y = y),
+            color = color_drf, size = 3
         ) +
         theme_void() +
         xlim(c(limits$min[which(limits$parameter == "theta1")], limits$max[which(limits$parameter == "theta1")]))
-
-    # ========================Right plot = marginal distribution for theta_2
+    if (!is.null(smcdrf_results)) {
+        smcdrf_density <- density(Y_smcdrf$theta1)
+        smcdrf_df <- data.frame(x = smcdrf_density$x, y = smcdrf_density$y)
+        p_top <- p_top +
+            # geom_histogram(
+            #     data = Y_smcdrf,
+            #     aes(x = theta1, y = ..density..),
+            #     fill = color_smcdrf, color = color_smcdrf, alpha = 0.3
+            # ) +
+            geom_line(
+                data = smcdrf_df,
+                aes(x = x, y = y),
+                color = color_smcdrf, size = 3
+            )
+    }
+    #---RIGHT plot = marginal distribution for theta_2
+    drf_density <- density(Y_drf$theta2)
+    drf_df <- data.frame(x = drf_density$x, y = drf_density$y)
     p_right <- ggplot() +
         geom_histogram(
-            data = Y_drf,
-            aes(x = theta2, y = ..density..),
-            fill = "royalblue2", color = "royalblue2", alpha = 0.5
-        ) +
-        geom_histogram(
             data = Y_truth, aes(x = theta2, y = ..density..),
-            fill = "firebrick1", color = "firebrick1", alpha = 0.5
+            fill = color_truth, color = color_truth, alpha = 1
+        ) +
+        # geom_histogram(
+        #     data = Y_drf,
+        #     aes(x = theta2, y = ..density..),
+        #     fill = color_drf, color = color_drf, alpha = 0.3
+        # ) +
+        geom_line(
+            data = drf_df,
+            aes(x = x, y = y),
+            color = color_drf, size = 3
         ) +
         theme_void() +
         coord_flip() +
         xlim(c(limits$min[which(limits$parameter == "theta2")], limits$max[which(limits$parameter == "theta2")]))
-
-    # ===============Main plot = joint distribution from DRF, TRUE and SMCRF
+    if (!is.null(smcdrf_results)) {
+        smcdrf_density <- density(Y_smcdrf$theta2)
+        smcdrf_df <- data.frame(x = smcdrf_density$x, y = smcdrf_density$y)
+        p_right <- p_right +
+            # geom_histogram(
+            #     data = Y_smcdrf,
+            #     aes(x = theta2, y = ..density..),
+            #     fill = color_smcdrf, color = color_smcdrf, alpha = 0.3
+            # ) +
+            geom_line(
+                data = smcdrf_df,
+                aes(x = x, y = y),
+                color = color_smcdrf, size = 3
+            )
+    }
+    #---MAIN plot = joint distribution from DRF, TRUE and SMCRF
     p_main <- ggplot() +
-        geom_density_2d_filled(data = Y_drf, aes(x = theta1, y = theta2)) +
-        geom_density_2d(data = Y_truth, aes(x = theta1, y = theta2), colour = "firebrick1", linewidth = 2, bins = 4) +
+        geom_density_2d_filled(data = Y_truth, aes(x = theta1, y = theta2)) +
+        geom_density_2d(data = Y_drf, aes(x = theta1, y = theta2), colour = color_drf, linewidth = 2, bins = 6) +
         theme_minimal() +
+        scale_fill_grey() +
         xlim(c(limits$min[which(limits$parameter == "theta1")], limits$max[which(limits$parameter == "theta1")])) +
         ylim(c(limits$min[which(limits$parameter == "theta2")], limits$max[which(limits$parameter == "theta2")])) +
         labs(x = expression(theta[1]), y = expression(theta[2])) +
         theme(
             text = element_text(size = 30),
             panel.background = element_rect(fill = "white", colour = "white"),
+            plot.margin = unit(c(0, 0, 0, 0), "cm"),
             panel.grid.major = element_blank(),
             panel.grid.minor = element_blank(),
             legend.position = "none"
         )
-
+    if (!is.null(smcdrf_results)) {
+        p_main <- p_main +
+            geom_density_2d(data = Y_smcdrf, aes(x = theta1, y = theta2), colour = color_smcdrf, linewidth = 2, bins = 6)
+    }
     # Combine the plots using patchwork
     combined_plot <- p_top + plot_spacer() + p_main + p_right +
         plot_layout(ncol = 2, nrow = 2, widths = c(4, 1), heights = c(1, 4))
@@ -124,68 +180,60 @@ parameters_target <- data.frame(
     theta2 = theta2
 )
 statistics_target <- model(parameters = parameters_target)[-c(1:ncol(parameters_target))]
-# ===============================True marginal posteriors for parameters
+# ====================================================Prior distribution
+dprior <- function(parameters, parameter_id = "all") {
+    vec_NAN <- which(parameters$theta2 <= 0)
+    vec_notNAN <- which(parameters$theta2 > 0)
+    probs <- rep(1, nrow(parameters))
+    probs[vec_NAN] <- 0
+    if (parameter_id %in% c("all", "theta2")) {
+        probs[vec_notNAN] <- probs[vec_notNAN] * dinvgamma(parameters$theta2[vec_notNAN], shape = alpha, rate = beta)
+    }
+    if (parameter_id %in% c("all", "theta1")) {
+        probs[vec_notNAN] <- probs[vec_notNAN] * dnorm(parameters$theta1[vec_notNAN], 0, sqrt(parameters$theta2[vec_notNAN]))
+    }
+    return(probs)
+}
+rprior <- function(Nparameters) {
+    theta2 <- rinvgamma(Nparameters, shape = alpha, rate = beta)
+    theta1 <- rnorm(Nparameters, 0, sqrt(theta2))
+    return(data.frame(theta1 = theta1, theta2 = theta2))
+}
+# ====================================Labels for parameters in the plots
+parameters_labels <- data.frame(
+    parameter = c("theta1", "theta2"),
+    label = c(deparse(expression(theta[1])), deparse(expression(theta[2])))
+)
+# ==============================================True marginal posteriors
 nSamples <- 10
 s_2 <- statistics_target[, "variance"] * (nSamples - 1)
 ybar <- statistics_target[, "mean"]
 shape_theta2 <- nSamples / 2 + alpha
 scale_theta2 <- 0.5 * (s_2 + 2 * beta + nSamples * ybar^2 / (nSamples + 1))
 theta2_true <- rinvgamma(10000, shape = shape_theta2, scale = 1 / scale_theta2)
-theta1_true <- rnorm(10000, mean = nSamples * ybar / (nSamples + 1), sd = sqrt(2 * theta2_true / (nSamples + 1))) # removed in sd a 2 here
+theta1_true <- rnorm(10000, mean = nSamples * ybar / (nSamples + 1), sd = sqrt(2 * theta2_true / (nSamples + 1)))
 parameters_truth <- data.frame(
     theta1 = theta1_true,
     theta2 = theta2_true
 )
-# ======================================Model for parameter perturbation
-#   Input:  data frame of parameters, each row is one set of parameters
-#   Output: data frame of parameters, after perturbation
-perturb <- function(parameters) {
-    for (i in 1:ncol(parameters)) parameters[[i]] <- parameters[[i]] + runif(nrow(parameters), min = -0.1, max = 0.1)
-    return(parameters)
-}
-# ======================================Define ranges for the parameters
-bounds <- data.frame(
-    parameter = c("theta1", "theta2"),
-    min = c(-Inf, 0),
-    max = c(Inf, Inf)
-)
-# =================================Define limits for plotting parameters
-limits <- data.frame(
-    parameter = c("theta1", "theta2"),
-    min = c(0, 0),
-    max = c(5, 8)
-)
-# ========================================Initial guesses for parameters
-# ====================================(sampled from prior distributions)
-theta2 <- 1 / rgamma(100000, shape = alpha, rate = beta)
-theta1 <- rnorm(100000, 0, sqrt(theta2))
-parameters_initial <- data.frame(
-    theta1 = theta1,
-    theta2 = theta2
-)
-# ====================================Labels for parameters in the plots
-parameters_labels <- data.frame(
-    parameter = c("theta1", "theta2"),
-    label = c(deparse(expression(theta[1])), deparse(expression(theta[2])))
-)
-# ===================================================================DRF
-#---Run ABC-DRF
-drf_results <- smcrf(
-    method = "smcrf-multi-param",
-    statistics_target = statistics_target,
-    parameters_initial = parameters_initial,
-    model = model,
-    perturb = perturb,
-    bounds = bounds,
-    nParticles = rep(20000, 1),
-    num.trees = 2500,
-    # compute.variable.importance = TRUE,
-    parallel = TRUE
-)
+# # ===================================================================DRF
+# #---Run ABC-DRF
+# drf_results <- smcrf(
+#     method = "smcrf-multi-param",
+#     statistics_target = statistics_target,
+#     model = model,
+#     rprior = rprior,
+#     dprior = dprior,
+#     nParticles = rep(20000, 1),
+#     # splitting.rule = "CART",
+#     num.trees = 500,
+#     # compute.variable.importance = TRUE,
+#     parallel = TRUE
+# )
 # =============================================Plot marginal joint plots
 plot_hierarchical_extreme(
     drf_results = drf_results,
-    limits = limits,
+    limits = data.frame(parameter = c("theta1", "theta2"), min = c(0, 0), max = c(5, 8)),
     parameters_truth = parameters_truth
 )
 # # ==========================================Plot the Variable Importance
