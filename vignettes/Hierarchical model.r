@@ -11,8 +11,6 @@ plot_hierarchical_extreme <- function(drf_results,
     color_drf <- "#FFD320"
     color_smcdrf <- "#C03728"
     color_truth <- "#2E2A2B"
-    print(smcdrf_results)
-    print(is.null(smcdrf_results))
     #---Get parameters from each method
     Y_drf <- drf_results[[paste0("Iteration_", drf_results$nIterations + 1)]]$parameters_unperturbed
     Y_drf <- Y_drf[sample(1:nrow(Y_drf), size = 400, replace = T), ]
@@ -29,11 +27,6 @@ plot_hierarchical_extreme <- function(drf_results,
             data = Y_truth, aes(x = theta1, y = ..density..),
             fill = color_truth, color = color_truth, alpha = 1
         ) +
-        # geom_histogram(
-        #     data = Y_drf,
-        #     aes(x = theta1, y = ..density..),
-        #     fill = color_drf, color = color_drf, alpha = 0.3
-        # ) +
         geom_line(
             data = drf_df,
             aes(x = x, y = y),
@@ -45,11 +38,6 @@ plot_hierarchical_extreme <- function(drf_results,
         smcdrf_density <- density(Y_smcdrf$theta1)
         smcdrf_df <- data.frame(x = smcdrf_density$x, y = smcdrf_density$y)
         p_top <- p_top +
-            # geom_histogram(
-            #     data = Y_smcdrf,
-            #     aes(x = theta1, y = ..density..),
-            #     fill = color_smcdrf, color = color_smcdrf, alpha = 0.3
-            # ) +
             geom_line(
                 data = smcdrf_df,
                 aes(x = x, y = y),
@@ -64,11 +52,6 @@ plot_hierarchical_extreme <- function(drf_results,
             data = Y_truth, aes(x = theta2, y = ..density..),
             fill = color_truth, color = color_truth, alpha = 1
         ) +
-        # geom_histogram(
-        #     data = Y_drf,
-        #     aes(x = theta2, y = ..density..),
-        #     fill = color_drf, color = color_drf, alpha = 0.3
-        # ) +
         geom_line(
             data = drf_df,
             aes(x = x, y = y),
@@ -81,11 +64,6 @@ plot_hierarchical_extreme <- function(drf_results,
         smcdrf_density <- density(Y_smcdrf$theta2)
         smcdrf_df <- data.frame(x = smcdrf_density$x, y = smcdrf_density$y)
         p_right <- p_right +
-            # geom_histogram(
-            #     data = Y_smcdrf,
-            #     aes(x = theta2, y = ..density..),
-            #     fill = color_smcdrf, color = color_smcdrf, alpha = 0.3
-            # ) +
             geom_line(
                 data = smcdrf_df,
                 aes(x = x, y = y),
@@ -216,20 +194,20 @@ parameters_truth <- data.frame(
     theta1 = theta1_true,
     theta2 = theta2_true
 )
-# # ===================================================================DRF
-# #---Run ABC-DRF
-# drf_results <- smcrf(
-#     method = "smcrf-multi-param",
-#     statistics_target = statistics_target,
-#     model = model,
-#     rprior = rprior,
-#     dprior = dprior,
-#     nParticles = rep(20000, 1),
-#     # splitting.rule = "CART",
-#     num.trees = 500,
-#     # compute.variable.importance = TRUE,
-#     parallel = TRUE
-# )
+# ===================================================================DRF
+#---Run ABC-DRF
+drf_results <- smcrf(
+    method = "smcrf-multi-param",
+    statistics_target = statistics_target,
+    model = model,
+    rprior = rprior,
+    dprior = dprior,
+    nParticles = rep(20000, 1),
+    # splitting.rule = "CART",
+    num.trees = 500,
+    # compute.variable.importance = TRUE,
+    parallel = TRUE
+)
 # =============================================Plot marginal joint plots
 plot_hierarchical_extreme(
     drf_results = drf_results,
