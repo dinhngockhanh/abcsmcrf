@@ -166,7 +166,6 @@ parameters_truth <- data.frame(
     theta2 = theta2_true
 )
 # ===================================================================DRF
-#---Run ABC-DRF
 drf_results <- smcrf(
     method = "smcrf-multi-param",
     statistics_target = statistics_target,
