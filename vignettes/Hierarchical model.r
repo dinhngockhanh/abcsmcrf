@@ -3,7 +3,6 @@ library(invgamma)
 set.seed(1)
 # ===================================Function for plotting extrame cases
 plot_hierarchical_extreme <- function(drf_results,
-                                      smcdrf_results = NULL,
                                       parameters_truth,
                                       limits) {
     library(ggplot2)
@@ -14,10 +13,6 @@ plot_hierarchical_extreme <- function(drf_results,
     #---Get parameters from each method
     Y_drf <- drf_results[[paste0("Iteration_", drf_results$nIterations + 1)]]$parameters_unperturbed
     Y_drf <- Y_drf[sample(1:nrow(Y_drf), size = 400, replace = T), ]
-    if (!is.null(smcdrf_results)) {
-        Y_smcdrf <- smcdrf_results[[paste0("Iteration_", smcdrf_results$nIterations + 1)]]$parameters_unperturbed
-        Y_smcdrf <- Y_smcdrf[sample(1:nrow(Y_smcdrf), size = 400, replace = T), ]
-    }
     Y_truth <- parameters_truth
     #---TOP plot = marginal distribution for theta_1
     drf_density <- density(Y_drf$theta1)
@@ -34,16 +29,6 @@ plot_hierarchical_extreme <- function(drf_results,
         ) +
         theme_void() +
         xlim(c(limits$min[which(limits$parameter == "theta1")], limits$max[which(limits$parameter == "theta1")]))
-    if (!is.null(smcdrf_results)) {
-        smcdrf_density <- density(Y_smcdrf$theta1)
-        smcdrf_df <- data.frame(x = smcdrf_density$x, y = smcdrf_density$y)
-        p_top <- p_top +
-            geom_line(
-                data = smcdrf_df,
-                aes(x = x, y = y),
-                color = color_smcdrf, size = 3
-            )
-    }
     #---RIGHT plot = marginal distribution for theta_2
     drf_density <- density(Y_drf$theta2)
     drf_df <- data.frame(x = drf_density$x, y = drf_density$y)
@@ -60,16 +45,6 @@ plot_hierarchical_extreme <- function(drf_results,
         theme_void() +
         coord_flip() +
         xlim(c(limits$min[which(limits$parameter == "theta2")], limits$max[which(limits$parameter == "theta2")]))
-    if (!is.null(smcdrf_results)) {
-        smcdrf_density <- density(Y_smcdrf$theta2)
-        smcdrf_df <- data.frame(x = smcdrf_density$x, y = smcdrf_density$y)
-        p_right <- p_right +
-            geom_line(
-                data = smcdrf_df,
-                aes(x = x, y = y),
-                color = color_smcdrf, size = 3
-            )
-    }
     #---MAIN plot = joint distribution from DRF, TRUE and SMCRF
     p_main <- ggplot() +
         geom_density_2d_filled(data = Y_truth, aes(x = theta1, y = theta2)) +
@@ -87,10 +62,6 @@ plot_hierarchical_extreme <- function(drf_results,
             panel.grid.minor = element_blank(),
             legend.position = "none"
         )
-    if (!is.null(smcdrf_results)) {
-        p_main <- p_main +
-            geom_density_2d(data = Y_smcdrf, aes(x = theta1, y = theta2), colour = color_smcdrf, linewidth = 2, bins = 6)
-    }
     # Combine the plots using patchwork
     combined_plot <- p_top + plot_spacer() + p_main + p_right +
         plot_layout(ncol = 2, nrow = 2, widths = c(4, 1), heights = c(1, 4))
