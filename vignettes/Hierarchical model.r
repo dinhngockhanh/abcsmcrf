@@ -173,7 +173,6 @@ drf_results <- smcrf(
     rprior = rprior,
     dprior = dprior,
     nParticles = rep(20000, 1),
-    num.trees = 500,
     # compute.variable.importance = TRUE,
     parallel = TRUE
 )
