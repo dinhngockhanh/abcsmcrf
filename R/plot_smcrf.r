@@ -641,7 +641,7 @@ plot_compare_joint <- function(plots = NULL,
                                parameters_truth = NULL,
                                parameters_labels = NULL,
                                lims = NULL,
-                               nBins = 3) {
+                               nBins = 4) {
     library(MASS)
     library(dplyr)
     library(RColorBrewer)
@@ -754,7 +754,6 @@ plot_compare_joint <- function(plots = NULL,
             geom_density_2d_filled(data = posterior_df, aes(x = x, y = y), show.legend = FALSE) +
             scale_fill_grey()
     } else {
-        nBins <- 4
         posterior_df <- posterior_df[sample(1:nrow(posterior_df), size = 400, replace = T), ]
         plots <- plots +
             geom_density_2d(data = posterior_df, aes(x = x, y = y, color = legend), linewidth = 3, bins = nBins)
