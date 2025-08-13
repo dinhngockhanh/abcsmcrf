@@ -1,4 +1,5 @@
 library(abcsmcrf)
+library(LaplacesDemon)
 set.seed(1)
 # ===================================Function to compute estimation of m
 estimated_mean <- function(abc_results) {
@@ -160,8 +161,8 @@ rprior <- function(Nparameters) {
 }
 # ====================================Labels for parameters in the plots
 parameters_labels <- data.frame(
-    parameter = c("m", "gamma", "kappa"),
-    label = c(deparse(expression(m)), deparse(expression(gamma)), deparse(expression(kappa)))
+    parameter = c("m", "gamma", "kappa", paste0("prob_", 0:K_max)),
+    label = c(deparse(expression(m)), deparse(expression(gamma)), deparse(expression(kappa)), paste0("prob_", 0:K_max))
 )
 # ===================================================================DRF
 #---Run DRF
@@ -184,7 +185,11 @@ drf_results <- estimated_mean(drf_results)
 #---Plot posterior joint distributions against other methods
 plots_joint <- plot_compare_joint(
     abc_results = drf_results,
-    parameters_labels = parameters_labels
+    parameters_labels = data.frame(
+        parameter = c("m", "gamma"),
+        label = c(deparse(expression(m)), deparse(expression(gamma)))
+    ),
+    nBins = 9
 )
 #---Plot qqplots against other methods
 plots_compare_qqplot <- plot_compare_qqplot(
@@ -197,9 +202,7 @@ plots_marginal <- plot_compare_marginal(
     abc_results = drf_results,
     parameters_labels = parameters_labels,
     parameters_truth = parameters_target,
-    plot_hist = TRUE,
-    position_x = 0.9,
-    position_y = 0.7
+    plot_hist = TRUE
 )
 # ====================================================================RF
 #---Run ABC-RF
@@ -229,9 +232,7 @@ plots_marginal <- plot_compare_marginal(
     plots = plots_marginal,
     abc_results = abcrf_results,
     parameters_labels = parameters_labels,
-    plot_hist = TRUE,
-    position_x = 0.9,
-    position_y = 0.5
+    plot_hist = TRUE
 )
 # ================================================================SMC-RF
 #---Run ABC-SMC-RF
@@ -255,9 +256,7 @@ abcrf_results <- estimated_mean(abcrf_results)
 plots_marginal <- plot_compare_marginal(
     abc_results = abcrf_results,
     parameters_labels = parameters_labels,
-    plot_hist = TRUE,
-    position_x = 0.9,
-    position_y = 0.5
+    plot_hist = TRUE
 )
 #---Plot qqplots against other methods
 plots_compare_qqplot <- plot_compare_qqplot(
@@ -289,7 +288,10 @@ smcrf_results_multi_param <- estimated_mean(smcrf_results_multi_param)
 plots_joint <- plot_compare_joint(
     plots = plots_joint,
     abc_results = smcrf_results_multi_param,
-    parameters_labels = parameters_labels
+    parameters_labels = data.frame(
+        parameter = c("m", "gamma"),
+        label = c(deparse(expression(m)), deparse(expression(gamma)))
+    )
 )
 #---Plot qqplots
 plots_compare_qqplot <- plot_compare_qqplot(
@@ -308,7 +310,5 @@ plots_marginal <- plot_compare_marginal(
     plots = plots_marginal,
     abc_results = smcrf_results_multi_param,
     parameters_labels = parameters_labels,
-    plot_hist = TRUE,
-    position_x = 0.9,
-    position_y = 0.1
+    plot_hist = TRUE
 )
