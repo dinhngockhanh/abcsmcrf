@@ -262,7 +262,7 @@ plots_joint <- plot_compare_joint(
     ),
     abc_results = smcrf_results_multi_param,
     parameters_labels = parameters_labels,
-    nBins = 8
+    nBins = 9
 )
 #---Plot marginal distributions against other methods
 plots_marginal <- plot_compare_marginal(
