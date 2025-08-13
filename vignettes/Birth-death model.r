@@ -100,7 +100,6 @@ nLL <- function(param) {
     } else {
         mu <- (lambda_minus_mu * mu_over_lambda) / (1 - mu_over_lambda)
         lambda <- mu + lambda_minus_mu
-
         zvals <- c(10, unlist(statistics_target))
         zvals <- unname(zvals)
         times <- seq(1, 25) / 25
@@ -232,9 +231,7 @@ plots_compare_qqplot <- plot_compare_qqplot(
 plots_marginal <- plot_compare_marginal(
     abc_results = abcrf_results,
     parameters_labels = parameters_labels,
-    plot_hist = TRUE,
-    position_x = 0.9,
-    position_y = 0.5
+    plot_hist = TRUE
 )
 # ===========================================================ABC-SMC-DRF
 smcrf_results_multi_param <- smcrf(
@@ -264,16 +261,15 @@ plots_joint <- plot_compare_joint(
         max = c(5, 1)
     ),
     abc_results = smcrf_results_multi_param,
-    parameters_labels = parameters_labels
+    parameters_labels = parameters_labels,
+    nBins = 8
 )
 #---Plot marginal distributions against other methods
 plots_marginal <- plot_compare_marginal(
     plots = plots_marginal,
     abc_results = smcrf_results_multi_param,
     parameters_labels = parameters_labels,
-    plot_hist = TRUE,
-    position_x = 0.9,
-    position_y = 0.1
+    plot_hist = TRUE
 )
 #---Plot qqplots against other methods
 plots_compare_qqplot <- plot_compare_qqplot(
