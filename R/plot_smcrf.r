@@ -24,7 +24,11 @@
 #' @examples
 #' #    Dataframe containing the true parameters
 #' parameters_truth <- data.frame(
-#'     theta = 2
+#'     theta = 2 # this will plot a vertical line
+#' )
+#' if you prefer to have a histogram of true posterior
+#' parameters_truth <- data.frame(
+#'     theta = rnorm(10000, mean = 2, 1)
 #' )
 #' #    Dataframe containing the parameter labels
 #' parameters_labels <- data.frame(
@@ -536,6 +540,10 @@ plot_compare_marginal <- function(plots = NULL,
 #'     min = c(0, 0),
 #'     max = c(10, 10)
 #' )
+#' parameters_truth <- data.frame(
+#'          theta = rnorm(10000, mean = 2, sd = 1),
+#'          mu = rnorm(10000, mean = 1, sd = 2)
+#')
 plot_smcrf_joint <- function(smcrf_results,
                              parameters_truth = NULL,
                              parameters_labels = NULL,
@@ -810,6 +818,22 @@ plot_compare_joint <- function(plots = NULL,
 #' The user can use the function to compare ABC-SMC-(D)RF quantile-quantile plots with the quantile-quantile plots
 #' of other ABC-SMC-(D)RF result(s).
 #' @export
+#' @examples
+#' #    parameters_truth is optional here!
+#' parameters_truth <- data.frame(
+#'     theta = rnorm(10000, mean = 2, 1)
+#' )
+#' #    Dataframe containing the parameter labels
+#' parameters_labels <- data.frame(
+#'     parameter = c("theta"),
+#'     label = c(deparse(expression(theta)))
+#' )
+#' #    Dataframe containing the x-axis bounds
+#' xlimit <- data.frame(
+#'     parameter = c("theta"),
+#'     min = c(1),
+#'     max = c(20)
+#' )
 plot_compare_qqplot <- function(plots = NULL,
                                 abc_results,
                                 parameters_truth,

@@ -34,7 +34,8 @@
 #' @param perturbation Perturbation method for the parameters.
 #' abcsmcrf supports perturbation = "Gaussian" (default) or "Uniform".
 #' @param perturbation_parameters A dataframe containing the parameters for the perturbation.
-#' Each row corresponds to one iteration, and each column corresponds to one parameter.
+#' Each row corresponds to one iteration, and each column corresponds to one parameter (the column 
+#' names must match parameter_ids)
 #' The values are the normal distribution variances (for perturbation = "Gaussian") or ranges (for perturbation = "Uniform").
 #' @param nParticles A list of numbers showing the particles of ABC-SMC-RF.
 #' Each entry indicates the number of simulations in the corresponding iteration.
@@ -69,27 +70,29 @@
 #'     )
 #'     cbind(parameters, statistics)
 #' }
-#' # and a function to perturb the parameters with random noise between iterations
-#' perturb <- function(parameters) {
-#'     parameters$theta <- parameters$theta + runif(nrow(parameters), min = -0.1, max = 0.1)
-#'     return(parameters)
-#' }
-#' # We start from initial guesses for theta from Uniform(-10, 10)
-#' parameters_initial <- data.frame(theta = runif(100000, -10, 10))
-#' # while ensuring that theta stays within bounds
-#' bounds <- data.frame(
-#'     parameter = c("theta"),
-#'     min = c(-10),
-#'     max = c(10)
+#' # and the perturbation parameters for a uniform perturbation
+#' perturbation_parameters <- <- data.frame(
+#'      theta = rep(0.1, 2) #length of list should be equal to nb of iterations
 #' )
+#'
+#' # We need to define rprior and dprior
+#' rprior <- function(Nparameters){
+#'      theta <- runif(Nparameters, -10, 10)
+#'      return(data.frame(theta = theta))
+#' }
+#' dprior <- function(parameters, parameter_id = "theta"){
+#'      return(rep(1/20), nrow(parameters))
+#' }
+#' 
 #' # Finally, we run ABC-SMC-RF with 2 iterations, each with 1000 particles
 #' smcrf_results <- smcrf(
 #'     method = "smcrf-single-param",
 #'     statistics_target = statistics_target,
 #'     model = model,
-#'     perturb = perturb,
-#'     bounds = bounds,
-#'     parameters_initial = parameters_initial,
+#'     rprior = rprior, 
+#'     dprior = dprior,
+#'     perturbation = "Uniform",
+#'     perturbation_parameters = perturbation_parameters,
 #'     nParticles = c(1000, 1000),
 #' )
 #' # Now we examine the posterior distribution of theta
@@ -107,9 +110,11 @@
 #'     method = "smcrf-single-param",
 #'     smcrf_results = smcrf_results,
 #'     model = model,
-#'     perturb = perturb,
-#'     bounds = bounds,
-#'     nParticles = c(1000, 1000)
+#'     rprior = rprior, 
+#'     dprior = dprior,
+#'     perturbation = "Uniform",
+#'     perturbation_parameters = perturbation_parameters,
+#'     nParticles = c(1000, 1000),
 #' )
 #' # We look again at the posterior mean and variance of theta
 #' posterior_iteration <- paste0("Iteration_", (smcrf_results$nIterations + 1))
@@ -133,34 +138,37 @@
 #'     )
 #'     cbind(parameters, statistics)
 #' }
-#' # and a function to perturb the parameters with random noise between iterations
-#' perturb <- function(parameters) {
-#'     if (any(grepl("theta", colnames(parameters)))) {
-#'         parameters[["theta"]] <- parameters[["theta"]] + runif(nrow(parameters), min = -0.1, max = 0.1)
-#'     } else if (any(grepl("mu", colnames(parameters)))) {
-#'         parameters[["mu"]] <- parameters[["mu"]] + runif(nrow(parameters), min = -0.1, max = 0.1)
-#'     }
-#'     return(parameters)
+#' # and the perturbation parameters
+#' perturbation_parameters <- data.frame(
+#'      theta <- rep(0.1, 3),
+#'      mu <- rep(0.1, 3)
+#' )
+#' # We define the rprior and dprior functions
+#' rprior <- function(Nparameters){
+#'      theta <- runif(Nparameters, -10, 10),
+#'      mu <- runif(Nparameters, -10, 10)
+#'      return(data.frame(theta = theta, mu = mu))
 #' }
-#' # We start from initial guesses from U(-10, 10) x U(-10, 10)
-#' parameters_initial <- data.frame(
-#'     theta = runif(100000, -10, 10),
-#'     mu = runif(100000, -10, 10)
-#' )
-#' # while ensuring that the parameters stay within bounds
-#' bounds <- data.frame(
-#'     parameter = c("theta", "mu"),
-#'     min = c(-10, -10),
-#'     max = c(10, 10)
-#' )
+#' 
+#' dprior <- function(parameters, parameter_id = "all"){
+#'      probs <- rep(1, nrow(parameters))
+#'      if (parameter_id %in% c("all", "theta")){
+#'          probs <- probs * dunif(parameters[["theta"]], -10, 10)
+#'      }
+#'      if (parameter_id %in% c("all", "mu")){
+#'          probs <- probs * dunif(parameters[["mu"]], -10, 10)
+#'      }
+#'      return(probs)
+#' }
 #' # Finally, we run ABC-SMC-RF with 3 iterations, each with 1000 particles
 #' smcrf_results <- smcrf(
 #'     method = "smcrf-single-param",
 #'     statistics_target = statistics_target,
 #'     model = model,
-#'     perturb = perturb,
-#'     bounds = bounds,
-#'     parameters_initial = parameters_initial,
+#'     rprior = rprior, 
+#'     dprior = dprior,
+#'     perturbation = "Uniform",
+#'     perturbation_parameters = perturbation_parameters,
 #'     nParticles = c(1000, 1000, 1000),
 #' )
 #' # Now we examine the posterior distribution of each parameter
@@ -183,35 +191,37 @@
 #'     )
 #'     cbind(parameters, statistics)
 #' }
-#' # and a function to perturb the parameters with random noise between iterations
-#' perturb <- function(parameters) {
-#'     if (any(grepl("theta", colnames(parameters)))) {
-#'         parameters[["theta"]] <- parameters[["theta"]] + runif(nrow(parameters), min = -0.1, max = 0.1)
-#'     } else if (any(grepl("mu", colnames(parameters)))) {
-#'         parameters[["mu"]] <- parameters[["mu"]] + runif(nrow(parameters), min = -0.1, max = 0.1)
-#'     }
-#'     return(parameters)
+#' # and the perturbation parameters
+#' perturbation_parameters <- data.frame(
+#'      theta <- rep(0.1, 3),
+#'      mu <- rep(0.1, 3)
+#' )
+#' # We define the rprior and dprior functions
+#' rprior <- function(Nparameters){
+#'      theta <- runif(Nparameters, -10, 10),
+#'      mu <- runif(Nparameters, -10, 10)
+#'      return(data.frame(theta = theta, mu = mu))
 #' }
-#' # We start from initial guesses from U(-10, 10) x U(-10, 10)
-#' theta <- runif(100000, -10, 10)
-#' parameters_initial <- data.frame(
-#'     theta = runif(100000, -10, 10),
-#'     mu = runif(100000, -10, 10)
-#' )
-#' # while ensuring that the parameters stay within bounds
-#' bounds <- data.frame(
-#'     parameter = c("theta", "mu"),
-#'     min = c(-10, -10),
-#'     max = c(10, 10)
-#' )
+#' 
+#' dprior <- function(parameters, parameter_id = "all"){
+#'      probs <- rep(1, nrow(parameters))
+#'      if (parameter_id %in% c("all", "theta")){
+#'          probs <- probs * dunif(parameters[["theta"]], -10, 10)
+#'      }
+#'      if (parameter_id %in% c("all", "mu")){
+#'          probs <- probs * dunif(parameters[["mu"]], -10, 10)
+#'      }
+#'      return(probs)
+#' }
 #' # Finally, we run ABC-SMC-DRF with 3 iterations, each with 1000 particles
 #' smcrf_results <- smcrf(
 #'     method = "smcrf-multi-param",
 #'     statistics_target = statistics_target,
 #'     model = model,
-#'     perturb = perturb,
-#'     bounds = bounds,
-#'     parameters_initial = parameters_initial,
+#'     rprior = rprior, 
+#'     dprior = dprior,
+#'     perturbation = "Uniform",
+#'     perturbation_parameters = perturbation_parameters,
 #'     nParticles = c(1000, 1000, 1000),
 #' )
 #' # Now we examine the posterior distribution of each parameter
