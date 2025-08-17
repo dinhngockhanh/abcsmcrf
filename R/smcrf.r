@@ -35,6 +35,7 @@
 #' \code{\link{smcrf}} supports \code{perturbation} = \code{"Gaussian"} (default) or \code{"Uniform"}.
 #' @param perturbation_parameters A dataframe containing the parameters for the perturbation.
 #' Each row corresponds to one iteration, and each column corresponds to one parameter (the column 
+<<<<<<< HEAD
 #' names must match parameter_ids).
 #' The values are the normal distribution variances (for \code{perturbation} = \code{"Gaussian"}) or ranges (for \code{perturbation} = \code{"Uniform"}).
 #' @param nParticles A vector of particle counts.
@@ -49,6 +50,22 @@
 #' If \code{save_rds} = \code{TRUE}, the ABC-SMC-RF results will be saved in an rds file.
 #' @param filename_rds A string (\code{"ABCSMCDRF.rds"} by default).
 #' If \code{save_rds} = \code{TRUE}, the output from ABC-SMC-(D)RF will be saved in a file with this name.
+=======
+#' names must match parameter_ids)
+#' The values are the normal distribution variances (for perturbation = "Gaussian") or ranges (for perturbation = "Uniform").
+#' @param nParticles A list of numbers showing the particles of ABC-SMC-RF.
+#' Each entry indicates the number of simulations in the corresponding iteration.
+#' @param model_redo_if_NA A logic variable (model_redo_if_NA = FALSE by default).
+#' If model_redo_if_NA = TRUE, the model will be re-evaluated if it returns NA.
+#' @param parallel A logic variable (parallel = FALSE by default).
+#' If parallel = TRUE, the ABC-RF functions will be computed in parallel.
+#' @param save_model A logic variable (parallel = FALSE by default).
+#' If save_model = TRUE, the random forest will be saved in the output.
+#' @param save_rds A logic variable (parallel = FALSE by default).
+#' If save_rds = TRUE, the ABC-SMC-RF results will be saved in an rds file.
+#' @param filename_rds A string (filename_rds = "ABCSMCDRF.rds" by default).
+#' If save_rds = TRUE, the output from ABC-SMC-(D)RF will be saved in a file with this name.
+>>>>>>> 05615aea5354d8539decd58eb7927c740dc9dc96
 #' @param ... Additional arguments to be passed to \code{abcrf} or \code{drf}.
 #' @return An object \code{smcrf_results} containing the results of the inference.
 #' If the posterior distributions have not converged to a satisfactory level,
@@ -70,19 +87,35 @@
 #'     )
 #'     cbind(parameters, statistics)
 #' }
+<<<<<<< HEAD
 #' #    and the perturbation parameters for a uniform perturbation
 #' perturbation_parameters <- data.frame(
 #'      theta = rep(0.1, 2) # vector length is equal to number of ABC-SMC-(D)RF iterations
 #' )
 #' #    We then define rprior and dprior
+=======
+#' # and the perturbation parameters for a uniform perturbation
+#' perturbation_parameters <- <- data.frame(
+#'      theta = rep(0.1, 2) #length of list should be equal to nb of iterations
+#' )
+#'
+#' # We need to define rprior and dprior
+>>>>>>> 05615aea5354d8539decd58eb7927c740dc9dc96
 #' rprior <- function(Nparameters){
 #'      theta <- runif(Nparameters, -10, 10)
 #'      return(data.frame(theta = theta))
 #' }
 #' dprior <- function(parameters, parameter_id = "theta"){
+<<<<<<< HEAD
 #'      return(rep(1/20, nrow(parameters)))
 #' }
 #' #    Finally, we run ABC-SMC-RF with 2 iterations, each with 1000 particles
+=======
+#'      return(rep(1/20), nrow(parameters))
+#' }
+#' 
+#' # Finally, we run ABC-SMC-RF with 2 iterations, each with 1000 particles
+>>>>>>> 05615aea5354d8539decd58eb7927c740dc9dc96
 #' smcrf_results <- smcrf(
 #'     method = "smcrf-single-param",
 #'     statistics_target = statistics_target,
@@ -136,6 +169,7 @@
 #'     )
 #'     cbind(parameters, statistics)
 #' }
+<<<<<<< HEAD
 #' #    and the perturbation parameters
 #' perturbation_parameters <- data.frame(
 #'      theta = rep(0.1, 3),
@@ -158,6 +192,31 @@
 #'      return(probs)
 #' }
 #' #    Finally, we run ABC-SMC-RF with 3 iterations, each with 1000 particles
+=======
+#' # and the perturbation parameters
+#' perturbation_parameters <- data.frame(
+#'      theta <- rep(0.1, 3),
+#'      mu <- rep(0.1, 3)
+#' )
+#' # We define the rprior and dprior functions
+#' rprior <- function(Nparameters){
+#'      theta <- runif(Nparameters, -10, 10),
+#'      mu <- runif(Nparameters, -10, 10)
+#'      return(data.frame(theta = theta, mu = mu))
+#' }
+#' 
+#' dprior <- function(parameters, parameter_id = "all"){
+#'      probs <- rep(1, nrow(parameters))
+#'      if (parameter_id %in% c("all", "theta")){
+#'          probs <- probs * dunif(parameters[["theta"]], -10, 10)
+#'      }
+#'      if (parameter_id %in% c("all", "mu")){
+#'          probs <- probs * dunif(parameters[["mu"]], -10, 10)
+#'      }
+#'      return(probs)
+#' }
+#' # Finally, we run ABC-SMC-RF with 3 iterations, each with 1000 particles
+>>>>>>> 05615aea5354d8539decd58eb7927c740dc9dc96
 #' smcrf_results <- smcrf(
 #'     method = "smcrf-single-param",
 #'     statistics_target = statistics_target,
@@ -188,6 +247,7 @@
 #'     )
 #'     cbind(parameters, statistics)
 #' }
+<<<<<<< HEAD
 #' #    and the perturbation parameters
 #' perturbation_parameters <- data.frame(
 #'      theta = rep(0.1, 3),
@@ -210,6 +270,31 @@
 #'      return(probs)
 #' }
 #' #    Finally, we run ABC-SMC-DRF with 3 iterations, each with 1000 particles
+=======
+#' # and the perturbation parameters
+#' perturbation_parameters <- data.frame(
+#'      theta <- rep(0.1, 3),
+#'      mu <- rep(0.1, 3)
+#' )
+#' # We define the rprior and dprior functions
+#' rprior <- function(Nparameters){
+#'      theta <- runif(Nparameters, -10, 10),
+#'      mu <- runif(Nparameters, -10, 10)
+#'      return(data.frame(theta = theta, mu = mu))
+#' }
+#' 
+#' dprior <- function(parameters, parameter_id = "all"){
+#'      probs <- rep(1, nrow(parameters))
+#'      if (parameter_id %in% c("all", "theta")){
+#'          probs <- probs * dunif(parameters[["theta"]], -10, 10)
+#'      }
+#'      if (parameter_id %in% c("all", "mu")){
+#'          probs <- probs * dunif(parameters[["mu"]], -10, 10)
+#'      }
+#'      return(probs)
+#' }
+#' # Finally, we run ABC-SMC-DRF with 3 iterations, each with 1000 particles
+>>>>>>> 05615aea5354d8539decd58eb7927c740dc9dc96
 #' smcrf_results <- smcrf(
 #'     method = "smcrf-multi-param",
 #'     statistics_target = statistics_target,
