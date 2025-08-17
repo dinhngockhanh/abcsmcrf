@@ -12,8 +12,11 @@ plot_compare_marginal(
   statistics_labels = NULL,
   xlimit = NULL,
   plot_statistics = FALSE,
+  plot_truth_hist = TRUE,
   plot_hist = FALSE,
   plot_hist_point = FALSE,
+  breaks = NULL,
+  alpha_truth = 0.8,
   alpha = 0.3,
   plot_prior = FALSE
 )

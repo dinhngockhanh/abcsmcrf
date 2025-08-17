@@ -36,3 +36,20 @@ of other ABC-SMC-(D)RF result(s).
 \description{
 \code{\link{plot_compare_qqplot}} plots the marginal quantile-quantile plots for inferred parameters and parameters from ground-truth distributions.
 }
+\examples{
+#    parameters_truth is optional here!
+parameters_truth <- data.frame(
+    theta = rnorm(10000, mean = 2, 1)
+)
+#    Dataframe containing the parameter labels
+parameters_labels <- data.frame(
+    parameter = c("theta"),
+    label = c(deparse(expression(theta)))
+)
+#    Dataframe containing the x-axis bounds
+xlimit <- data.frame(
+    parameter = c("theta"),
+    min = c(1),
+    max = c(20)
+)
+}

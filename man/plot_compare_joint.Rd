@@ -10,7 +10,7 @@ plot_compare_joint(
   parameters_truth = NULL,
   parameters_labels = NULL,
   lims = NULL,
-  nBins = 5
+  nBins = 4
 )
 }
 \arguments{

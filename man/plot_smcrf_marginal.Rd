@@ -45,7 +45,11 @@ Approximate Bayesian Computation sequential Monte Carlo via random forest result
 \examples{
 #    Dataframe containing the true parameters
 parameters_truth <- data.frame(
-    theta = 2
+    theta = 2 # this will plot a vertical line
+)
+if you prefer to have a histogram of true posterior
+parameters_truth <- data.frame(
+    theta = rnorm(10000, mean = 2, 1)
 )
 #    Dataframe containing the parameter labels
 parameters_labels <- data.frame(

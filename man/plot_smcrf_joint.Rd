@@ -36,6 +36,10 @@ lims <- data.frame(
     min = c(0, 0),
     max = c(10, 10)
 )
+parameters_truth <- data.frame(
+         theta = rnorm(10000, mean = 2, sd = 1),
+         mu = rnorm(10000, mean = 1, sd = 2)
+)
 }
 \seealso{
 \code{\link{smcrf}}

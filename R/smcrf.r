@@ -5,49 +5,50 @@
 #' uses either ABC-RF (functions \code{regAbcrf} and \code{predict} in R package \code{abcrf})
 #' or ABC-DRF (functions \code{drf} and \code{predict} in R package \code{drf}) to update the posterior distribution(s).
 #'
-#' @param method Random forest method to implement in each iteration ("smcrf-single-param" by default).
-#' method = "smcrf-single-param": implements ABC-RF for each parameter and results in their marginal posterior distributions.
-#' method = "smcrf-multi-param": implements ABC-DRF for all parameters and results in the joint posterior distribution.
+#' @param method Random forest method to implement in each iteration (\code{"smcrf-single-param"} by default).
+#' method = \code{"smcrf-single-param"}: implements ABC-RF for each parameter and results in their marginal posterior distributions.
+#' method = \code{"smcrf-multi-param"}: implements ABC-DRF for all parameters and results in the joint posterior distribution.
 #' @param statistics_target A dataframe containing statistics from data.
 #' Column names are the statistics IDs.
 #' \code{\link{smcrf}} only supports one row of statistics.
 #' If there are multiple observations, we recommend applying \code{\link{smcrf}} to each row individually.
-#' @param statistics_selection A dataframe indicating selection of statistics for fitting individual parameters (only works for method "smcrf-single-param"; NULL by default).
-#' Each column's name is one statistic ID, and each row's name is one parameter ID.
+#' @param statistics_selection A dataframe indicating selection of statistics for fitting individual parameters (only works for method \code{"smcrf-single-param"}; \code{NULL} by default).
+#' Each column's name matches one statistic ID, and each row's name matches one parameter ID.
 #' The value is 1 if the statistic is used for the parameter, 0 otherwise.
 #' @param smcrf_results An existing ABC-SMC-RF result.
 #' If provided, smcrf will continue ABC-SMC-RF from the last iteration of the previous run.
 #' @param model Model for the statistics.
-#' The function must take two inputs: a data frame parameters and logic variable parallel.
-#' The model will output a reference table.
-#' Each row contains parameters for each simulation and corresponding statistics.
+#' The function must take two inputs: a dataframe \code{parameters} and logic variable \code{parallel}.
+#' The model must output a reference table, where each row contains parameters for each simulation and corresponding statistics.
+#' The column names of the reference table must match the parameter and statistics IDs.
 #' @param rprior Function to generate particles from the prior distribution.
-#' The function must take one input: Nparameters, the number of particles to generate.
-#' The output is a data frame where column names match parameter IDs,
+#' The function must take one input: \code{Nparameters}, the number of particles to generate.
+#' The output is a dataframe where column names match parameter IDs,
 #' and each row contains one parameter set.
 #' @param dprior Function to compute the prior density.
-#' The function must take two inputs: parameters and parameter_id.
-#' The data frame parameters contains parameter sets in each row, with column names as parameter IDs.
-#' The parameter_id is either "all" or one of the parameter IDs.
-#' The output is a vector of prior probabilities corresponding to rows in parameters,
-#' either for the parameter indicated by parameter_id or jointly for all parameters (if parameter_id = "all").
+#' The function must take two inputs: \code{parameters} and \code{parameter_id}.
+#' The dataframe \code{parameters} contains parameter sets in each row, with column names as parameter IDs.
+#' The \code{parameter_id} is either \code{"all"} or one of the parameter IDs.
+#' The output is a vector of prior probabilities corresponding to rows in \code{parameters},
+#' either for the parameter indicated by \code{parameter_id} or jointly for all parameters (if \code{parameter_id} = \code{"all"}).
 #' @param perturbation Perturbation method for the parameters.
-#' abcsmcrf supports perturbation = "Gaussian" (default) or "Uniform".
+#' \code{\link{smcrf}} supports \code{perturbation} = \code{"Gaussian"} (default) or \code{"Uniform"}.
 #' @param perturbation_parameters A dataframe containing the parameters for the perturbation.
-#' Each row corresponds to one iteration, and each column corresponds to one parameter.
-#' The values are the normal distribution variances (for perturbation = "Gaussian") or ranges (for perturbation = "Uniform").
-#' @param nParticles A list of numbers showing the particles of ABC-SMC-RF.
-#' Each entry indicates the number of simulations in the corresponding iteration.
-#' @param model_redo_if_NA A logic variable (model_redo_if_NA = FALSE by default).
-#' If model_redo_if_NA = TRUE, the model will be re-evaluated if it returns NA.
-#' @param parallel A logic variable (parallel = FALSE by default).
-#' If parallel = TRUE, the ABC-RF functions will be computed in parallel.
-#' @param save_model A logic variable (parallel = FALSE by default).
-#' If save_model = TRUE, the random forest will be saved in the output.
-#' @param save_rds A logic variable (parallel = FALSE by default).
-#' If save_rds = TRUE, the ABC-SMC-RF results will be saved in an rds file.
-#' @param filename_rds A string (filename_rds = "ABCSMCDRF.rds" by default).
-#' If save_rds = TRUE, the output from ABC-SMC-(D)RF will be saved in a file with this name.
+#' Each row corresponds to one iteration, and each column corresponds to one parameter (the column 
+#' names must match parameter_ids).
+#' The values are the normal distribution variances (for \code{perturbation} = \code{"Gaussian"}) or ranges (for \code{perturbation} = \code{"Uniform"}).
+#' @param nParticles A vector of particle counts.
+#' Each entry indicates the number of simulations (e.g. particles) in the corresponding iteration.
+#' @param model_redo_if_NA A logic variable (\code{FALSE} by default).
+#' If \code{model_redo_if_NA} = \code{TRUE}, the particles where \code{model} returns \code{NA} will be simulated again.
+#' @param parallel A logic variable (\code{FALSE} by default).
+#' If \code{parallel} = \code{TRUE}, the ABC-RF functions will be computed in parallel.
+#' @param save_model A logic variable (\code{FALSE} by default).
+#' If \code{save_model} = \code{TRUE}, the random forest will be saved in \code{\link{smcrf}}'s output.
+#' @param save_rds A logic variable (\code{FALSE} by default).
+#' If \code{save_rds} = \code{TRUE}, the ABC-SMC-RF results will be saved in an rds file.
+#' @param filename_rds A string (\code{"ABCSMCDRF.rds"} by default).
+#' If \code{save_rds} = \code{TRUE}, the output from ABC-SMC-(D)RF will be saved in a file with this name.
 #' @param ... Additional arguments to be passed to \code{abcrf} or \code{drf}.
 #' @return An object \code{smcrf_results} containing the results of the inference.
 #' If the posterior distributions have not converged to a satisfactory level,
@@ -59,9 +60,9 @@
 #' #--------------------------------------------------------------------
 #' #---------------------------ABC-SMC-RF for a model with one parameter
 #' #--------------------------------------------------------------------
-#' # Data to be fitted consists of two statistics s1 and s2
+#' #    Data to be fitted consists of two statistics s1 and s2
 #' statistics_target <- data.frame(s1 = 0, s2 = 2)
-#' # We then define a parametrized model for the statistics
+#' #    We define a parametrized model for the statistics
 #' model <- function(parameters) {
 #'     statistics <- data.frame(
 #'         s1 = parameters$theta - 1 + runif(nrow(parameters), -0.1, 0.1),
@@ -69,63 +70,65 @@
 #'     )
 #'     cbind(parameters, statistics)
 #' }
-#' # and a function to perturb the parameters with random noise between iterations
-#' perturb <- function(parameters) {
-#'     parameters$theta <- parameters$theta + runif(nrow(parameters), min = -0.1, max = 0.1)
-#'     return(parameters)
-#' }
-#' # We start from initial guesses for theta from Uniform(-10, 10)
-#' parameters_initial <- data.frame(theta = runif(100000, -10, 10))
-#' # while ensuring that theta stays within bounds
-#' bounds <- data.frame(
-#'     parameter = c("theta"),
-#'     min = c(-10),
-#'     max = c(10)
+#' #    and the perturbation parameters for a uniform perturbation
+#' perturbation_parameters <- data.frame(
+#'      theta = rep(0.1, 2) # vector length is equal to number of ABC-SMC-(D)RF iterations
 #' )
-#' # Finally, we run ABC-SMC-RF with 2 iterations, each with 1000 particles
+#' #    We then define rprior and dprior
+#' rprior <- function(Nparameters){
+#'      theta <- runif(Nparameters, -10, 10)
+#'      return(data.frame(theta = theta))
+#' }
+#' dprior <- function(parameters, parameter_id = "theta"){
+#'      return(rep(1/20, nrow(parameters)))
+#' }
+#' #    Finally, we run ABC-SMC-RF with 2 iterations, each with 1000 particles
 #' smcrf_results <- smcrf(
 #'     method = "smcrf-single-param",
 #'     statistics_target = statistics_target,
 #'     model = model,
-#'     perturb = perturb,
-#'     bounds = bounds,
-#'     parameters_initial = parameters_initial,
+#'     rprior = rprior, 
+#'     dprior = dprior,
+#'     perturbation = "Uniform",
+#'     perturbation_parameters = perturbation_parameters,
 #'     nParticles = c(1000, 1000),
 #' )
-#' # Now we examine the posterior distribution of theta
+#' #    Now we examine the posterior distribution of theta
 #' posterior_iteration <- paste0("Iteration_", (smcrf_results$nIterations + 1))
 #' posterior_theta <- smcrf_results[[posterior_iteration]]$parameters$theta
-#' # We look at the posterior mean of theta
+#' #    We look at the posterior mean of theta
 #' theta_mean <- mean(posterior_theta)
 #' print(theta_mean)
-#' # Notice that the mean is close to 1, the true value of theta.
-#' # We can also look at the posterior variance of theta
+#' #    Notice that the mean is close to 1, the true value of theta.
+#' #    We can also look at the posterior variance of theta
 #' theta_var <- var(posterior_theta)
 #' print(theta_var)
-#' # We can also continue the ABC-SMC-RF run if the posterior convergence is not satisfactory
+#' #    We can also continue the ABC-SMC-RF run if the posterior convergence is not satisfactory
 #' smcrf_results <- smcrf(
 #'     method = "smcrf-single-param",
 #'     smcrf_results = smcrf_results,
 #'     model = model,
-#'     perturb = perturb,
-#'     bounds = bounds,
-#'     nParticles = c(1000, 1000)
+#'     rprior = rprior, 
+#'     dprior = dprior,
+#'     perturbation = "Uniform",
+#'     perturbation_parameters = perturbation_parameters,
+#'     nParticles = c(1000, 1000),
 #' )
-#' # We look again at the posterior mean and variance of theta
+#' #    We can look again at the posterior mean and variance of theta
 #' posterior_iteration <- paste0("Iteration_", (smcrf_results$nIterations + 1))
 #' posterior_theta <- smcrf_results[[posterior_iteration]]$parameters$theta
 #' theta_mean <- mean(posterior_theta)
 #' print(theta_mean)
 #' theta_var <- var(posterior_theta)
 #' print(theta_var)
-#' # and notice whether there is any improvement in the posterior distribution
-#' # We can continue the runs of ABC-SMC-(D)RF similarly for the examples below
+#' #    and notice whether there is any improvement in the posterior distribution
+#' #    We can continue the runs of ABC-SMC-(D)RF similarly for the examples below
 #' #--------------------------------------------------------------------
 #' #---------------------ABC-SMC-RF for a model with multiple parameters
 #' #--------------------------------------------------------------------
-#' # Data to be fitted consists of two statistics s1 and s2
+#' #    Data to be fitted consists of two statistics s1 and s2
 #' statistics_target <- data.frame(s1 = 4, s2 = 4)
-#' # We then define a parametrized model for the statistics
+#' #    We then define a parametrized model for the statistics
 #' model <- function(parameters) {
 #'     statistics <- data.frame(
 #'         s1 = parameters$mu + parameters$theta + runif(nrow(parameters), -0.1, 0.1),
@@ -133,37 +136,39 @@
 #'     )
 #'     cbind(parameters, statistics)
 #' }
-#' # and a function to perturb the parameters with random noise between iterations
-#' perturb <- function(parameters) {
-#'     if (any(grepl("theta", colnames(parameters)))) {
-#'         parameters[["theta"]] <- parameters[["theta"]] + runif(nrow(parameters), min = -0.1, max = 0.1)
-#'     } else if (any(grepl("mu", colnames(parameters)))) {
-#'         parameters[["mu"]] <- parameters[["mu"]] + runif(nrow(parameters), min = -0.1, max = 0.1)
-#'     }
-#'     return(parameters)
+#' #    and the perturbation parameters
+#' perturbation_parameters <- data.frame(
+#'      theta = rep(0.1, 3),
+#'      mu = rep(0.1, 3)
+#' )
+#' #    We define the rprior and dprior functions
+#' rprior <- function(Nparameters){
+#'      theta <- runif(Nparameters, -10, 10)
+#'      mu <- runif(Nparameters, -10, 10)
+#'      return(data.frame(theta = theta, mu = mu))
 #' }
-#' # We start from initial guesses from U(-10, 10) x U(-10, 10)
-#' parameters_initial <- data.frame(
-#'     theta = runif(100000, -10, 10),
-#'     mu = runif(100000, -10, 10)
-#' )
-#' # while ensuring that the parameters stay within bounds
-#' bounds <- data.frame(
-#'     parameter = c("theta", "mu"),
-#'     min = c(-10, -10),
-#'     max = c(10, 10)
-#' )
-#' # Finally, we run ABC-SMC-RF with 3 iterations, each with 1000 particles
+#' dprior <- function(parameters, parameter_id = "all"){
+#'      probs <- rep(1, nrow(parameters))
+#'      if (parameter_id %in% c("all", "theta")){
+#'          probs <- probs * dunif(parameters[["theta"]], -10, 10)
+#'      }
+#'      if (parameter_id %in% c("all", "mu")){
+#'          probs <- probs * dunif(parameters[["mu"]], -10, 10)
+#'      }
+#'      return(probs)
+#' }
+#' #    Finally, we run ABC-SMC-RF with 3 iterations, each with 1000 particles
 #' smcrf_results <- smcrf(
 #'     method = "smcrf-single-param",
 #'     statistics_target = statistics_target,
 #'     model = model,
-#'     perturb = perturb,
-#'     bounds = bounds,
-#'     parameters_initial = parameters_initial,
+#'     rprior = rprior, 
+#'     dprior = dprior,
+#'     perturbation = "Uniform",
+#'     perturbation_parameters = perturbation_parameters,
 #'     nParticles = c(1000, 1000, 1000),
 #' )
-#' # Now we examine the posterior distribution of each parameter
+#' #    Now we examine the posterior distribution of each parameter
 #' posterior_iteration <- paste0("Iteration_", (smcrf_results$nIterations + 1))
 #' posterior_params <- smcrf_results[[posterior_iteration]]$parameters
 #' posterior_means <- colMeans(posterior_params)
@@ -173,9 +178,9 @@
 #' #--------------------------------------------------------------------
 #' #--------------------------------ABC-SMC-DRF for a multivariate model
 #' #--------------------------------------------------------------------
-#' # Data to be fitted consists of 3 statistics s1, s2 and s3
+#' #    Data to be fitted consists of two statistics s1 and s2
 #' statistics_target <- data.frame(s1 = 9, s2 = 18)
-#' # We then define a parametrized model for the statistics
+#' #    We then define a parametrized model for the statistics
 #' model <- function(parameters) {
 #'     statistics <- data.frame(
 #'         s1 = parameters$mu + parameters$theta + runif(nrow(parameters), -0.1, 0.1),
@@ -183,38 +188,39 @@
 #'     )
 #'     cbind(parameters, statistics)
 #' }
-#' # and a function to perturb the parameters with random noise between iterations
-#' perturb <- function(parameters) {
-#'     if (any(grepl("theta", colnames(parameters)))) {
-#'         parameters[["theta"]] <- parameters[["theta"]] + runif(nrow(parameters), min = -0.1, max = 0.1)
-#'     } else if (any(grepl("mu", colnames(parameters)))) {
-#'         parameters[["mu"]] <- parameters[["mu"]] + runif(nrow(parameters), min = -0.1, max = 0.1)
-#'     }
-#'     return(parameters)
+#' #    and the perturbation parameters
+#' perturbation_parameters <- data.frame(
+#'      theta = rep(0.1, 3),
+#'      mu = rep(0.1, 3)
+#' )
+#' #    We define the rprior and dprior functions
+#' rprior <- function(Nparameters){
+#'      theta <- runif(Nparameters, -10, 10)
+#'      mu <- runif(Nparameters, -10, 10)
+#'      return(data.frame(theta = theta, mu = mu))
 #' }
-#' # We start from initial guesses from U(-10, 10) x U(-10, 10)
-#' theta <- runif(100000, -10, 10)
-#' parameters_initial <- data.frame(
-#'     theta = runif(100000, -10, 10),
-#'     mu = runif(100000, -10, 10)
-#' )
-#' # while ensuring that the parameters stay within bounds
-#' bounds <- data.frame(
-#'     parameter = c("theta", "mu"),
-#'     min = c(-10, -10),
-#'     max = c(10, 10)
-#' )
-#' # Finally, we run ABC-SMC-DRF with 3 iterations, each with 1000 particles
+#' dprior <- function(parameters, parameter_id = "all"){
+#'      probs <- rep(1, nrow(parameters))
+#'      if (parameter_id %in% c("all", "theta")){
+#'          probs <- probs * dunif(parameters[["theta"]], -10, 10)
+#'      }
+#'      if (parameter_id %in% c("all", "mu")){
+#'          probs <- probs * dunif(parameters[["mu"]], -10, 10)
+#'      }
+#'      return(probs)
+#' }
+#' #    Finally, we run ABC-SMC-DRF with 3 iterations, each with 1000 particles
 #' smcrf_results <- smcrf(
 #'     method = "smcrf-multi-param",
 #'     statistics_target = statistics_target,
 #'     model = model,
-#'     perturb = perturb,
-#'     bounds = bounds,
-#'     parameters_initial = parameters_initial,
+#'     rprior = rprior, 
+#'     dprior = dprior,
+#'     perturbation = "Uniform",
+#'     perturbation_parameters = perturbation_parameters,
 #'     nParticles = c(1000, 1000, 1000),
 #' )
-#' # Now we examine the posterior distribution of each parameter
+#' #    Now we examine the posterior distribution of each parameter
 #' posterior_iteration <- paste0("Iteration_", (smcrf_results$nIterations + 1))
 #' posterior_params <- smcrf_results[[posterior_iteration]]$parameters
 #' posterior_means <- colMeans(posterior_params)
