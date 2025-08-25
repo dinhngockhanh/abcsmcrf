@@ -34,13 +34,15 @@
 #' @param perturbation Perturbation method for the parameters.
 #' \code{\link{smcrf}} supports \code{perturbation} = \code{"Gaussian"} (default) or \code{"Uniform"}.
 #' @param perturbation_parameters A dataframe containing the parameters for the perturbation.
-#' Each row corresponds to one iteration, and each column corresponds to one parameter (the column 
+#' Each row corresponds to one iteration, and each column corresponds to one parameter (the column
 #' names must match parameter_ids).
 #' The values are the normal distribution variances (for \code{perturbation} = \code{"Gaussian"}) or ranges (for \code{perturbation} = \code{"Uniform"}).
 #' @param nParticles A vector of particle counts.
 #' Each entry indicates the number of simulations (e.g. particles) in the corresponding iteration.
 #' @param model_redo_if_NA A logic variable (\code{FALSE} by default).
 #' If \code{model_redo_if_NA} = \code{TRUE}, the particles where \code{model} returns \code{NA} will be simulated again.
+#' @param verbose A logic variable (\code{TRUE} by default).
+#' If \code{verbose} = \code{TRUE}, progress messages will be printed during the fitting process.
 #' @param parallel A logic variable (\code{FALSE} by default).
 #' If \code{parallel} = \code{TRUE}, the ABC-RF functions will be computed in parallel.
 #' @param save_model A logic variable (\code{FALSE} by default).
@@ -72,22 +74,22 @@
 #' }
 #' #    and the perturbation parameters for a uniform perturbation
 #' perturbation_parameters <- data.frame(
-#'      theta = rep(0.1, 2) # vector length is equal to number of ABC-SMC-(D)RF iterations
+#'     theta = rep(0.1, 2) # vector length is equal to number of ABC-SMC-(D)RF iterations
 #' )
 #' #    We then define rprior and dprior
-#' rprior <- function(Nparameters){
-#'      theta <- runif(Nparameters, -10, 10)
-#'      return(data.frame(theta = theta))
+#' rprior <- function(Nparameters) {
+#'     theta <- runif(Nparameters, -10, 10)
+#'     return(data.frame(theta = theta))
 #' }
-#' dprior <- function(parameters, parameter_id = "theta"){
-#'      return(rep(1/20, nrow(parameters)))
+#' dprior <- function(parameters, parameter_id = "theta") {
+#'     return(rep(1 / 20, nrow(parameters)))
 #' }
 #' #    Finally, we run ABC-SMC-RF with 2 iterations, each with 1000 particles
 #' smcrf_results <- smcrf(
 #'     method = "smcrf-single-param",
 #'     statistics_target = statistics_target,
 #'     model = model,
-#'     rprior = rprior, 
+#'     rprior = rprior,
 #'     dprior = dprior,
 #'     perturbation = "Uniform",
 #'     perturbation_parameters = perturbation_parameters,
@@ -108,7 +110,7 @@
 #'     method = "smcrf-single-param",
 #'     smcrf_results = smcrf_results,
 #'     model = model,
-#'     rprior = rprior, 
+#'     rprior = rprior,
 #'     dprior = dprior,
 #'     perturbation = "Uniform",
 #'     perturbation_parameters = perturbation_parameters,
@@ -138,31 +140,31 @@
 #' }
 #' #    and the perturbation parameters
 #' perturbation_parameters <- data.frame(
-#'      theta = rep(0.1, 3),
-#'      mu = rep(0.1, 3)
+#'     theta = rep(0.1, 3),
+#'     mu = rep(0.1, 3)
 #' )
 #' #    We define the rprior and dprior functions
-#' rprior <- function(Nparameters){
-#'      theta <- runif(Nparameters, -10, 10)
-#'      mu <- runif(Nparameters, -10, 10)
-#'      return(data.frame(theta = theta, mu = mu))
+#' rprior <- function(Nparameters) {
+#'     theta <- runif(Nparameters, -10, 10)
+#'     mu <- runif(Nparameters, -10, 10)
+#'     return(data.frame(theta = theta, mu = mu))
 #' }
-#' dprior <- function(parameters, parameter_id = "all"){
-#'      probs <- rep(1, nrow(parameters))
-#'      if (parameter_id %in% c("all", "theta")){
-#'          probs <- probs * dunif(parameters[["theta"]], -10, 10)
-#'      }
-#'      if (parameter_id %in% c("all", "mu")){
-#'          probs <- probs * dunif(parameters[["mu"]], -10, 10)
-#'      }
-#'      return(probs)
+#' dprior <- function(parameters, parameter_id = "all") {
+#'     probs <- rep(1, nrow(parameters))
+#'     if (parameter_id %in% c("all", "theta")) {
+#'         probs <- probs * dunif(parameters[["theta"]], -10, 10)
+#'     }
+#'     if (parameter_id %in% c("all", "mu")) {
+#'         probs <- probs * dunif(parameters[["mu"]], -10, 10)
+#'     }
+#'     return(probs)
 #' }
 #' #    Finally, we run ABC-SMC-RF with 3 iterations, each with 1000 particles
 #' smcrf_results <- smcrf(
 #'     method = "smcrf-single-param",
 #'     statistics_target = statistics_target,
 #'     model = model,
-#'     rprior = rprior, 
+#'     rprior = rprior,
 #'     dprior = dprior,
 #'     perturbation = "Uniform",
 #'     perturbation_parameters = perturbation_parameters,
@@ -190,31 +192,31 @@
 #' }
 #' #    and the perturbation parameters
 #' perturbation_parameters <- data.frame(
-#'      theta = rep(0.1, 3),
-#'      mu = rep(0.1, 3)
+#'     theta = rep(0.1, 3),
+#'     mu = rep(0.1, 3)
 #' )
 #' #    We define the rprior and dprior functions
-#' rprior <- function(Nparameters){
-#'      theta <- runif(Nparameters, -10, 10)
-#'      mu <- runif(Nparameters, -10, 10)
-#'      return(data.frame(theta = theta, mu = mu))
+#' rprior <- function(Nparameters) {
+#'     theta <- runif(Nparameters, -10, 10)
+#'     mu <- runif(Nparameters, -10, 10)
+#'     return(data.frame(theta = theta, mu = mu))
 #' }
-#' dprior <- function(parameters, parameter_id = "all"){
-#'      probs <- rep(1, nrow(parameters))
-#'      if (parameter_id %in% c("all", "theta")){
-#'          probs <- probs * dunif(parameters[["theta"]], -10, 10)
-#'      }
-#'      if (parameter_id %in% c("all", "mu")){
-#'          probs <- probs * dunif(parameters[["mu"]], -10, 10)
-#'      }
-#'      return(probs)
+#' dprior <- function(parameters, parameter_id = "all") {
+#'     probs <- rep(1, nrow(parameters))
+#'     if (parameter_id %in% c("all", "theta")) {
+#'         probs <- probs * dunif(parameters[["theta"]], -10, 10)
+#'     }
+#'     if (parameter_id %in% c("all", "mu")) {
+#'         probs <- probs * dunif(parameters[["mu"]], -10, 10)
+#'     }
+#'     return(probs)
 #' }
 #' #    Finally, we run ABC-SMC-DRF with 3 iterations, each with 1000 particles
 #' smcrf_results <- smcrf(
 #'     method = "smcrf-multi-param",
 #'     statistics_target = statistics_target,
 #'     model = model,
-#'     rprior = rprior, 
+#'     rprior = rprior,
 #'     dprior = dprior,
 #'     perturbation = "Uniform",
 #'     perturbation_parameters = perturbation_parameters,
@@ -238,6 +240,7 @@ smcrf <- function(method = "smcrf-single-param",
                   perturbation_parameters = NULL,
                   nParticles,
                   model_redo_if_NA = FALSE,
+                  verbose = TRUE,
                   parallel = FALSE,
                   save_model = TRUE,
                   save_rds = FALSE,
@@ -267,6 +270,7 @@ smcrf <- function(method = "smcrf-single-param",
             perturbation_parameters = perturbation_parameters,
             nParticles = nParticles,
             model_redo_if_NA = model_redo_if_NA,
+            verbose = verbose,
             parallel = parallel,
             save_model = save_model,
             save_rds = save_rds,
@@ -285,6 +289,7 @@ smcrf <- function(method = "smcrf-single-param",
             perturbation_parameters = perturbation_parameters,
             nParticles = nParticles,
             model_redo_if_NA = model_redo_if_NA,
+            verbose = verbose,
             parallel = parallel,
             save_model = save_model,
             save_rds = save_rds,
@@ -306,6 +311,7 @@ smcrf_single_param <- function(statistics_target,
                                perturbation_parameters,
                                nParticles,
                                model_redo_if_NA,
+                               verbose,
                                parallel,
                                save_model = TRUE,
                                save_rds = FALSE,
@@ -341,11 +347,24 @@ smcrf_single_param <- function(statistics_target,
     SMCRF[["statistics_target"]] <- statistics_target
     SMCRF[["parameters_labels"]] <- data.frame(parameter = parameters_ids)
     SMCRF[["statistics_labels"]] <- data.frame(ID = colnames(statistics_target))
+    if (!verbose) {
+        pb <- txtProgressBar(
+            min = 1,
+            max = length(nParticles) + 1,
+            style = 3,
+            width = 50,
+            char = "+"
+        )
+    }
     for (iteration in iteration_start:(nIterations + 1)) {
-        if (iteration == (nIterations + 1)) {
-            cat(bold(red("ABC-SMC-DRF FOR SINGLE PARAMETERS:")), paste0(bold(yellow("final posterior distribution", "\n"))))
+        if (verbose) {
+            if (iteration == (nIterations + 1)) {
+                cat(bold(red("ABC-SMC-DRF FOR SINGLE PARAMETERS:")), paste0(bold(yellow("final posterior distribution", "\n"))))
+            } else {
+                cat(bold(red("ABC-SMC-DRF FOR SINGLE PARAMETERS:")), paste0(bold(yellow("iteration", iteration, "\n"))))
+            }
         } else {
-            cat(bold(red("ABC-SMC-DRF FOR SINGLE PARAMETERS:")), paste0(bold(yellow("iteration", iteration, "\n"))))
+            setTxtProgressBar(pb, iteration)
         }
         #---Compute Beaumont variances from the previous iteration
         if (iteration > 1) {
@@ -358,7 +377,7 @@ smcrf_single_param <- function(statistics_target,
             }
         }
         #---Create training set
-        cat(blue("Sampling parameters and computing model simulations...\n"))
+        if (verbose) cat(blue("Sampling parameters and computing model simulations...\n"))
         nrow <- ifelse(iteration == (nIterations + 1), nParticles[nIterations], nParticles[iteration])
         invalid_indices <- 1:nrow
         parameters_unperturbed <- data.frame(matrix(NA, nrow = nrow, ncol = length(parameters_ids)))
@@ -448,10 +467,11 @@ smcrf_single_param <- function(statistics_target,
             if (save_rds == TRUE) {
                 saveRDS(SMCRF, file = filename_rds)
             }
+            if (!verbose) cat("\n")
             return(SMCRF)
         }
         #---Run ABCRF for all parameters
-        cat(blue("Performing Random Forest prediction...\n"))
+        if (verbose) cat(blue("Performing Random Forest prediction...\n"))
         ABCRF_weights <- data.frame(matrix(NA, nrow = nParticles[iteration], ncol = 0))
         if (save_model == TRUE) {
             RFmodels <- list()
@@ -485,7 +505,7 @@ smcrf_single_param <- function(statistics_target,
             }
         }
         #---Modify ABCRF weights
-        cat(blue("Recalibrating Random Forest weights...\n"))
+        if (verbose) cat(blue("Recalibrating Random Forest weights...\n"))
         if (iteration > 1) {
             for (parameter_id in parameters_ids) {
                 if (perturbation == "Gaussian") {
@@ -538,6 +558,7 @@ smcrf_multi_param <- function(statistics_target,
                               perturbation_parameters,
                               nParticles,
                               model_redo_if_NA,
+                              verbose,
                               parallel,
                               save_model,
                               save_rds,
@@ -574,11 +595,24 @@ smcrf_multi_param <- function(statistics_target,
     SMCDRF[["statistics_target"]] <- statistics_target
     SMCDRF[["parameters_labels"]] <- data.frame(parameter = parameters_ids)
     SMCDRF[["statistics_labels"]] <- data.frame(ID = statistics_ids)
+    if (!verbose) {
+        pb <- txtProgressBar(
+            min = 1,
+            max = length(nParticles) + 1,
+            style = 3,
+            width = 50,
+            char = "+"
+        )
+    }
     for (iteration in iteration_start:(nIterations + 1)) {
-        if (iteration == (nIterations + 1)) {
-            cat(bold(red("ABC-SMC-DRF FOR MULTIPLE PARAMETERS:")), paste0(bold(yellow("final posterior distribution", "\n"))))
+        if (verbose) {
+            if (iteration == (nIterations + 1)) {
+                cat(bold(red("ABC-SMC-DRF FOR MULTIPLE PARAMETERS:")), paste0(bold(yellow("final posterior distribution", "\n"))))
+            } else {
+                cat(bold(red("ABC-SMC-DRF FOR MULTIPLE PARAMETERS:")), paste0(bold(yellow("iteration", iteration, "\n"))))
+            }
         } else {
-            cat(bold(red("ABC-SMC-DRF FOR MULTIPLE PARAMETERS:")), paste0(bold(yellow("iteration", iteration, "\n"))))
+            setTxtProgressBar(pb, iteration)
         }
         #---Compute Beaumont variances from the previous iteration
         if (iteration > 1) {
@@ -591,7 +625,7 @@ smcrf_multi_param <- function(statistics_target,
             }
         }
         #---Create training set
-        cat(blue("Sampling parameters and computing model simulations...\n"))
+        if (verbose) cat(blue("Sampling parameters and computing model simulations...\n"))
         nrow <- ifelse(iteration == (nIterations + 1), nParticles[nIterations], nParticles[iteration])
         invalid_indices <- 1:nrow
         parameters_unperturbed <- data.frame(matrix(NA, nrow = nrow, ncol = length(parameters_ids)))
@@ -677,10 +711,11 @@ smcrf_multi_param <- function(statistics_target,
             if (save_rds == TRUE) {
                 saveRDS(SMCDRF, file = filename_rds)
             }
+            if (!verbose) cat("\n")
             return(SMCDRF)
         }
         #---Run DRF for all parameters
-        cat(blue("Performing Random Forest prediction...\n"))
+        if (verbose) cat(blue("Performing Random Forest prediction...\n"))
         drfmodel <- drf(
             X = statistics,
             Y = parameters,
@@ -693,7 +728,7 @@ smcrf_multi_param <- function(statistics_target,
         )
         DRF_weights <- as.vector(get_sample_weights(drfmodel, statistics_target))
         #---Modify DRF weights
-        cat(blue("Recalibrating Random Forest weights...\n"))
+        if (verbose) cat(blue("Recalibrating Random Forest weights...\n"))
         if (iteration > 1) {
             if (perturbation == "Gaussian") {
                 weight_modifiers <- w_modifiers_normal(
