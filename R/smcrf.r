@@ -39,6 +39,8 @@
 #' The values are the normal distribution variances (for \code{perturbation} = \code{"Gaussian"}) or ranges (for \code{perturbation} = \code{"Uniform"}).
 #' @param nParticles A vector of particle counts.
 #' Each entry indicates the number of simulations (e.g. particles) in the corresponding iteration.
+#' @param final_sample A logic variable (\code{TRUE} by default).
+#' If \code{final_sample} = \code{TRUE}, parameters will be sampled from the final iteration and saved in iteration \code{length(nParticles)+1}.
 #' @param model_redo_if_NA A logic variable (\code{FALSE} by default).
 #' If \code{model_redo_if_NA} = \code{TRUE}, the particles where \code{model} returns \code{NA} will be simulated again.
 #' @param verbose A logic variable (\code{TRUE} by default).
@@ -239,6 +241,7 @@ smcrf <- function(method = "smcrf-single-param",
                   perturbation = "Gaussian",
                   perturbation_parameters = NULL,
                   nParticles,
+                  final_sample = TRUE,
                   model_redo_if_NA = FALSE,
                   verbose = TRUE,
                   parallel = FALSE,
@@ -269,6 +272,7 @@ smcrf <- function(method = "smcrf-single-param",
             perturbation = perturbation,
             perturbation_parameters = perturbation_parameters,
             nParticles = nParticles,
+            final_sample = final_sample,
             model_redo_if_NA = model_redo_if_NA,
             verbose = verbose,
             parallel = parallel,
@@ -288,6 +292,7 @@ smcrf <- function(method = "smcrf-single-param",
             perturbation = perturbation,
             perturbation_parameters = perturbation_parameters,
             nParticles = nParticles,
+            final_sample = final_sample,
             model_redo_if_NA = model_redo_if_NA,
             verbose = verbose,
             parallel = parallel,
@@ -310,6 +315,7 @@ smcrf_single_param <- function(statistics_target,
                                perturbation,
                                perturbation_parameters,
                                nParticles,
+                               final_sample,
                                model_redo_if_NA,
                                verbose,
                                parallel,
@@ -328,6 +334,7 @@ smcrf_single_param <- function(statistics_target,
         statistics_ids <- colnames(SMCRF[["Iteration_1"]]$statistics)
         nIterations <- length(nParticles) + SMCRF[["nIterations"]]
         iteration_start <- 1 + SMCRF[["nIterations"]]
+        iteration_end <- ifelse(final_sample, nIterations + 1, nIterations)
         if (is.null(statistics_target)) statistics_target <- SMCRF[["statistics_target"]]
         nParticles <- c(SMCRF[["nParticles"]], nParticles)
         SMCRF[[paste0("Iteration_", iteration_start)]] <- c()
@@ -356,7 +363,7 @@ smcrf_single_param <- function(statistics_target,
             char = "+"
         )
     }
-    for (iteration in iteration_start:(nIterations + 1)) {
+    for (iteration in iteration_start:iteration_end) {
         if (verbose) {
             if (iteration == (nIterations + 1)) {
                 cat(bold(red("ABC-SMC-DRF FOR SINGLE PARAMETERS:")), paste0(bold(yellow("final posterior distribution", "\n"))))
@@ -548,6 +555,11 @@ smcrf_single_param <- function(statistics_target,
             saveRDS(SMCRF, file = filename_rds)
         }
     }
+    if (save_rds == TRUE) {
+        saveRDS(SMCRF, file = filename_rds)
+    }
+    if (!verbose) cat("\n")
+    return(SMCRF)
 }
 
 smcrf_multi_param <- function(statistics_target,
@@ -557,6 +569,7 @@ smcrf_multi_param <- function(statistics_target,
                               perturbation,
                               perturbation_parameters,
                               nParticles,
+                              final_sample,
                               model_redo_if_NA,
                               verbose,
                               parallel,
@@ -576,6 +589,7 @@ smcrf_multi_param <- function(statistics_target,
         statistics_ids <- colnames(SMCDRF[["Iteration_1"]]$statistics)
         nIterations <- length(nParticles) + SMCDRF[["nIterations"]]
         iteration_start <- 1 + SMCDRF[["nIterations"]]
+        iteration_end <- ifelse(final_sample, nIterations + 1, nIterations)
         if (is.null(statistics_target)) statistics_target <- SMCDRF[["statistics_target"]]
         nParticles <- c(SMCDRF[["nParticles"]], nParticles)
         SMCDRF[[paste0("Iteration_", iteration_start)]] <- c()
@@ -604,7 +618,7 @@ smcrf_multi_param <- function(statistics_target,
             char = "+"
         )
     }
-    for (iteration in iteration_start:(nIterations + 1)) {
+    for (iteration in iteration_start:iteration_end) {
         if (verbose) {
             if (iteration == (nIterations + 1)) {
                 cat(bold(red("ABC-SMC-DRF FOR MULTIPLE PARAMETERS:")), paste0(bold(yellow("final posterior distribution", "\n"))))
@@ -771,6 +785,11 @@ smcrf_multi_param <- function(statistics_target,
             saveRDS(SMCDRF, file = filename_rds)
         }
     }
+    if (save_rds == TRUE) {
+        saveRDS(SMCDRF, file = filename_rds)
+    }
+    if (!verbose) cat("\n")
+    return(SMCDRF)
 }
 
 w_modifiers_normal <- function(parameters,
