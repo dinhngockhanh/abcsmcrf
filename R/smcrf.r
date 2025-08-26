@@ -347,7 +347,7 @@ smcrf_single_param <- function(statistics_target,
         nIterations <- length(nParticles)
         iteration_start <- 1
     }
-    iteration_end <- ifelse(final_sample, iteration_start + nIterations, iteration_start + nIterations - 1)
+    iteration_end <- ifelse(final_sample, nIterations + 1, nIterations)
     SMCRF[["method"]] <- "smcrf-single-param"
     SMCRF[["nIterations"]] <- nIterations
     SMCRF[["nParticles"]] <- nParticles
@@ -357,7 +357,7 @@ smcrf_single_param <- function(statistics_target,
     if (!verbose) {
         pb <- txtProgressBar(
             min = 1,
-            max = length(nParticles) + 1,
+            max = iteration_end - iteration_start + 1,
             style = 3,
             width = 50,
             char = "+"
@@ -602,7 +602,7 @@ smcrf_multi_param <- function(statistics_target,
         nIterations <- length(nParticles)
         iteration_start <- 1
     }
-    iteration_end <- ifelse(final_sample, iteration_start + nIterations, iteration_start + nIterations - 1)
+    iteration_end <- ifelse(final_sample, nIterations + 1, nIterations)
     SMCDRF[["method"]] <- "smcrf-multi-param"
     SMCDRF[["nIterations"]] <- nIterations
     SMCDRF[["nParticles"]] <- nParticles
@@ -612,7 +612,7 @@ smcrf_multi_param <- function(statistics_target,
     if (!verbose) {
         pb <- txtProgressBar(
             min = 1,
-            max = length(nParticles) + 1,
+            max = iteration_end - iteration_start + 1,
             style = 3,
             width = 50,
             char = "+"
