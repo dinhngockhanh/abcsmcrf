@@ -357,7 +357,7 @@ smcrf_single_param <- function(statistics_target,
     if (!verbose) {
         pb <- txtProgressBar(
             min = 1,
-            max = iteration_end - iteration_start + 1,
+            max = iteration_end - iteration_start + 2,
             style = 3,
             width = 50,
             char = "+"
@@ -371,7 +371,7 @@ smcrf_single_param <- function(statistics_target,
                 cat(bold(red("ABC-SMC-DRF FOR SINGLE PARAMETERS:")), paste0(bold(yellow("iteration", iteration, "\n"))))
             }
         } else {
-            setTxtProgressBar(pb, iteration)
+            setTxtProgressBar(pb, iteration - iteration_start + 1)
         }
         #---Compute Beaumont variances from the previous iteration
         if (iteration > 1) {
@@ -612,7 +612,7 @@ smcrf_multi_param <- function(statistics_target,
     if (!verbose) {
         pb <- txtProgressBar(
             min = 1,
-            max = iteration_end - iteration_start + 1,
+            max = iteration_end - iteration_start + 2,
             style = 3,
             width = 50,
             char = "+"
@@ -626,7 +626,7 @@ smcrf_multi_param <- function(statistics_target,
                 cat(bold(red("ABC-SMC-DRF FOR MULTIPLE PARAMETERS:")), paste0(bold(yellow("iteration", iteration, "\n"))))
             }
         } else {
-            setTxtProgressBar(pb, iteration)
+            setTxtProgressBar(pb, iteration - iteration_start + 1)
         }
         #---Compute Beaumont variances from the previous iteration
         if (iteration > 1) {
