@@ -334,7 +334,6 @@ smcrf_single_param <- function(statistics_target,
         statistics_ids <- colnames(SMCRF[["Iteration_1"]]$statistics)
         nIterations <- length(nParticles) + SMCRF[["nIterations"]]
         iteration_start <- 1 + SMCRF[["nIterations"]]
-        iteration_end <- ifelse(final_sample, nIterations + 1, nIterations)
         if (is.null(statistics_target)) statistics_target <- SMCRF[["statistics_target"]]
         nParticles <- c(SMCRF[["nParticles"]], nParticles)
         SMCRF[[paste0("Iteration_", iteration_start)]] <- c()
@@ -348,6 +347,7 @@ smcrf_single_param <- function(statistics_target,
         nIterations <- length(nParticles)
         iteration_start <- 1
     }
+    iteration_end <- ifelse(final_sample, iteration_start + nIterations, iteration_start + nIterations - 1)
     SMCRF[["method"]] <- "smcrf-single-param"
     SMCRF[["nIterations"]] <- nIterations
     SMCRF[["nParticles"]] <- nParticles
@@ -589,7 +589,6 @@ smcrf_multi_param <- function(statistics_target,
         statistics_ids <- colnames(SMCDRF[["Iteration_1"]]$statistics)
         nIterations <- length(nParticles) + SMCDRF[["nIterations"]]
         iteration_start <- 1 + SMCDRF[["nIterations"]]
-        iteration_end <- ifelse(final_sample, nIterations + 1, nIterations)
         if (is.null(statistics_target)) statistics_target <- SMCDRF[["statistics_target"]]
         nParticles <- c(SMCDRF[["nParticles"]], nParticles)
         SMCDRF[[paste0("Iteration_", iteration_start)]] <- c()
@@ -603,6 +602,7 @@ smcrf_multi_param <- function(statistics_target,
         nIterations <- length(nParticles)
         iteration_start <- 1
     }
+    iteration_end <- ifelse(final_sample, iteration_start + nIterations, iteration_start + nIterations - 1)
     SMCDRF[["method"]] <- "smcrf-multi-param"
     SMCDRF[["nIterations"]] <- nIterations
     SMCDRF[["nParticles"]] <- nParticles
