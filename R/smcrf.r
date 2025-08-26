@@ -370,8 +370,6 @@ smcrf_single_param <- function(statistics_target,
             } else {
                 cat(bold(red("ABC-SMC-DRF FOR SINGLE PARAMETERS:")), paste0(bold(yellow("iteration", iteration, "\n"))))
             }
-        } else {
-            setTxtProgressBar(pb, iteration - iteration_start + 1)
         }
         #---Compute Beaumont variances from the previous iteration
         if (iteration > 1) {
@@ -474,6 +472,7 @@ smcrf_single_param <- function(statistics_target,
             if (save_rds == TRUE) {
                 saveRDS(SMCRF, file = filename_rds)
             }
+            if (!verbose) setTxtProgressBar(pb, iteration - iteration_start + 1)
             if (!verbose) cat("\n")
             return(SMCRF)
         }
@@ -554,6 +553,7 @@ smcrf_single_param <- function(statistics_target,
         if (save_rds == TRUE) {
             saveRDS(SMCRF, file = filename_rds)
         }
+        if (!verbose) setTxtProgressBar(pb, iteration - iteration_start + 1)
     }
     if (save_rds == TRUE) {
         saveRDS(SMCRF, file = filename_rds)
@@ -625,8 +625,6 @@ smcrf_multi_param <- function(statistics_target,
             } else {
                 cat(bold(red("ABC-SMC-DRF FOR MULTIPLE PARAMETERS:")), paste0(bold(yellow("iteration", iteration, "\n"))))
             }
-        } else {
-            setTxtProgressBar(pb, iteration - iteration_start + 1)
         }
         #---Compute Beaumont variances from the previous iteration
         if (iteration > 1) {
@@ -725,6 +723,7 @@ smcrf_multi_param <- function(statistics_target,
             if (save_rds == TRUE) {
                 saveRDS(SMCDRF, file = filename_rds)
             }
+            if (!verbose) setTxtProgressBar(pb, iteration - iteration_start + 1)
             if (!verbose) cat("\n")
             return(SMCDRF)
         }
@@ -784,6 +783,7 @@ smcrf_multi_param <- function(statistics_target,
         if (save_rds == TRUE) {
             saveRDS(SMCDRF, file = filename_rds)
         }
+        if (!verbose) setTxtProgressBar(pb, iteration - iteration_start + 1)
     }
     if (save_rds == TRUE) {
         saveRDS(SMCDRF, file = filename_rds)
