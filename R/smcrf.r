@@ -356,8 +356,8 @@ smcrf_single_param <- function(statistics_target,
     SMCRF[["statistics_labels"]] <- data.frame(ID = colnames(statistics_target))
     if (!verbose) {
         pb <- txtProgressBar(
-            min = 1,
-            max = iteration_end - iteration_start + 2,
+            min = 0,
+            max = iteration_end - iteration_start + 1,
             style = 3,
             width = 50,
             char = "+"
@@ -611,8 +611,8 @@ smcrf_multi_param <- function(statistics_target,
     SMCDRF[["statistics_labels"]] <- data.frame(ID = statistics_ids)
     if (!verbose) {
         pb <- txtProgressBar(
-            min = 1,
-            max = iteration_end - iteration_start + 2,
+            min = 0,
+            max = iteration_end - iteration_start + 1,
             style = 3,
             width = 50,
             char = "+"
