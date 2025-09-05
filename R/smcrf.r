@@ -380,6 +380,7 @@ smcrf_single_param <- function(statistics_target,
             } else {
                 Beaumont_variances <- pmax(sapply(tmp, var), 1e-10)
             }
+            Beaumont_variances <- 2 * Beaumont_variances
         }
         #---Create training set
         if (verbose) cat(blue("Sampling parameters and computing model simulations...\n"))
@@ -635,6 +636,7 @@ smcrf_multi_param <- function(statistics_target,
             } else {
                 Beaumont_variances <- pmax(sapply(tmp, var), 1e-10)
             }
+            Beaumont_variances <- 2 * Beaumont_variances
         }
         #---Create training set
         if (verbose) cat(blue("Sampling parameters and computing model simulations...\n"))
