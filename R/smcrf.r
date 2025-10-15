@@ -363,6 +363,7 @@ smcrf_single_param <- function(statistics_target,
             char = "+"
         )
     }
+    colnames_reference_next <- colnames(model(parameters = rprior(Nparameters = 1)))
     for (iteration in iteration_start:iteration_end) {
         if (verbose) {
             if (iteration == (nIterations + 1)) {
@@ -391,7 +392,7 @@ smcrf_single_param <- function(statistics_target,
         parameters_next <- data.frame(matrix(NA, nrow = nrow, ncol = length(parameters_ids)))
         colnames(parameters_next) <- parameters_ids
         reference_next <- data.frame(matrix(NA, nrow = nrow, ncol = length(parameters_ids) + ncol(statistics_target)))
-        colnames(reference_next) <- colnames(model(parameters = rprior(Nparameters = 1)))
+        colnames(reference_next) <- colnames_reference_next
         while (length(invalid_indices) > 0) {
             #   Generate new particles...
             if (iteration == 1) {
@@ -619,6 +620,7 @@ smcrf_multi_param <- function(statistics_target,
             char = "+"
         )
     }
+    colnames_reference_next <- colnames(model(parameters = rprior(Nparameters = 1)))
     for (iteration in iteration_start:iteration_end) {
         if (verbose) {
             if (iteration == (nIterations + 1)) {
@@ -647,7 +649,7 @@ smcrf_multi_param <- function(statistics_target,
         parameters_next <- data.frame(matrix(NA, nrow = nrow, ncol = length(parameters_ids)))
         colnames(parameters_next) <- parameters_ids
         reference_next <- data.frame(matrix(NA, nrow = nrow, ncol = length(parameters_ids) + ncol(statistics_target)))
-        colnames(reference_next) <- colnames(model(parameters = rprior(Nparameters = 1)))
+        colnames(reference_next) <- colnames_reference_next
         while (length(invalid_indices) > 0) {
             #   Generate new particles...
             if (iteration == 1) {
