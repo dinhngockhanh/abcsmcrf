@@ -1,13 +1,4 @@
 Icon?
 Icon
 .DS_Store
-vignettes/DECODE/
-vignettes/birth-death/
-vignettes/Lotka-Volterra/
-vignettes/Michaelis-Menten/
-vignettes/test/
-vignettes/Coalescent model with stats=S/
-vignettes/Coalescent model with stats=S+SFS/
-vignettes/Coalescent model with stats=SFS/
-vignettes/Hierarchical model/
-vignettes/Hierarchical model - DRF vs SMC-DRF/
+vignettes/Results for paper/

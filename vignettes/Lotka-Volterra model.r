@@ -107,6 +107,31 @@ rprior <- function(Nparameters) {
     )
     return(parameters)
 }
+# =============================================Perturbation distribution
+dperturb <- function(parameters, parameters_previous, parameters_previous_sampled, iteration, parameter_id = "all") {
+    probs <- rep(1, nrow(parameters))
+    if (parameter_id %in% c("all", "a")) {
+        probs <- probs * dunif(parameters[["a"]], min = pmax(-10, parameters_previous[["a"]] - 0.1), max = pmin(10, parameters_previous[["a"]] + 0.1))
+    }
+    if (parameter_id %in% c("all", "b")) {
+        probs <- probs * dunif(parameters[["b"]], min = pmax(-10, parameters_previous[["b"]] - 0.1), max = pmin(10, parameters_previous[["b"]] + 0.1))
+    }
+    return(probs)
+}
+rperturb <- function(parameters_unperturbed, parameters_previous_sampled, iteration) {
+    parameters_perturbed <- parameters_unperturbed
+    parameters_perturbed[["a"]] <- runif(
+        n = nrow(parameters_perturbed),
+        min = pmax(-10, parameters_unperturbed[["a"]] - 0.1),
+        max = pmin(10, parameters_unperturbed[["a"]] + 0.1)
+    )
+    parameters_perturbed[["b"]] <- runif(
+        n = nrow(parameters_perturbed),
+        min = pmax(-10, parameters_unperturbed[["b"]] - 0.1),
+        max = pmin(10, parameters_unperturbed[["b"]] + 0.1)
+    )
+    return(parameters_perturbed)
+}
 # ====================================Labels for parameters in the plots
 parameters_labels <- data.frame(
     parameter = c("a", "b"),
@@ -120,9 +145,9 @@ smcrf_results_multi_param <- smcrf(
     model = model,
     rprior = rprior,
     dprior = dprior,
+    rperturb = rperturb,
+    dperturb = dperturb,
     nParticles = rep(5000, 4),
-    perturbation = "Uniform",
-    perturbation_parameters = data.frame(a = rep(0.1, 3), b = rep(0.1, 3)),
     parallel = TRUE
 )
 #---Plot marginal distributions

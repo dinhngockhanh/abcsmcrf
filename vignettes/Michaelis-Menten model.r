@@ -209,72 +209,92 @@ rprior <- function(Nparameters) {
     )
     return(parameters)
 }
-# # ======================================Model for parameter perturbation
-# #   Input:  data frame of parameters, each row is one set of parameters
-# #   Output: data frame of parameters, after perturbation
-# perturb <- function(parameters) {
-#     if (any(grepl("c1", colnames(parameters)))) {
-#         parameters[["c1"]] <- parameters[["c1"]] + runif(nrow(parameters), min = -0.05, max = 0.05)
-#     } else if (any(grepl("c2", colnames(parameters)))) {
-#         parameters[["c2"]] <- parameters[["c2"]] + runif(nrow(parameters), min = -0.1, max = 0.1)
-#     } else if (any(grepl("c3", colnames(parameters)))) {
-#         parameters[["c3"]] <- parameters[["c3"]] + runif(nrow(parameters), min = -0.1, max = 0.1)
-#     }
-#     return(parameters)
-# }
+# =============================================Perturbation distribution
+dperturb <- function(parameters, parameters_previous, parameters_previous_sampled, iteration, parameter_id = "all") {
+    probs <- rep(1, nrow(parameters))
+    if (parameter_id %in% c("all", "c1")) {
+        probs <- probs * dunif(parameters[["c1"]], min = pmax(0, parameters_previous[["c1"]] - 0.05), max = pmin(1, parameters_previous[["c1"]] + 0.05))
+    }
+    if (parameter_id %in% c("all", "c2")) {
+        probs <- probs * dunif(parameters[["c2"]], min = pmax(5, parameters_previous[["c2"]] - 0.1), max = pmin(7, parameters_previous[["c2"]] + 0.1))
+    }
+    if (parameter_id %in% c("all", "c3")) {
+        probs <- probs * dunif(parameters[["c3"]], min = pmax(-5, parameters_previous[["c3"]] - 0.1), max = pmin(-3, parameters_previous[["c3"]] + 0.1))
+    }
+    return(probs)
+}
+rperturb <- function(parameters_unperturbed, parameters_previous_sampled, iteration) {
+    parameters_perturbed <- parameters_unperturbed
+    parameters_perturbed[["c1"]] <- runif(
+        n = nrow(parameters_perturbed),
+        min = pmax(0, parameters_unperturbed[["c1"]] - 0.05),
+        max = pmin(1, parameters_unperturbed[["c1"]] + 0.05)
+    )
+    parameters_perturbed[["c2"]] <- runif(
+        n = nrow(parameters_perturbed),
+        min = pmax(5, parameters_unperturbed[["c2"]] - 0.1),
+        max = pmin(7, parameters_unperturbed[["c2"]] + 0.1)
+    )
+    parameters_perturbed[["c3"]] <- runif(
+        n = nrow(parameters_perturbed),
+        min = pmax(-5, parameters_unperturbed[["c3"]] - 0.1),
+        max = pmin(-3, parameters_unperturbed[["c3"]] + 0.1)
+    )
+    return(parameters_perturbed)
+}
 # ====================================Labels for parameters in the plots
 parameters_labels <- data.frame(
     parameter = c("c1", "c2", "c3"),
     label = c("expression(c[1])", "expression(c[2])", "expression(c[3])")
 )
-# # ===================================================================DRF
-# #---Run DRF
-# drf_results <- smcrf(
-#     method = "smcrf-multi-param",
-#     statistics_target = statistics_target,
-#     model = model,
-#     rprior = rprior,
-#     dprior = dprior,
-#     nParticles = rep(20000, 1),
-#     num.trees = 2500,
-#     parallel = TRUE
-# )
-# #---Plot marginal distributions compare
-# plots_marginal <- plot_compare_marginal(
-#     xlimit = data.frame(parameter = c("c1", "c2", "c3"), min = c(0, 5, -5), max = c(1, 7, -3)),
-#     abc_results = drf_results,
-#     parameters_truth = parameters_truth,
-#     parameters_labels = parameters_labels,
-#     plot_hist = TRUE
-# )
-# # ========================================SMC-RF for multiple parameters
-# #---Run SMC-RF for multiple parameters
-# smcrf_results_multi_param <- smcrf(
-#     method = "smcrf-multi-param",
-#     statistics_target = statistics_target,
-#     model = model,
-#     rprior = rprior,
-#     dprior = dprior,
-#     nParticles = rep(4000, 5),
-#     num.trees = 2500,
-#     perturbation = "Uniform",
-#     perturbation_parameters = data.frame(c1 = rep(0.05, 4), c2 = rep(0.1, 4), c3 = rep(0.1, 4)),
-#     parallel = TRUE
-# )
-# #---Plot marginal distributions compare
-# plots_marginal <- plot_compare_marginal(
-#     plots = plots_marginal,
-#     xlimit = data.frame(parameter = c("c1", "c2", "c3"), min = c(0, 5, -5), max = c(1, 7, -3)),
-#     abc_results = smcrf_results_multi_param,
-#     parameters_truth = parameters_truth,
-#     parameters_labels = parameters_labels,
-#     plot_hist = TRUE
-# )
-# plot_smcrf_marginal(
-#     smcrf_results = smcrf_results_multi_param,
-#     parameters_labels = parameters_labels,
-#     plot_hist = TRUE
-# )
+# ===================================================================DRF
+#---Run DRF
+drf_results <- smcrf(
+    method = "smcrf-multi-param",
+    statistics_target = statistics_target,
+    model = model,
+    rprior = rprior,
+    dprior = dprior,
+    nParticles = rep(20000, 1),
+    num.trees = 2500,
+    parallel = TRUE
+)
+#---Plot marginal distributions compare
+plots_marginal <- plot_compare_marginal(
+    xlimit = data.frame(parameter = c("c1", "c2", "c3"), min = c(0, 5, -5), max = c(1, 7, -3)),
+    abc_results = drf_results,
+    parameters_truth = parameters_truth,
+    parameters_labels = parameters_labels,
+    plot_hist = TRUE
+)
+# ========================================SMC-RF for multiple parameters
+#---Run SMC-RF for multiple parameters
+smcrf_results_multi_param <- smcrf(
+    method = "smcrf-multi-param",
+    statistics_target = statistics_target,
+    model = model,
+    rprior = rprior,
+    dprior = dprior,
+    nParticles = rep(4000, 5),
+    num.trees = 2500,
+    rperturb = rperturb,
+    dperturb = dperturb,
+    parallel = TRUE
+)
+#---Plot marginal distributions compare
+plots_marginal <- plot_compare_marginal(
+    plots = plots_marginal,
+    xlimit = data.frame(parameter = c("c1", "c2", "c3"), min = c(0, 5, -5), max = c(1, 7, -3)),
+    abc_results = smcrf_results_multi_param,
+    parameters_truth = parameters_truth,
+    parameters_labels = parameters_labels,
+    plot_hist = TRUE
+)
+plot_smcrf_marginal(
+    smcrf_results = smcrf_results_multi_param,
+    parameters_labels = parameters_labels,
+    plot_hist = TRUE
+)
 #---Plot box plot showing the trajectory
 plot_boxplot(
     drf_results = drf_results,

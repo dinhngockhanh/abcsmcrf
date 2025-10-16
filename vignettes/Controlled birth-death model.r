@@ -1,5 +1,6 @@
 library(abcsmcrf)
 library(LaplacesDemon)
+library(truncnorm)
 set.seed(1)
 # ===================================Function to compute estimation of m
 estimated_mean <- function(abc_results) {
@@ -103,19 +104,6 @@ parameters_target <- data.frame(
     gamma = 0.8,
     kappa = 4
 )
-# ======================================Model for parameter perturbation
-perturbation <- function(nb_iterations) {
-    prob_names <- paste0("prob_", seq_along(prob_X) - 1)
-    prob_matrix <- matrix(rep(rep(0.05, length(prob_X)), nb_iterations), nrow = nb_iterations)
-    prob_df <- as.data.frame(prob_matrix)
-    colnames(prob_df) <- prob_names
-    perturbation_parameters <- data.frame(
-        kappa = rep(3, nb_iterations),
-        gamma = rep(0.05, nb_iterations)
-    )
-    perturbation_parameters <- cbind(perturbation_parameters, prob_df)
-    return(perturbation_parameters)
-}
 # ====================================================Prior distribution
 dprior <- function(parameters, parameter_id = "all") {
     probs <- rep(1, nrow(parameters))
@@ -156,8 +144,57 @@ rprior <- function(Nparameters) {
     }
     probabilities <- as.data.frame(probabilities)
     colnames(probabilities) <- paste0("prob_", 0:K_max)
-    parameter_df <- data.frame(kappa = kappa, gamma = gamma)
+    parameter_df <- data.frame(gamma = gamma, kappa = kappa)
     return(cbind(parameter_df, probabilities))
+}
+# =============================================Perturbation distribution
+dperturb <- function(parameters, parameters_previous, parameters_previous_sampled, iteration, parameter_id = "all") {
+    probs <- rep(1, nrow(parameters))
+    if (parameter_id %in% c("all", "gamma")) {
+        probs <- probs * dunif(
+            parameters[["gamma"]],
+            min = pmax(0, parameters_previous[["gamma"]] - 0.05),
+            max = pmin(1, parameters_previous[["gamma"]] + 0.05)
+        )
+    }
+    if (parameter_id %in% c("all", "kappa")) {
+        probs <- probs * dunif(
+            parameters[["kappa"]],
+            min = pmax(0, parameters_previous[["kappa"]] - 3),
+            max = pmin(K_max + 1, parameters_previous[["kappa"]] + 3)
+        )
+    }
+    for (i in 0:K_max) {
+        if (parameter_id %in% c("all", paste0("prob_", i))) {
+            probs <- probs * dunif(
+                parameters[[paste0("prob_", i)]],
+                min = pmax(0, parameters_previous[[paste0("prob_", i)]] - 0.05),
+                max = pmin(1, parameters_previous[[paste0("prob_", i)]] + 0.05)
+            )
+        }
+    }
+    return(probs)
+}
+rperturb <- function(parameters_unperturbed, parameters_previous_sampled, iteration) {
+    parameters_perturbed <- parameters_unperturbed
+    parameters_perturbed[["gamma"]] <- runif(
+        n = nrow(parameters_perturbed),
+        min = pmax(0, parameters_perturbed[["gamma"]] - 0.05),
+        max = pmin(1, parameters_perturbed[["gamma"]] + 0.05)
+    )
+    parameters_perturbed[["kappa"]] <- runif(
+        n = nrow(parameters_perturbed),
+        min = pmax(0, parameters_perturbed[["kappa"]] - 3),
+        max = pmin(K_max + 1, parameters_perturbed[["kappa"]] + 3)
+    )
+    for (i in 0:K_max) {
+        parameters_perturbed[[paste0("prob_", i)]] <- runif(
+            n = nrow(parameters_perturbed),
+            min = pmax(0, parameters_perturbed[[paste0("prob_", i)]] - 0.05),
+            max = pmin(K_max + 1, parameters_perturbed[[paste0("prob_", i)]] + 0.05)
+        )
+    }
+    return(parameters_perturbed)
 }
 # ====================================Labels for parameters in the plots
 parameters_labels <- data.frame(
@@ -240,10 +277,10 @@ abcrf_results <- smcrf(
     method = "smcrf-single-param",
     statistics_target = statistics_target,
     model = model,
-    perturbation = "Uniform",
     rprior = rprior,
     dprior = dprior,
-    perturbation_parameters = perturbation(4),
+    rperturb = rperturb,
+    dperturb = dperturb,
     ntree = 2500,
     nParticles = rep(5000, 4),
     save_model = FALSE,
@@ -273,8 +310,8 @@ smcrf_results_multi_param <- smcrf(
     model = model,
     rprior = rprior,
     dprior = dprior,
-    perturbation = "Uniform",
-    perturbation_parameters = perturbation(4),
+    rperturb = rperturb,
+    dperturb = dperturb,
     nParticles = rep(5000, 4),
     save_model = FALSE,
     num.trees = 2500,

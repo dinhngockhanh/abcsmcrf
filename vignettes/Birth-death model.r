@@ -202,6 +202,31 @@ rprior <- function(Nparameters) {
     mu_over_lambda <- rbeta(Nparameters, shape1 = shape1, shape2 = shape2)
     return(data.frame(lambda_minus_mu = lambda_minus_mu, mu_over_lambda = mu_over_lambda))
 }
+# =============================================Perturbation distribution
+dperturb <- function(parameters, parameters_previous, parameters_previous_sampled, iteration, parameter_id = "all") {
+    probs <- rep(1, nrow(parameters))
+    if (parameter_id %in% c("all", "lambda_minus_mu")) {
+        probs <- probs * dunif(parameters[["lambda_minus_mu"]], min = pmax(0, parameters_previous[["lambda_minus_mu"]] - 0.05), max = parameters_previous[["lambda_minus_mu"]] + 0.05)
+    }
+    if (parameter_id %in% c("all", "mu_over_lambda")) {
+        probs <- probs * dunif(parameters[["mu_over_lambda"]], min = pmax(0, parameters_previous[["mu_over_lambda"]] - 0.05), max = pmin(1, parameters_previous[["mu_over_lambda"]] + 0.05))
+    }
+    return(probs)
+}
+rperturb <- function(parameters_unperturbed, parameters_previous_sampled, iteration) {
+    parameters_perturbed <- parameters_unperturbed
+    parameters_perturbed[["lambda_minus_mu"]] <- runif(
+        n = nrow(parameters_perturbed),
+        min = pmax(0, parameters_unperturbed[["lambda_minus_mu"]] - 0.05),
+        max = parameters_unperturbed[["lambda_minus_mu"]] + 0.05
+    )
+    parameters_perturbed[["mu_over_lambda"]] <- runif(
+        n = nrow(parameters_perturbed),
+        min = pmax(0, parameters_unperturbed[["mu_over_lambda"]] - 0.05),
+        max = pmin(1, parameters_unperturbed[["mu_over_lambda"]] + 0.05)
+    )
+    return(parameters_perturbed)
+}
 # ============================================================ABC-SMC-RF
 #---Run ABC-RF
 abcrf_results <- smcrf(
@@ -210,16 +235,13 @@ abcrf_results <- smcrf(
     model = model,
     rprior = rprior,
     dprior = dprior,
-    perturbation = "Uniform",
-    perturbation_parameters = data.frame(
-        lambda_minus_mu = rep(1, 4),
-        mu_over_lambda = rep(0.05, 4)
-    ),
+    rperturb = rperturb,
+    dperturb = dperturb,
     nParticles = rep(5000, 4),
     ntree = 2500,
     save_model = FALSE,
-    parallel = TRUE,
-    model_redo_if_NA = TRUE
+    model_redo_if_NA = TRUE,
+    parallel = TRUE
 )
 #---Plot qqplots against other methods
 plots_compare_qqplot <- plot_compare_qqplot(
@@ -240,14 +262,11 @@ smcrf_results_multi_param <- smcrf(
     model = model,
     rprior = rprior,
     dprior = dprior,
-    perturbation = "Uniform",
-    perturbation_parameters = data.frame(
-        lambda_minus_mu = rep(1, 4),
-        mu_over_lambda = rep(0.05, 4)
-    ),
+    rperturb = rperturb,
+    dperturb = dperturb,
     nParticles = rep(5000, 4),
-    save_model = FALSE,
     num.trees = 2500,
+    save_model = FALSE,
     splitting.rule = "FourierMMD",
     model_redo_if_NA = TRUE,
     parallel = TRUE
