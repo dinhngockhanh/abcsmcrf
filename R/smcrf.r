@@ -365,7 +365,11 @@ smcrf_single_param <- function(statistics_target,
         }
         #---Prepare sampled particles from the previous iteration
         if (iteration > 1) {
-            parameters_previous_sampled <- parameters[sample(nrow(parameters), size = 10000, prob = DRF_weights[, 1], replace = TRUE), , drop = FALSE]
+            parameters_previous_sampled <- data.frame(matrix(NA, nrow = 10000, ncol = length(parameters_ids)))
+            colnames(parameters_previous_sampled) <- parameters_ids
+            for (parameter_id in parameters_ids) {
+                parameters_previous_sampled[, parameter_id] <- parameters[sample(nrow(parameters), size = 10000, prob = ABCRF_weights[, parameter_id], replace = TRUE), parameter_id]
+            }
         }
         #---Create training set
         if (verbose) cat(blue("Sampling parameters and computing model simulations...\n"))
