@@ -2,7 +2,7 @@
 
 ##  Installation
 
-The ABC-SMC-(D)RF library can be installed with
+The ABC-SMC-(D)RF library [1] can be installed with
 
 ```{r}
 devtools::install_github("dinhngockhanh/abcsmcrf")
@@ -10,7 +10,7 @@ devtools::install_github("dinhngockhanh/abcsmcrf")
 
 ##  Vignettes
 
-The `vignettes` folder contains examples of using ABC-SMC-(D)RF, ABC-RF, ABC-DRF and traditional ABC methods to infer parameters in different mathematical models. These examples are showcased in the paper "Approximate Bayesian Computation sequential Monte Carlo via random forests" [1].
+The `vignettes` folder contains examples of using ABC-SMC-(D)RF, ABC-RF, ABC-DRF and traditional ABC methods to infer parameters in different mathematical models. These examples are showcased in [1].
 
 ##  References
 1.  Dinh KN, Liu C, Xiang Z, Liu Z, Tavaré S. Approximate Bayesian computation sequential Monte Carlo via random forests. Stat Comput 35, 219 (2025). https://doi.org/10.1007/s11222-025-10748-x
