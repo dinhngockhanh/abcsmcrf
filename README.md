@@ -2,7 +2,7 @@
 
 ##  Installation
 
-The ABC-SMC-(D)RF library [1] can be installed with
+The [ABC-SMC-(D)RF](https://doi.org/10.1007/s11222-025-10748-x) library can be installed with
 
 ```{r}
 devtools::install_github("dinhngockhanh/abcsmcrf")
